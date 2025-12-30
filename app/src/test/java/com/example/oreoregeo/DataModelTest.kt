@@ -7,6 +7,11 @@ import org.junit.Assert.*
 
 class DataModelTest {
 
+    companion object {
+        // 30 minutes in milliseconds - matches CheckinEntity constant
+        private const val THIRTY_MINUTES_MS = 1800000L
+    }
+
     @Test
     fun testPlaceKeyFormat() {
         val place = PlaceEntity(
@@ -35,7 +40,7 @@ class DataModelTest {
         )
         
         // Verify bucket calculation (30 minutes = 1800000 ms)
-        val expectedBucket = visitedAt / 1800000
+        val expectedBucket = visitedAt / THIRTY_MINUTES_MS
         assertEquals(expectedBucket, checkin.visited_at_bucket)
         
         // Two check-ins within 30 minutes should have the same bucket
@@ -49,7 +54,7 @@ class DataModelTest {
         // Check-in after 30 minutes should have different bucket
         val checkin3 = CheckinEntity(
             place_key = "osm:node:12345",
-            visited_at = visitedAt + 1900000, // +31 minutes
+            visited_at = visitedAt + THIRTY_MINUTES_MS + 100000, // +31 minutes
             note = "Test note 3"
         )
         assertNotEquals(checkin.visited_at_bucket, checkin3.visited_at_bucket)
@@ -89,6 +94,6 @@ class DataModelTest {
         assertEquals("osm:node:12345", checkin.place_key)
         assertEquals(now, checkin.visited_at)
         assertEquals("Great place!", checkin.note)
-        assertEquals(now / 1800000, checkin.visited_at_bucket)
+        assertEquals(now / THIRTY_MINUTES_MS, checkin.visited_at_bucket)
     }
 }

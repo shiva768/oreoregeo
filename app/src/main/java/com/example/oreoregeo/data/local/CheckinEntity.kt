@@ -4,6 +4,9 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+// 30 minutes in milliseconds for check-in deduplication
+private const val THIRTY_MINUTES_MS = 1800000L
+
 @Entity(
     tableName = "checkins",
     indices = [
@@ -20,5 +23,5 @@ data class CheckinEntity(
     val place_key: String,
     val visited_at: Long, // epoch ms, UTC
     val note: String,
-    val visited_at_bucket: Long = visited_at / 1800000 // 30 minutes bucket
+    val visited_at_bucket: Long = visited_at / THIRTY_MINUTES_MS // 30 minutes bucket
 )
