@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -155,6 +156,17 @@ fun MainScreen(
                         }
                     }
                 )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+                    label = { Text("Settings") },
+                    selected = selectedItem == 2,
+                    onClick = {
+                        selectedItem = 2
+                        navController.navigate("settings") {
+                            popUpTo("search")
+                        }
+                    }
+                )
             }
         }
     ) { paddingValues ->
@@ -219,6 +231,17 @@ fun MainScreen(
                 val checkins by historyViewModel.checkins.collectAsState()
 
                 HistoryScreen(checkins = checkins)
+            }
+            
+            composable("settings") {
+                SettingsScreen(
+                    onBackupClick = {
+                        // TODO: Implement backup with Google Drive
+                    },
+                    onOsmLoginClick = {
+                        // TODO: Implement OSM OAuth
+                    }
+                )
             }
         }
     }
