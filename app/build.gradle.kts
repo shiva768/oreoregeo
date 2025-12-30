@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.oreoregeo"
+    namespace = "com.zelretch.oreoregeo"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.oreoregeo"
+        applicationId = "com.zelretch.oreoregeo"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
