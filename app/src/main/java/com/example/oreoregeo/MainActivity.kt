@@ -9,17 +9,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.oreoregeo.ui.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -118,6 +118,7 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(0) }
+    var showFab by remember { mutableStateOf(true) }
 
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
     val repository = app.repository
@@ -129,7 +130,12 @@ fun MainScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                ),
+                actions = {
+                    IconButton(onClick = { navController.navigate("add_place") }) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Place")
+                    }
+                }
             )
         },
         bottomBar = {
@@ -190,6 +196,10 @@ fun MainScreen(
                 var selectedPlaceKey by remember { mutableStateOf("") }
                 var selectedPlaceName by remember { mutableStateOf<String?>(null) }
 
+                LaunchedEffect(Unit) {
+                    showFab = true
+                }
+
                 SearchScreen(
                     searchState = searchState,
                     onSearchClick = {
@@ -205,6 +215,9 @@ fun MainScreen(
                         } else null
                         showCheckinDialog = true
                         checkinViewModel.reset()
+                    },
+                    onEditPlace = { placeKey ->
+                        navController.navigate("edit_tags/${placeKey.replace("/", "%2F")}")
                     }
                 )
 
@@ -230,16 +243,92 @@ fun MainScreen(
                 )
                 val checkins by historyViewModel.checkins.collectAsState()
 
+                LaunchedEffect(Unit) {
+                    showFab = false
+                }
+
                 HistoryScreen(checkins = checkins)
             }
             
             composable("settings") {
+                LaunchedEffect(Unit) {
+                    showFab = false
+                }
+
                 SettingsScreen(
                     onBackupClick = {
                         // TODO: Implement backup with Google Drive
                     },
                     onOsmLoginClick = {
                         // TODO: Implement OSM OAuth
+                    }
+                )
+            }
+
+            composable("add_place") {
+                val osmEditViewModel: OsmEditViewModel = viewModel(
+                    factory = OsmEditViewModelFactory(repository)
+                )
+                val editState by osmEditViewModel.editState.collectAsState()
+                
+                var currentLat: Double? = null
+                var currentLon: Double? = null
+
+                LaunchedEffect(Unit) {
+                    showFab = false
+                }
+
+                LaunchedEffect(editState) {
+                    if (editState is OsmEditState.Success) {
+                        navController.popBackStack()
+                        osmEditViewModel.reset()
+                    }
+                }
+
+                AddPlaceScreen(
+                    currentLat = currentLat,
+                    currentLon = currentLon,
+                    onSave = { lat, lon, tags ->
+                        osmEditViewModel.createPlace(lat, lon, tags)
+                    },
+                    onCancel = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = "edit_tags/{placeKey}",
+                arguments = listOf(navArgument("placeKey") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val placeKey = backStackEntry.arguments?.getString("placeKey") ?: ""
+                val osmEditViewModel: OsmEditViewModel = viewModel(
+                    factory = OsmEditViewModelFactory(repository)
+                )
+                val editState by osmEditViewModel.editState.collectAsState()
+
+                LaunchedEffect(Unit) {
+                    showFab = false
+                }
+
+                LaunchedEffect(editState) {
+                    if (editState is OsmEditState.Success) {
+                        navController.popBackStack()
+                        osmEditViewModel.reset()
+                    }
+                }
+
+                // TODO: Load existing tags from place
+                val existingTags = mapOf("name" to "Example")
+
+                EditTagsScreen(
+                    placeKey = placeKey,
+                    existingTags = existingTags,
+                    onSave = { nodeId, tags ->
+                        osmEditViewModel.updateNodeTags(nodeId, tags)
+                    },
+                    onCancel = {
+                        navController.popBackStack()
                     }
                 )
             }

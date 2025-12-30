@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ fun SearchScreen(
     searchState: SearchState,
     onSearchClick: () -> Unit,
     onPlaceClick: (String) -> Unit,
+    onEditPlace: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -69,7 +71,10 @@ fun SearchScreen(
                         items(state.places) { placeWithDistance ->
                             PlaceCard(
                                 placeWithDistance = placeWithDistance,
-                                onClick = { onPlaceClick(placeWithDistance.place.placeKey) }
+                                onClick = { onPlaceClick(placeWithDistance.place.placeKey) },
+                                onEditClick = if (placeWithDistance.place.placeKey.contains(":node:") && onEditPlace != null) {
+                                    { onEditPlace(placeWithDistance.place.placeKey) }
+                                } else null
                             )
                         }
                     }
@@ -99,6 +104,7 @@ fun SearchScreen(
 fun PlaceCard(
     placeWithDistance: PlaceWithDistance,
     onClick: () -> Unit,
+    onEditClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val place = placeWithDistance.place
@@ -114,30 +120,44 @@ fun PlaceCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = place.name,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = place.category,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = distanceText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = place.placeKey,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = place.name,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = place.category,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = distanceText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = place.placeKey,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (onEditClick != null) {
+                IconButton(onClick = onEditClick) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit tags",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
     }
 }
