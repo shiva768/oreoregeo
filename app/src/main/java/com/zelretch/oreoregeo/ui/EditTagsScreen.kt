@@ -85,7 +85,7 @@ fun EditTagsScreen(
             }
         }
 
-        HorizontalDivider()
+        Divider()
 
         Text(
             text = "Add New Tag",
