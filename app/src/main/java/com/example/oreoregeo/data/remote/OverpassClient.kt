@@ -17,7 +17,13 @@ class OverpassClient {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    private val endpoint = "https://overpass-api.de/api/interpreter"
+    // Primary endpoint with fallback options for load balancing and reliability
+    private val endpoints = listOf(
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter",
+        "https://overpass.openstreetmap.ru/api/interpreter"
+    )
+    private var currentEndpointIndex = 0
 
     suspend fun searchNearby(
         lat: Double,
@@ -27,19 +33,38 @@ class OverpassClient {
         try {
             val query = buildQuery(lat, lon, radiusMeters)
             val requestBody = query.toRequestBody("text/plain".toMediaType())
-            val request = Request.Builder()
-                .url(endpoint)
-                .post(requestBody)
-                .build()
+            
+            // Try endpoints in order until one succeeds
+            var lastException: Exception? = null
+            for (i in endpoints.indices) {
+                val endpointIndex = (currentEndpointIndex + i) % endpoints.size
+                val endpoint = endpoints[endpointIndex]
+                
+                try {
+                    val request = Request.Builder()
+                        .url(endpoint)
+                        .post(requestBody)
+                        .build()
 
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) {
-                return@withContext Result.failure(IOException("Unexpected response: ${response.code}"))
+                    val response = client.newCall(request).execute()
+                    if (!response.isSuccessful) {
+                        continue // Try next endpoint
+                    }
+
+                    val responseBody = response.body?.string() ?: ""
+                    val elements = parseResponse(responseBody)
+                    
+                    // Success - update current endpoint for next request
+                    currentEndpointIndex = endpointIndex
+                    return@withContext Result.success(elements)
+                } catch (e: Exception) {
+                    lastException = e
+                    continue // Try next endpoint
+                }
             }
-
-            val responseBody = response.body?.string() ?: ""
-            val elements = parseResponse(responseBody)
-            Result.success(elements)
+            
+            // All endpoints failed
+            Result.failure(lastException ?: IOException("All Overpass endpoints failed"))
         } catch (e: Exception) {
             Result.failure(e)
         }

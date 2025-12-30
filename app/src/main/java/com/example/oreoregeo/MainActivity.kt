@@ -271,11 +271,16 @@ fun MainScreen(
                 )
                 val editState by osmEditViewModel.editState.collectAsState()
                 
-                var currentLat: Double? = null
-                var currentLon: Double? = null
+                var currentLat by remember { mutableStateOf<Double?>(null) }
+                var currentLon by remember { mutableStateOf<Double?>(null) }
 
                 LaunchedEffect(Unit) {
                     showFab = false
+                    // Try to get current location for convenience
+                    onRequestLocation { lat, lon ->
+                        currentLat = lat
+                        currentLon = lon
+                    }
                 }
 
                 LaunchedEffect(editState) {

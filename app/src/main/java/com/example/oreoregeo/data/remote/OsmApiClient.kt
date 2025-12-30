@@ -18,6 +18,10 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
+// Note: In production, the access token should be retrieved from EncryptedSharedPreferences
+// within each method rather than stored as a class member for better security.
+// This implementation uses a constructor parameter for simplicity but should be refactored
+// to use secure token storage (see IMPLEMENTATION_GUIDE.md for details).
 class OsmApiClient(private val accessToken: String? = null) {
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
