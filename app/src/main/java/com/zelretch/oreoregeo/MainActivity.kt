@@ -2,6 +2,8 @@ package com.zelretch.oreoregeo
 
 import android.Manifest
 import android.os.Bundle
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -32,9 +34,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -49,6 +55,9 @@ import com.zelretch.oreoregeo.domain.SearchResult
 import com.zelretch.oreoregeo.ui.BackupState
 import com.zelretch.oreoregeo.ui.CheckinViewModel
 import com.zelretch.oreoregeo.ui.HistoryViewModel
+import com.zelretch.oreoregeo.ui.NodeLoadState
+import com.zelretch.oreoregeo.ui.OsmEditState
+import com.zelretch.oreoregeo.ui.OsmEditViewModel
 import com.zelretch.oreoregeo.ui.SearchState
 import com.zelretch.oreoregeo.ui.SearchViewModel
 import com.zelretch.oreoregeo.ui.SettingsViewModel
@@ -63,7 +72,7 @@ class MainActivity : ComponentActivity() {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     @Suppress("UNCHECKED_CAST")
-                    return CheckinViewModel(repository) as T
+                    return CheckinViewModel(repository, applicationContext) as T
                 }
             }
         }
@@ -87,7 +96,16 @@ class MainActivity : ComponentActivity() {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     @Suppress("UNCHECKED_CAST")
-                    return SettingsViewModel(applicationContext) as T
+                    return SettingsViewModel(applicationContext, repository) as T
+                }
+            }
+        }
+
+        val osmEditViewModel by viewModels<OsmEditViewModel> {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return OsmEditViewModel(repository, applicationContext) as T
                 }
             }
         }
@@ -118,7 +136,8 @@ class MainActivity : ComponentActivity() {
                                     checkinViewModel.checkIn(place, null, utcTime)
                                 },
                                 onHistory = { navController.navigate("history") },
-                                onSettings = { navController.navigate("settings") }
+                                onSettings = { navController.navigate("settings") },
+                                onEditTags = { place -> navController.navigate("edit/${'$'}{place.placeKey}") }
                             )
                         }
                         composable("history") {
@@ -127,13 +146,17 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable("settings") {
-                            SettingsScreen(settingsViewModel)
+                            SettingsScreen(
+                                viewModel = settingsViewModel,
+                                onAddPlace = { navController.navigate("add") }
+                            )
                         }
                         composable("add") {
-                            AddPlaceScreen { navController.popBackStack() }
+                            AddPlaceScreen(osmEditViewModel) { navController.popBackStack() }
                         }
-                        composable("edit") {
-                            EditTagsScreen { navController.popBackStack() }
+                        composable("edit/{placeKey}") { entry ->
+                            val key = entry.arguments?.getString("placeKey") ?: ""
+                            EditTagsScreen(key, osmEditViewModel) { navController.popBackStack() }
                         }
                     }
                 }
@@ -165,6 +188,7 @@ fun SearchScreen(
     onCheckIn: (Place) -> Unit,
     onHistory: () -> Unit,
     onSettings: () -> Unit,
+    onEditTags: (Place) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -193,13 +217,17 @@ fun SearchScreen(
             SearchState.Idle -> Text("周辺の店舗を検索できます")
             SearchState.Loading -> Text("検索中…")
             is SearchState.Error -> Text("エラー: ${'$'}{s.message}")
-            is SearchState.Loaded -> SearchResultList(s.results, onCheckIn)
+            is SearchState.Loaded -> SearchResultList(s.results, onCheckIn, onEditTags)
         }
     }
 }
 
 @Composable
-fun SearchResultList(results: List<SearchResult>, onCheckIn: (Place) -> Unit) {
+fun SearchResultList(
+    results: List<SearchResult>,
+    onCheckIn: (Place) -> Unit,
+    onEditTags: (Place) -> Unit,
+) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items(results) { item ->
             Card(Modifier.fillMaxWidth()) {
@@ -212,10 +240,14 @@ fun SearchResultList(results: List<SearchResult>, onCheckIn: (Place) -> Unit) {
                             Spacer(Modifier.width(4.dp))
                             Text("チェックイン")
                         }
-                        TextButton(onClick = { /* reserved for details */ }) {
+                        val isNode = item.place.placeKey.startsWith("osm:node:")
+                        TextButton(
+                            enabled = isNode,
+                            onClick = { onEditTags(item.place) }
+                        ) {
                             Icon(Icons.Default.AddLocation, contentDescription = null)
                             Spacer(Modifier.width(4.dp))
-                            Text("タグ編集")
+                            Text(if (isNode) "タグ編集" else "nodeのみ")
                         }
                     }
                 }
@@ -247,8 +279,9 @@ fun HistoryScreen(viewModel: HistoryViewModel, onClose: () -> Unit) {
 }
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel) {
+fun SettingsScreen(viewModel: SettingsViewModel, onAddPlace: () -> Unit) {
     val state by viewModel.state.collectAsState()
+    val token by viewModel.osmToken.collectAsState()
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val account = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
@@ -257,6 +290,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             viewModel.backup(account)
         }
     }
+    LaunchedEffect(Unit) { viewModel.refreshToken() }
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(onClick = {
             val account = com.google.android.gms.auth.api.signin.GoogleSignIn.getLastSignedInAccount(context)
@@ -276,25 +310,108 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             BackupState.Success -> Text("完了しました")
             is BackupState.Error -> Text("エラー: ${(state as BackupState.Error).message}")
         }
+
+        Spacer(Modifier.height(12.dp))
+        Text("OSM OAuth", style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(viewModel.startOsmAuthorizationUrl()))
+                context.startActivity(intent)
+            }) {
+                Icon(Icons.Default.LocationOn, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("OSM にログイン")
+            }
+            TextButton(onClick = { viewModel.logoutOsm() }) { Text("ログアウト") }
+        }
+        Text(if (token != null) "トークン取得済み" else "未ログイン")
+
+        Spacer(Modifier.height(12.dp))
+        Button(onClick = onAddPlace) {
+            Icon(Icons.Default.AddLocation, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("OSM ノードを追加")
+        }
     }
 }
 
 @Composable
-fun AddPlaceScreen(onClose: () -> Unit) {
-    Column(Modifier.padding(16.dp)) {
-        Text("OSM ノード追加")
-        Spacer(Modifier.height(8.dp))
-        Text("OAuth トークン設定後に有効になります。現在はダミー UI です。")
-        Button(onClick = onClose, modifier = Modifier.padding(top = 16.dp)) { Text("閉じる") }
+fun AddPlaceScreen(viewModel: OsmEditViewModel, onClose: () -> Unit) {
+    var lat by remember { androidx.compose.runtime.mutableStateOf("") }
+    var lon by remember { androidx.compose.runtime.mutableStateOf("") }
+    var name by remember { androidx.compose.runtime.mutableStateOf("") }
+    var category by remember { androidx.compose.runtime.mutableStateOf("") }
+    val editState by viewModel.editState.collectAsState()
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("OSM ノード追加", style = MaterialTheme.typography.titleLarge)
+        TextField(value = lat, onValueChange = { lat = it }, label = { Text("緯度") })
+        TextField(value = lon, onValueChange = { lon = it }, label = { Text("経度") })
+        TextField(value = name, onValueChange = { name = it }, label = { Text("name タグ") })
+        TextField(value = category, onValueChange = { category = it }, label = { Text("amenity/shop/tourism") })
+        Button(onClick = {
+            val latVal = lat.toDoubleOrNull()
+            val lonVal = lon.toDoubleOrNull()
+            if (latVal != null && lonVal != null) {
+                val tags = buildMap {
+                    if (name.isNotBlank()) put("name", name)
+                    if (category.isNotBlank()) put("amenity", category)
+                }
+                viewModel.createPlace(latVal, lonVal, tags)
+            }
+        }) {
+            Text("追加する")
+        }
+        when (val s = editState) {
+            OsmEditState.Idle -> Text("必要なタグを入力してください")
+            OsmEditState.Loading -> Text("送信中…")
+            is OsmEditState.Error -> Text("エラー: ${'$'}{s.message}")
+            is OsmEditState.Success -> Text("追加要求を送信しました")
+        }
+        Button(onClick = onClose) { Text("閉じる") }
     }
 }
 
 @Composable
-fun EditTagsScreen(onClose: () -> Unit) {
-    Column(Modifier.padding(16.dp)) {
-        Text("OSM タグ編集")
-        Spacer(Modifier.height(8.dp))
-        Text("ノード読み込みとタグ更新はトークン設定後に実行されます。")
-        Button(onClick = onClose, modifier = Modifier.padding(top = 16.dp)) { Text("閉じる") }
+fun EditTagsScreen(placeKey: String, viewModel: OsmEditViewModel, onClose: () -> Unit) {
+    val nodeState by viewModel.nodeState.collectAsState()
+    val editState by viewModel.editState.collectAsState()
+    var name by remember(nodeState) {
+        val loaded = (nodeState as? NodeLoadState.Loaded)?.detail
+        mutableStateOf(loaded?.tags?.get("name") ?: "")
+    }
+    var category by remember(nodeState) {
+        val loaded = (nodeState as? NodeLoadState.Loaded)?.detail
+        mutableStateOf(loaded?.tags?.get("amenity") ?: loaded?.tags?.get("shop") ?: loaded?.tags?.get("tourism") ?: "")
+    }
+    LaunchedEffect(placeKey) {
+        viewModel.loadNode(placeKey)
+    }
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("OSM タグ編集", style = MaterialTheme.typography.titleLarge)
+        when (val state = nodeState) {
+            NodeLoadState.Idle -> Text("読み込み待ち")
+            NodeLoadState.Loading -> Text("取得中…")
+            is NodeLoadState.Error -> Text("エラー: ${'$'}{state.message}")
+            is NodeLoadState.Loaded -> {
+                TextField(value = name, onValueChange = { name = it }, label = { Text("name") })
+                TextField(value = category, onValueChange = { category = it }, label = { Text("amenity/shop/tourism") })
+                Button(onClick = {
+                    val tags = buildMap {
+                        if (name.isNotBlank()) put("name", name)
+                        if (category.isNotBlank()) put("amenity", category)
+                    }
+                    viewModel.updateNodeTags(placeKey, tags)
+                }) {
+                    Text("タグを更新")
+                }
+            }
+        }
+        when (val s = editState) {
+            OsmEditState.Idle -> {}
+            OsmEditState.Loading -> Text("更新中…")
+            is OsmEditState.Error -> Text("エラー: ${'$'}{s.message}")
+            is OsmEditState.Success -> Text("更新しました")
+        }
+        Button(onClick = onClose) { Text("閉じる") }
     }
 }

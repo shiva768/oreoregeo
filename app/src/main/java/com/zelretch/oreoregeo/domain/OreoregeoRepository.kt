@@ -4,9 +4,11 @@ import android.location.Location
 import com.zelretch.oreoregeo.data.local.AppDatabase
 import com.zelretch.oreoregeo.data.local.CheckinEntity
 import com.zelretch.oreoregeo.data.local.PlaceEntity
+import com.zelretch.oreoregeo.data.local.OsmTokenStore
 import com.zelretch.oreoregeo.data.remote.OsmApiClient
 import com.zelretch.oreoregeo.data.remote.OsmNodeCreate
 import com.zelretch.oreoregeo.data.remote.OsmNodeUpdate
+import com.zelretch.oreoregeo.data.remote.OsmNodeDetail
 import com.zelretch.oreoregeo.data.remote.OverpassClient
 import com.zelretch.oreoregeo.data.remote.OverpassElement
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +18,7 @@ class OreoregeoRepository(
     private val db: AppDatabase,
     private val overpassClient: OverpassClient,
     private val osmApiClient: OsmApiClient,
+    private val tokenStore: OsmTokenStore,
 ) {
     val history: Flow<List<Checkin>> = db.checkinDao().observeHistory().map { list ->
         list.map { Checkin(it.id, it.placeKey, it.visitedAt, it.note) }
@@ -69,11 +72,32 @@ class OreoregeoRepository(
         }
     }
 
-    suspend fun addNode(token: String, lat: Double, lon: Double, tags: Map<String, String>): Result<Unit> {
+    fun osmAccessToken(): String? = tokenStore.get()
+
+    fun setOsmAccessToken(token: String) {
+        tokenStore.save(token)
+    }
+
+    fun clearOsmToken() {
+        tokenStore.clear()
+    }
+
+    suspend fun addNode(lat: Double, lon: Double, tags: Map<String, String>): Result<Unit> {
+        val token = tokenStore.get() ?: return Result.failure(IllegalStateException("OSMにログインしてください"))
         return osmApiClient.createNode(token, OsmNodeCreate(lat, lon, tags, "Add place from Oreoregeo"))
     }
 
-    suspend fun updateNode(token: String, id: Long, version: Long, tags: Map<String, String>): Result<Unit> {
-        return osmApiClient.updateNode(token, OsmNodeUpdate(id, version, tags, "Update tags from Oreoregeo"))
+    suspend fun updateNode(id: Long, tags: Map<String, String>): Result<Unit> {
+        val token = tokenStore.get() ?: return Result.failure(IllegalStateException("OSMにログインしてください"))
+        val current = osmApiClient.getNode(id).getOrElse { return Result.failure(it) }
+        val version = current.version ?: return Result.failure(IllegalStateException("ノードのversionが取得できません"))
+        return osmApiClient.updateNodeWithRetry(
+            token = token,
+            initial = OsmNodeUpdate(id, version.toLong(), tags, "Update tags from Oreoregeo")
+        )
+    }
+
+    suspend fun fetchNode(id: Long): Result<OsmNodeDetail> {
+        return osmApiClient.getNode(id)
     }
 }

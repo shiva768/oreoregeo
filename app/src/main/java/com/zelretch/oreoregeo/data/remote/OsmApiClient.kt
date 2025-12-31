@@ -5,6 +5,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 
 class OsmApiClient(private val client: OkHttpClient) {
     suspend fun createNode(token: String, requestBody: OsmNodeCreate): Result<Unit> {
@@ -19,14 +20,56 @@ class OsmApiClient(private val client: OkHttpClient) {
         }
     }
 
-    suspend fun updateNode(token: String, requestBody: OsmNodeUpdate): Result<Unit> {
-        val changesetXml = buildChangesetXml(requestBody.changesetComment)
+    suspend fun updateNodeWithRetry(token: String, initial: OsmNodeUpdate): Result<Unit> {
+        val changesetXml = buildChangesetXml(initial.changesetComment)
         return runCatching {
             val changesetId = openChangeset(token, changesetXml)
             try {
-                updateNodeInternal(token, changesetId, requestBody)
+                try {
+                    updateNodeInternal(token, changesetId, initial)
+                } catch (e: IllegalStateException) {
+                    if (e.message?.contains("Version conflict") == true) {
+                        val refreshed = getNode(initial.id).getOrThrow()
+                        val newVersion = refreshed.version ?: throw e
+                        val retry = initial.copy(version = newVersion.toLong())
+                        updateNodeInternal(token, changesetId, retry)
+                    } else {
+                        throw e
+                    }
+                }
             } finally {
                 closeChangeset(token, changesetId)
+            }
+        }
+    }
+
+    suspend fun getNode(id: Long): Result<OsmNodeDetail> {
+        return runCatching {
+            val request = Request.Builder()
+                .url("https://api.openstreetmap.org/api/0.6/node/${'$'}id.json")
+                .get()
+                .build()
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw IllegalStateException("Failed to fetch node: ${'$'}{response.code}")
+                val payload = response.body?.string() ?: throw IllegalStateException("Missing node body")
+                val root = JSONObject(payload)
+                val element = root.getJSONArray("elements").getJSONObject(0)
+                val tagsObject = element.optJSONObject("tags")
+                val tags = mutableMapOf<String, String>()
+                if (tagsObject != null) {
+                    val iterator = tagsObject.keys()
+                    while (iterator.hasNext()) {
+                        val key = iterator.next()
+                        tags[key] = tagsObject.optString(key)
+                    }
+                }
+                OsmNodeDetail(
+                    id = element.getLong("id"),
+                    lat = element.getDouble("lat"),
+                    lon = element.getDouble("lon"),
+                    version = if (element.has("version")) element.getLong("version") else null,
+                    tags = tags
+                )
             }
         }
     }
@@ -115,4 +158,12 @@ data class OsmNodeUpdate(
     val version: Long,
     val tags: Map<String, String>,
     val changesetComment: String,
+)
+
+data class OsmNodeDetail(
+    val id: Long,
+    val lat: Double,
+    val lon: Double,
+    val version: Long?,
+    val tags: Map<String, String>,
 )

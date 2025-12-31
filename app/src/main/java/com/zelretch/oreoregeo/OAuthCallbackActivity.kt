@@ -1,9 +1,9 @@
 package com.zelretch.oreoregeo
 
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import com.zelretch.oreoregeo.data.remote.OsmOAuthManager
 import kotlinx.coroutines.launch
 
 class OAuthCallbackActivity : ComponentActivity() {
@@ -12,7 +12,11 @@ class OAuthCallbackActivity : ComponentActivity() {
         val code = intent?.data?.getQueryParameter("code")
         if (code != null) {
             lifecycleScope.launch {
-                // TODO: Exchange code for token when OAuth client is wired.
+                val manager = OsmOAuthManager(this@OAuthCallbackActivity)
+                val result = manager.exchangeCode(code)
+                result.onSuccess { token ->
+                    (application as OreoregeoApplication).repository.setOsmAccessToken(token)
+                }
             }
         }
         finish()

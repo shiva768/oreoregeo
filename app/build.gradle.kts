@@ -16,6 +16,10 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        buildConfigField("String", "OSM_CLIENT_ID", '"CHANGE_ME"')
+        buildConfigField("String", "OSM_CLIENT_SECRET", '"CHANGE_ME"')
+        buildConfigField("String", "OSM_REDIRECT_URI", '"oreoregeo://oauth/callback"')
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true

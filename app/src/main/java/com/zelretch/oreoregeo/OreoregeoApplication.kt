@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.zelretch.oreoregeo.data.local.AppDatabase
+import com.zelretch.oreoregeo.data.local.OsmTokenStore
 import com.zelretch.oreoregeo.data.remote.OsmApiClient
 import com.zelretch.oreoregeo.data.remote.OverpassClient
 import com.zelretch.oreoregeo.domain.OreoregeoRepository
@@ -32,6 +33,7 @@ class OreoregeoApplication : Application() {
 
         val overpassClient = OverpassClient(okHttpClient)
         val osmApiClient = OsmApiClient(okHttpClient)
-        repository = OreoregeoRepository(db, overpassClient, osmApiClient)
+        val osmTokenStore = OsmTokenStore(applicationContext)
+        repository = OreoregeoRepository(db, overpassClient, osmApiClient, osmTokenStore)
     }
 }
