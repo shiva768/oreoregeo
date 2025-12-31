@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.20"
 }
 
 android {
@@ -14,6 +15,10 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("String", "OSM_CLIENT_ID", "\"CHANGE_ME\"")
+        buildConfigField("String", "OSM_CLIENT_SECRET", "\"CHANGE_ME\"")
+        buildConfigField("String", "OSM_REDIRECT_URI", "\"oreoregeo://oauth/callback\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -42,6 +47,7 @@ android {
     
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     
     composeOptions {

@@ -1,135 +1,88 @@
 package com.zelretch.oreoregeo.data.remote
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
-import java.io.IOException
-import java.util.concurrent.TimeUnit
 
-class OverpassClient {
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
+class OverpassClient(private val client: OkHttpClient) {
+    private val json = Json { ignoreUnknownKeys = true }
 
-    // Primary endpoint with fallback options for load balancing and reliability
-    private val endpoints = listOf(
-        "https://overpass-api.de/api/interpreter",
-        "https://overpass.kumi.systems/api/interpreter",
-        "https://overpass.openstreetmap.ru/api/interpreter"
-    )
-    private var currentEndpointIndex = 0
-
-    suspend fun searchNearby(
-        lat: Double,
-        lon: Double,
-        radiusMeters: Int = 80
-    ): Result<List<OverpassElement>> = withContext(Dispatchers.IO) {
-        try {
-            val query = buildQuery(lat, lon, radiusMeters)
-            val requestBody = query.toRequestBody("text/plain".toMediaType())
-            
-            // Try endpoints in order until one succeeds
-            var lastException: Exception? = null
-            for (i in endpoints.indices) {
-                val endpointIndex = (currentEndpointIndex + i) % endpoints.size
-                val endpoint = endpoints[endpointIndex]
-                
-                try {
-                    val request = Request.Builder()
-                        .url(endpoint)
-                        .post(requestBody)
-                        .build()
-
-                    val response = client.newCall(request).execute()
-                    if (!response.isSuccessful) {
-                        continue // Try next endpoint
-                    }
-
-                    val responseBody = response.body?.string() ?: ""
-                    val elements = parseResponse(responseBody)
-                    
-                    // Success - update current endpoint for next request
-                    currentEndpointIndex = endpointIndex
-                    return@withContext Result.success(elements)
-                } catch (e: Exception) {
-                    lastException = e
-                    continue // Try next endpoint
-                }
+    suspend fun searchNearby(lat: Double, lon: Double): Result<List<OverpassElement>> {
+        val query = buildQuery(lat, lon)
+        val body = query.toRequestBody("text/plain".toMediaType())
+        val request = Request.Builder()
+            .url("https://overpass-api.de/api/interpreter")
+            .post(body)
+            .build()
+        return runCatching {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw IllegalStateException("Overpass error ${'$'}{response.code}")
+                val payload = response.body?.string() ?: throw IllegalStateException("Empty body")
+                val parsed = json.decodeFromString<OverpassResponse>(payload)
+                parsed.elements
             }
-            
-            // All endpoints failed
-            Result.failure(lastException ?: IOException("All Overpass endpoints failed"))
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
-    private fun buildQuery(lat: Double, lon: Double, radius: Int): String {
-        return """
-            [out:json];
-            (
-              node["amenity"](around:$radius,$lat,$lon);
-              way["amenity"](around:$radius,$lat,$lon);
-              relation["amenity"](around:$radius,$lat,$lon);
-              node["shop"](around:$radius,$lat,$lon);
-              way["shop"](around:$radius,$lat,$lon);
-              relation["shop"](around:$radius,$lat,$lon);
-              node["tourism"](around:$radius,$lat,$lon);
-              way["tourism"](around:$radius,$lat,$lon);
-              relation["tourism"](around:$radius,$lat,$lon);
-            );
-            out center tags;
+    private fun buildQuery(lat: Double, lon: Double): String =
+        """
+        [out:json];
+        (
+          node["amenity"](around:80,${'$'}lat,${'$'}lon);
+          way["amenity"](around:80,${'$'}lat,${'$'}lon);
+          relation["amenity"](around:80,${'$'}lat,${'$'}lon);
+          node["shop"](around:80,${'$'}lat,${'$'}lon);
+          way["shop"](around:80,${'$'}lat,${'$'}lon);
+          relation["shop"](around:80,${'$'}lat,${'$'}lon);
+          node["tourism"](around:80,${'$'}lat,${'$'}lon);
+          way["tourism"](around:80,${'$'}lat,${'$'}lon);
+          relation["tourism"](around:80,${'$'}lat,${'$'}lon);
+        );
+        out center tags;
         """.trimIndent()
-    }
-
-    private fun parseResponse(json: String): List<OverpassElement> {
-        val elements = mutableListOf<OverpassElement>()
-        val jsonObject = JSONObject(json)
-        val elementsArray = jsonObject.getJSONArray("elements")
-
-        for (i in 0 until elementsArray.length()) {
-            val element = elementsArray.getJSONObject(i)
-            val type = element.getString("type")
-            val id = element.getLong("id")
-            
-            val lat = element.optDouble("lat", Double.NaN)
-            val lon = element.optDouble("lon", Double.NaN)
-            
-            val center = if (element.has("center")) {
-                val centerObj = element.getJSONObject("center")
-                Center(
-                    lat = centerObj.getDouble("lat"),
-                    lon = centerObj.getDouble("lon")
-                )
-            } else null
-            
-            val tags = if (element.has("tags")) {
-                val tagsObj = element.getJSONObject("tags")
-                val tagMap = mutableMapOf<String, String>()
-                tagsObj.keys().forEach { key ->
-                    tagMap[key] = tagsObj.getString(key)
-                }
-                tagMap
-            } else null
-
-            elements.add(
-                OverpassElement(
-                    type = type,
-                    id = id,
-                    lat = if (lat.isNaN()) null else lat,
-                    lon = if (lon.isNaN()) null else lon,
-                    center = center,
-                    tags = tags
-                )
-            )
-        }
-
-        return elements
-    }
+            .replace("${'$'}lat", lat.toString())
+            .replace("${'$'}lon", lon.toString())
 }
+
+@Serializable
+data class OverpassResponse(
+    val elements: List<OverpassElement>
+)
+
+@Serializable
+sealed class OverpassElement {
+    abstract val id: Long
+    abstract val tags: Map<String, String>?
+
+    @Serializable
+    @SerialName("node")
+    data class Node(
+        override val id: Long,
+        val lat: Double,
+        val lon: Double,
+        override val tags: Map<String, String>? = emptyMap()
+    ) : OverpassElement()
+
+    @Serializable
+    @SerialName("way")
+    data class Way(
+        override val id: Long,
+        val center: Center?,
+        override val tags: Map<String, String>? = emptyMap()
+    ) : OverpassElement()
+
+    @Serializable
+    @SerialName("relation")
+    data class Relation(
+        override val id: Long,
+        val center: Center?,
+        override val tags: Map<String, String>? = emptyMap()
+    ) : OverpassElement()
+}
+
+@Serializable
+data class Center(val lat: Double, val lon: Double)
