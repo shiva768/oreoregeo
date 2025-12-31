@@ -1,53 +1,40 @@
 package com.zelretch.oreoregeo.ui
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.zelretch.oreoregeo.domain.PlaceWithDistance
-import com.zelretch.oreoregeo.domain.Repository
+import com.zelretch.oreoregeo.domain.OreoregeoRepository
+import com.zelretch.oreoregeo.domain.SearchResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-sealed class SearchState {
-    object Idle : SearchState()
-    object Loading : SearchState()
-    data class Success(val places: List<PlaceWithDistance>) : SearchState()
-    data class Error(val message: String) : SearchState()
+sealed interface SearchState {
+    object Idle : SearchState
+    object Loading : SearchState
+    data class Error(val message: String) : SearchState
+    data class Loaded(val results: List<SearchResult>) : SearchState
 }
 
 class SearchViewModel(
-    private val repository: Repository
+    private val repository: OreoregeoRepository,
+    private val appContext: Context,
 ) : ViewModel() {
+    private val _state = MutableStateFlow<SearchState>(SearchState.Idle)
+    val state: StateFlow<SearchState> = _state
 
-    private val _searchState = MutableStateFlow<SearchState>(SearchState.Idle)
-    val searchState: StateFlow<SearchState> = _searchState.asStateFlow()
-
-    fun searchNearby(lat: Double, lon: Double) {
+    fun search(lat: Double, lon: Double) {
         viewModelScope.launch {
-            _searchState.value = SearchState.Loading
-            val result = repository.searchNearbyPlaces(lat, lon)
-            _searchState.value = result.fold(
-                onSuccess = { SearchState.Success(it) },
-                onFailure = { SearchState.Error(it.message ?: "Unknown error") }
+            if (!NetworkUtil.isNetworkAvailable(appContext)) {
+                _state.value = SearchState.Error("ネットワークに接続できません")
+                return@launch
+            }
+            _state.value = SearchState.Loading
+            val result = repository.searchNearby(lat, lon)
+            _state.value = result.fold(
+                onSuccess = { SearchState.Loaded(it) },
+                onFailure = { SearchState.Error(it.message ?: "検索に失敗しました") }
             )
         }
-    }
-
-    fun reset() {
-        _searchState.value = SearchState.Idle
-    }
-}
-
-class SearchViewModelFactory(
-    private val repository: Repository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SearchViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return SearchViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

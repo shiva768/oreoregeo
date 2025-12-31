@@ -1,342 +1,300 @@
 package com.zelretch.oreoregeo
 
 import android.Manifest
-import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AddLocation
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.zelretch.oreoregeo.ui.*
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
+import com.zelretch.oreoregeo.domain.Place
+import com.zelretch.oreoregeo.domain.SearchResult
+import com.zelretch.oreoregeo.ui.BackupState
+import com.zelretch.oreoregeo.ui.CheckinViewModel
+import com.zelretch.oreoregeo.ui.HistoryViewModel
+import com.zelretch.oreoregeo.ui.SearchState
+import com.zelretch.oreoregeo.ui.SearchViewModel
+import com.zelretch.oreoregeo.ui.SettingsViewModel
+import java.util.TimeZone
 
 class MainActivity : ComponentActivity() {
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var currentLocation: Location? = null
-
-    private val locationPermissionRequest = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        when {
-            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true -> {
-                getCurrentLocation()
-            }
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true -> {
-                getCurrentLocation()
-            }
-            else -> {
-                // Permission denied
-            }
-        }
-    }
-
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        val repository = (application as OreoregeoApplication).repository
+        val checkinViewModel by viewModels<CheckinViewModel> {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return CheckinViewModel(repository) as T
+                }
+            }
+        }
+        val historyViewModel by viewModels<HistoryViewModel> {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return HistoryViewModel(repository) as T
+                }
+            }
+        }
+        val searchViewModel by viewModels<SearchViewModel> {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return SearchViewModel(repository, applicationContext) as T
+                }
+            }
+        }
+        val settingsViewModel by viewModels<SettingsViewModel> {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return SettingsViewModel(applicationContext) as T
+                }
+            }
+        }
+
+        val locationPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+                if (granted.values.all { it }) {
+                    fetchAndSearch(searchViewModel)
+                }
+            }
 
         setContent {
-            OreoregeoTheme {
-                MainScreen(
-                    onRequestLocation = { callback ->
-                        requestLocationAndSearch(callback)
-                    }
-                )
-            }
-        }
-    }
-
-    private fun requestLocationAndSearch(callback: (Double, Double) -> Unit) {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                getCurrentLocation { lat, lon ->
-                    callback(lat, lon)
-                }
-            }
-            else -> {
-                locationPermissionRequest.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
-            }
-        }
-    }
-
-    private fun getCurrentLocation(callback: ((Double, Double) -> Unit)? = null) {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            val cancellationTokenSource = CancellationTokenSource()
-            fusedLocationClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                cancellationTokenSource.token
-            ).addOnSuccessListener { location: Location? ->
-                location?.let {
-                    currentLocation = it
-                    callback?.invoke(it.latitude, it.longitude)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun OreoregeoTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = lightColorScheme(),
-        content = content
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainScreen(
-    onRequestLocation: ((Double, Double) -> Unit) -> Unit
-) {
-    val navController = rememberNavController()
-    var selectedItem by remember { mutableStateOf(0) }
-    var showFab by remember { mutableStateOf(true) }
-
-    val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
-    val repository = app.repository
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Oreoregeo") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                actions = {
-                    IconButton(onClick = { navController.navigate("add_place") }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Place")
+            MaterialTheme {
+                val navController = rememberNavController()
+                Scaffold { padding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = "search",
+                        modifier = Modifier.padding(padding)
+                    ) {
+                        composable("search") {
+                            SearchScreen(
+                                state = searchViewModel.state,
+                                onSearch = { fetchAndSearch(searchViewModel) },
+                                onCheckIn = { place ->
+                                    val now = System.currentTimeMillis()
+                                    val utcTime = now + TimeZone.getDefault().rawOffset * -1
+                                    checkinViewModel.checkIn(place, null, utcTime)
+                                },
+                                onHistory = { navController.navigate("history") },
+                                onSettings = { navController.navigate("settings") }
+                            )
+                        }
+                        composable("history") {
+                            HistoryScreen(historyViewModel) {
+                                navController.popBackStack()
+                            }
+                        }
+                        composable("settings") {
+                            SettingsScreen(settingsViewModel)
+                        }
+                        composable("add") {
+                            AddPlaceScreen { navController.popBackStack() }
+                        }
+                        composable("edit") {
+                            EditTagsScreen { navController.popBackStack() }
+                        }
                     }
                 }
+            }
+        }
+
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
-        },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                    label = { Text("Search") },
-                    selected = selectedItem == 0,
-                    onClick = {
-                        selectedItem = 0
-                        navController.navigate("search") {
-                            popUpTo("search") { inclusive = true }
-                        }
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.History, contentDescription = "History") },
-                    label = { Text("History") },
-                    selected = selectedItem == 1,
-                    onClick = {
-                        selectedItem = 1
-                        navController.navigate("history") {
-                            popUpTo("search")
-                        }
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                    label = { Text("Settings") },
-                    selected = selectedItem == 2,
-                    onClick = {
-                        selectedItem = 2
-                        navController.navigate("settings") {
-                            popUpTo("search")
-                        }
-                    }
-                )
+        )
+    }
+
+    private fun fetchAndSearch(searchViewModel: SearchViewModel) {
+        val fused = LocationServices.getFusedLocationProviderClient(this)
+        fused.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                searchViewModel.search(location.latitude, location.longitude)
             }
         }
-    ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = "search",
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            composable("search") {
-                val searchViewModel: SearchViewModel = viewModel(
-                    factory = SearchViewModelFactory(repository)
-                )
-                val checkinViewModel: CheckinViewModel = viewModel(
-                    factory = CheckinViewModelFactory(repository)
-                )
-                
-                val searchState by searchViewModel.searchState.collectAsState()
-                val checkinState by checkinViewModel.checkinState.collectAsState()
-                
-                var showCheckinDialog by remember { mutableStateOf(false) }
-                var selectedPlaceKey by remember { mutableStateOf("") }
-                var selectedPlaceName by remember { mutableStateOf<String?>(null) }
+    }
+}
 
-                LaunchedEffect(Unit) {
-                    showFab = true
-                }
-
-                SearchScreen(
-                    searchState = searchState,
-                    onSearchClick = {
-                        onRequestLocation { lat, lon ->
-                            searchViewModel.searchNearby(lat, lon)
-                        }
-                    },
-                    onPlaceClick = { placeKey ->
-                        selectedPlaceKey = placeKey
-                        selectedPlaceName = if (searchState is SearchState.Success) {
-                            (searchState as SearchState.Success).places
-                                .find { it.place.placeKey == placeKey }?.place?.name
-                        } else null
-                        showCheckinDialog = true
-                        checkinViewModel.reset()
-                    },
-                    onEditPlace = { placeKey ->
-                        navController.navigate("edit_tags/${placeKey.replace("/", "%2F")}")
-                    }
-                )
-
-                if (showCheckinDialog) {
-                    CheckinDialog(
-                        placeKey = selectedPlaceKey,
-                        placeName = selectedPlaceName,
-                        checkinState = checkinState,
-                        onCheckin = { note ->
-                            checkinViewModel.performCheckin(selectedPlaceKey, note)
-                        },
-                        onDismiss = {
-                            showCheckinDialog = false
-                            checkinViewModel.reset()
-                        }
-                    )
-                }
+@Composable
+fun SearchScreen(
+    state: androidx.compose.runtime.State<SearchState>,
+    onSearch: () -> Unit,
+    onCheckIn: (Place) -> Unit,
+    onHistory: () -> Unit,
+    onSettings: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = onSearch) {
+                Icon(Icons.Default.LocationOn, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("周辺検索")
             }
-            
-            composable("history") {
-                val historyViewModel: HistoryViewModel = viewModel(
-                    factory = HistoryViewModelFactory(repository)
-                )
-                val checkins by historyViewModel.checkins.collectAsState()
-
-                LaunchedEffect(Unit) {
-                    showFab = false
-                }
-
-                HistoryScreen(checkins = checkins)
+            Button(onClick = onHistory) {
+                Icon(Icons.Default.History, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("履歴")
             }
-            
-            composable("settings") {
-                LaunchedEffect(Unit) {
-                    showFab = false
-                }
-
-                SettingsScreen(
-                    onBackupClick = {
-                        // TODO: Implement backup with Google Drive
-                    },
-                    onOsmLoginClick = {
-                        // TODO: Implement OSM OAuth
-                    }
-                )
-            }
-
-            composable("add_place") {
-                val osmEditViewModel: OsmEditViewModel = viewModel(
-                    factory = OsmEditViewModelFactory(repository)
-                )
-                val editState by osmEditViewModel.editState.collectAsState()
-                
-                var currentLat by remember { mutableStateOf<Double?>(null) }
-                var currentLon by remember { mutableStateOf<Double?>(null) }
-
-                LaunchedEffect(Unit) {
-                    showFab = false
-                    // Try to get current location for convenience
-                    onRequestLocation { lat, lon ->
-                        currentLat = lat
-                        currentLon = lon
-                    }
-                }
-
-                LaunchedEffect(editState) {
-                    if (editState is OsmEditState.Success) {
-                        navController.popBackStack()
-                        osmEditViewModel.reset()
-                    }
-                }
-
-                AddPlaceScreen(
-                    currentLat = currentLat,
-                    currentLon = currentLon,
-                    onSave = { lat, lon, tags ->
-                        osmEditViewModel.createPlace(lat, lon, tags)
-                    },
-                    onCancel = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-
-            composable(
-                route = "edit_tags/{placeKey}",
-                arguments = listOf(navArgument("placeKey") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val placeKey = backStackEntry.arguments?.getString("placeKey") ?: ""
-                val osmEditViewModel: OsmEditViewModel = viewModel(
-                    factory = OsmEditViewModelFactory(repository)
-                )
-                val editState by osmEditViewModel.editState.collectAsState()
-
-                LaunchedEffect(Unit) {
-                    showFab = false
-                }
-
-                LaunchedEffect(editState) {
-                    if (editState is OsmEditState.Success) {
-                        navController.popBackStack()
-                        osmEditViewModel.reset()
-                    }
-                }
-
-                // TODO: Load existing tags from place
-                val existingTags = mapOf("name" to "Example")
-
-                EditTagsScreen(
-                    placeKey = placeKey,
-                    existingTags = existingTags,
-                    onSave = { nodeId, tags ->
-                        osmEditViewModel.updateNodeTags(nodeId, tags)
-                    },
-                    onCancel = {
-                        navController.popBackStack()
-                    }
-                )
+            Button(onClick = onSettings) {
+                Icon(Icons.Default.Backup, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("設定")
             }
         }
+        when (val s = state.value) {
+            SearchState.Idle -> Text("周辺の店舗を検索できます")
+            SearchState.Loading -> Text("検索中…")
+            is SearchState.Error -> Text("エラー: ${'$'}{s.message}")
+            is SearchState.Loaded -> SearchResultList(s.results, onCheckIn)
+        }
+    }
+}
+
+@Composable
+fun SearchResultList(results: List<SearchResult>, onCheckIn: (Place) -> Unit) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(results) { item ->
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp)) {
+                    Text(item.place.name, style = MaterialTheme.typography.titleMedium)
+                    Text("${'$'}{item.distanceMeters.toInt()} m")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { onCheckIn(item.place) }) {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("チェックイン")
+                        }
+                        TextButton(onClick = { /* reserved for details */ }) {
+                            Icon(Icons.Default.AddLocation, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("タグ編集")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HistoryScreen(viewModel: HistoryViewModel, onClose: () -> Unit) {
+    val history by viewModel.history.collectAsState(initial = emptyList())
+    Column(Modifier.padding(16.dp)) {
+        Text("チェックイン履歴", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(12.dp))
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(history) { item ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(item.placeKey)
+                        Text(item.visitedAt.toString())
+                        item.note?.let { Text(it) }
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Button(onClick = onClose) { Text("戻る") }
+    }
+}
+
+@Composable
+fun SettingsScreen(viewModel: SettingsViewModel) {
+    val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val account = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            .result
+        if (account != null) {
+            viewModel.backup(account)
+        }
+    }
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(onClick = {
+            val account = com.google.android.gms.auth.api.signin.GoogleSignIn.getLastSignedInAccount(context)
+            if (account == null) {
+                launcher.launch(viewModel.signInClient().signInIntent)
+            } else {
+                viewModel.backup(account)
+            }
+        }) {
+            Icon(Icons.Default.Backup, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("Google Drive にバックアップ")
+        }
+        when (state) {
+            BackupState.Idle -> Text("手動バックアップを実行します")
+            BackupState.Loading -> Text("バックアップ中…")
+            BackupState.Success -> Text("完了しました")
+            is BackupState.Error -> Text("エラー: ${(state as BackupState.Error).message}")
+        }
+    }
+}
+
+@Composable
+fun AddPlaceScreen(onClose: () -> Unit) {
+    Column(Modifier.padding(16.dp)) {
+        Text("OSM ノード追加")
+        Spacer(Modifier.height(8.dp))
+        Text("OAuth トークン設定後に有効になります。現在はダミー UI です。")
+        Button(onClick = onClose, modifier = Modifier.padding(top = 16.dp)) { Text("閉じる") }
+    }
+}
+
+@Composable
+fun EditTagsScreen(onClose: () -> Unit) {
+    Column(Modifier.padding(16.dp)) {
+        Text("OSM タグ編集")
+        Spacer(Modifier.height(8.dp))
+        Text("ノード読み込みとタグ更新はトークン設定後に実行されます。")
+        Button(onClick = onClose, modifier = Modifier.padding(top = 16.dp)) { Text("閉じる") }
     }
 }
