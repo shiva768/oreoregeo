@@ -46,7 +46,7 @@ class OsmEditViewModel(
             _editState.value = OsmEditState.Loading
             val result = repository.addNode(lat, lon, tags)
             _editState.value = result.fold(
-                onSuccess = { OsmEditState.Success("osm:node:${System.currentTimeMillis()}") },
+                onSuccess = { OsmEditState.Success(it) },
                 onFailure = { OsmEditState.Error(it.message ?: "Unknown error") }
             )
         }

@@ -15,7 +15,7 @@ class DriveBackupManager(private val context: Context) {
     fun getSignInClient(): GoogleSignInClient {
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
-            .requestScopes(com.google.android.gms.common.api.Scope(DriveScopes.DRIVE_FILE))
+            .requestScopes(com.google.android.gms.common.api.Scope(DriveScopes.DRIVE_APPDATA))
             .build()
         return GoogleSignIn.getClient(context, options)
     }
@@ -23,7 +23,7 @@ class DriveBackupManager(private val context: Context) {
     fun driveService(account: GoogleSignInAccount): Drive {
         val credential = GoogleAccountCredential.usingOAuth2(
             context,
-            listOf(DriveScopes.DRIVE_FILE)
+            listOf(DriveScopes.DRIVE_APPDATA)
         )
         credential.selectedAccount = account.account
         return Drive.Builder(

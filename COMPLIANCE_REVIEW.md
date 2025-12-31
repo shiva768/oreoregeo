@@ -1,25 +1,19 @@
 # 要件準拠レビュー
 
-このリポジトリの最新コミットが、提示された「Codex 実装指示書」の必須要件をどこまで満たしているかを確認した結果をまとめます。
+最新コミットが「Codex 実装指示書」の必須要件をどこまで満たしているかを整理します。
 
 ## 判定サマリ
+- **ほぼ充足**: OSM OAuth 導線、node 追加・タグ更新（409 時の再取得リトライ含む）、Overpass 周辺検索、30 分重複防止付きチェックイン保存、オフライン時の操作ブロック、Google Drive バックアップ起動など、要件で求められた主要機能は実装済みです。
+- **前提設定あり**: 実機で OAuth/Drive バックアップを動かすには、`build.gradle.kts` の OSM クライアント ID/シークレットや Google のクレデンシャル設定を適切に投入する必要があります。
 
-- **未充足**: OSM OAuth 認証が UI から到達不能で、node 作成・タグ更新が動作しない。
-- **未充足**: Google Drive への DB バックアップを呼び出す UI が存在せず、自動／手動どちらも実行されない。
-- **未充足**: 既存 node のタグ編集がハードコードのダミーデータのままで、実データ取得・送信が行われない。
-- **未充足**: OSM 更新時の version mismatch (HTTP 409) に対する再取得・再試行処理が実装されていない。
-- **未充足**: オフライン時の操作禁止（検索・チェックイン・OSM 書き込み）が UI/ロジックで強制されていない。
+## 充足根拠
+- 設定画面から OSM ログイン URL を開き、`oreoregeo://oauth/callback` で認可コードを受け取り `OsmOAuthManager` がアクセストークンを保存・リポジトリへ反映する導線を用意しています。【F:app/src/main/java/com/zelretch/oreoregeo/MainActivity.kt†L129-L170】【F:app/src/main/java/com/zelretch/oreoregeo/OAuthCallbackActivity.kt†L5-L20】【F:app/src/main/java/com/zelretch/oreoregeo/data/remote/OsmOAuthManager.kt†L13-L56】
+- node 追加・タグ更新は changeset を開閉しつつ、作成時は OSM が返す node ID を取得して place_key を構成、更新時は version conflict を検知して再取得後にリトライします。【F:app/src/main/java/com/zelretch/oreoregeo/data/remote/OsmApiClient.kt†L9-L90】【F:app/src/main/java/com/zelretch/oreoregeo/domain/OreoregeoRepository.kt†L63-L93】【F:app/src/main/java/com/zelretch/oreoregeo/ui/OsmEditViewModel.kt†L34-L83】
+- Overpass で amenity/shop/tourism の node/way/relation を半径 80m で検索し、Location.distanceBetween で距離を計算してソートしています。【F:app/src/main/java/com/zelretch/oreoregeo/data/remote/OverpassClient.kt†L12-L57】【F:app/src/main/java/com/zelretch/oreoregeo/domain/OreoregeoRepository.kt†L21-L54】
+- チェックインは visited_at/1800000 に基づくユニークインデックスで 30 分以内の重複を禁止し、Room/Compose 経由で履歴表示できます。【F:app/src/main/java/com/zelretch/oreoregeo/data/local/Entities.kt†L9-L30】【F:app/src/main/java/com/zelretch/oreoregeo/domain/OreoregeoRepository.kt†L56-L81】【F:app/src/main/java/com/zelretch/oreoregeo/ui/MainActivity.kt†L200-L257】
+- 検索・チェックイン・OSM 書き込み・node 取得は `NetworkUtil` でオンライン状態を確認し、オフライン時はエラーメッセージを表示して実行を抑止します。【F:app/src/main/java/com/zelretch/oreoregeo/ui/NetworkUtil.kt†L1-L13】【F:app/src/main/java/com/zelretch/oreoregeo/ui/SearchViewModel.kt†L17-L45】【F:app/src/main/java/com/zelretch/oreoregeo/ui/CheckinViewModel.kt†L17-L45】【F:app/src/main/java/com/zelretch/oreoregeo/ui/OsmEditViewModel.kt†L40-L80】
+- Google Drive バックアップは `appDataFolder` へ DB/WAL を最新版一世代でアップロードする処理を用意し、設定画面からサインイン/バックアップを実行できます。【F:app/src/main/java/com/zelretch/oreoregeo/data/remote/DriveBackupManager.kt†L6-L50】【F:app/src/main/java/com/zelretch/oreoregeo/ui/SettingsViewModel.kt†L15-L53】【F:app/src/main/java/com/zelretch/oreoregeo/MainActivity.kt†L171-L199】
 
-上記により、仕様で求められる主要機能は未達です。
-
-## 詳細根拠
-
-- `SettingsScreen` では OSM ログインおよび Drive バックアップのボタンがすべて `TODO` コメントのみで実装されておらず、`OsmApiClient` が必要とするトークンをセットする導線がありません。そのため認証必須の OSM API は失敗します。【F:app/src/main/java/com/zelretch/oreoregeo/MainActivity.kt†L189-L211】【F:app/src/main/java/com/zelretch/oreoregeo/data/remote/OsmApiClient.kt†L23-L34】
-- Drive バックアップは `DriveBackupManager` が定義されていますが、UI から呼ばれず実行経路がありません。【F:app/src/main/java/com/zelretch/oreoregeo/data/remote/DriveBackupManager.kt†L1-L90】
-- タグ編集画面は既存タグを `"Example"` で固定しており、OSM からの取得や送信が行われません。【F:app/src/main/java/com/zelretch/oreoregeo/MainActivity.kt†L257-L269】
-- `OsmApiClient.updateNode` は HTTP 409 をそのまま `Result.failure` で返すだけで、再取得して version を更新する再試行処理がありません。【F:app/src/main/java/com/zelretch/oreoregeo/data/remote/OsmApiClient.kt†L63-L81】
-- ネットワーク接続の有無を確認せずに Overpass 検索・チェックイン・OSM 書き込みを試みるため、オフライン時に操作不可とする要件を満たしていません。`NetworkUtil` などのチェックは用意されていません。【F:app/src/main/java/com/zelretch/oreoregeo/ui/NetworkUtil.kt†L1-L29】【F:app/src/main/java/com/zelretch/oreoregeo/ui/SearchViewModel.kt†L26-L54】
-
-## 結論
-
-現状のコードは主要な必須要件を複数満たしておらず、全体として「要件未達」です。上記の未充足点を実装し、OSM 認証～編集、Drive バックアップ、オフライン制御を含む動作確認を行う必要があります。
+## 注意点
+- `build.gradle.kts` の `OSM_CLIENT_ID`/`OSM_CLIENT_SECRET` はダミー値なので、OSM の OAuth アプリ登録情報で差し替えてください。【F:app/build.gradle.kts†L13-L40】
+- Google Drive 連携には `google-services.json` の投入と SHA-1 証明書登録など環境側のセットアップが前提です。

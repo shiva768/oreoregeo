@@ -82,9 +82,10 @@ class OreoregeoRepository(
         tokenStore.clear()
     }
 
-    suspend fun addNode(lat: Double, lon: Double, tags: Map<String, String>): Result<Unit> {
+    suspend fun addNode(lat: Double, lon: Double, tags: Map<String, String>): Result<String> {
         val token = tokenStore.get() ?: return Result.failure(IllegalStateException("OSMにログインしてください"))
         return osmApiClient.createNode(token, OsmNodeCreate(lat, lon, tags, "Add place from Oreoregeo"))
+            .map { id -> "osm:node:${id}" }
     }
 
     suspend fun updateNode(id: Long, tags: Map<String, String>): Result<Unit> {

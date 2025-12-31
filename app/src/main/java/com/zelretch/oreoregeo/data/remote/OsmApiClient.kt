@@ -8,7 +8,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 class OsmApiClient(private val client: OkHttpClient) {
-    suspend fun createNode(token: String, requestBody: OsmNodeCreate): Result<Unit> {
+    suspend fun createNode(token: String, requestBody: OsmNodeCreate): Result<Long> {
         val changesetXml = buildChangesetXml(requestBody.changesetComment)
         return runCatching {
             val changesetId = openChangeset(token, changesetXml)
@@ -96,7 +96,7 @@ class OsmApiClient(private val client: OkHttpClient) {
         client.newCall(request).execute().close()
     }
 
-    private fun createNodeInternal(token: String, changesetId: Long, body: OsmNodeCreate) {
+    private fun createNodeInternal(token: String, changesetId: Long, body: OsmNodeCreate): Long {
         val xml = buildString {
             append("<osm>")
             append("<node changeset=\"${'$'}changesetId\" lat=\"${'$'}{body.lat}\" lon=\"${'$'}{body.lon}\">")
@@ -112,6 +112,9 @@ class OsmApiClient(private val client: OkHttpClient) {
             .build()
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IllegalStateException("Failed to create node: ${'$'}{response.code}")
+            val id = response.body?.string()?.trim()?.toLongOrNull()
+                ?: throw IllegalStateException("Missing node id")
+            return id
         }
     }
 
