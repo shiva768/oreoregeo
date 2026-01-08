@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.zelretch.oreoregeo.R
 import com.zelretch.oreoregeo.domain.Checkin
 import java.text.SimpleDateFormat
 import java.util.*

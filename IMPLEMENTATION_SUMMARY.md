@@ -1,279 +1,279 @@
-# Oreoregeo Implementation Summary
+# Oreoregeo 実装サマリー
 
-## What Has Been Implemented
+## 実装済みの内容
 
-This is a complete Android application implementation for manual check-ins to OpenStreetMap places. The implementation follows the specifications exactly as outlined in the issue.
+これは、OpenStreetMap のスポットに手動でチェックインするための Android アプリケーションの完全な実装です。この実装は、課題で概説された仕様に厳密に従っています。
 
-### ✅ Completed Features
+### ✅ 完了した機能
 
-#### 1. Project Structure
-- Android app with Kotlin
-- Jetpack Compose UI with Material 3
-- Room database with SQLite/WAL mode
-- Gradle build configuration
-- Proper resource files (strings, themes, colors)
+#### 1. プロジェクト構造
+- Kotlin による Android アプリ
+- Material 3 を使用した Jetpack Compose UI
+- SQLite/WAL モードを有効にした Room データベース
+- Gradle ビルド構成
+- 適切なリソースファイル（strings, themes, colors）
 
-#### 2. Database Layer (`data/local/`)
-- **PlaceEntity**: Stores OSM places with `place_key` format `osm:{type}:{id}`
-- **CheckinEntity**: Stores check-ins with 30-minute duplicate prevention
-- **PlaceDao & CheckinDao**: Database access methods
-- **AppDatabase**: Room database configuration with WAL mode enabled
-- Unique index for 30-minute bucket constraint: `ux_checkins_place_bucket_30m`
+#### 2. データベース層 (`data/local/`)
+- **PlaceEntity**: `osm:{type}:{id}` 形式の `place_key` で OSM スポットを保存
+- **CheckinEntity**: 30 分以内の重複防止機能を備えたチェックイン情報の保存
+- **PlaceDao & CheckinDao**: データベースアクセス用メソッド
+- **AppDatabase**: WAL モードを有効にした Room データベース構成
+- 30 分バケット制約用のユニークインデックス: `ux_checkins_place_bucket_30m`
 
-#### 3. API Clients (`data/remote/`)
+#### 3. API クライアント (`data/remote/`)
 - **OverpassClient**: 
-  - Searches nearby places within 80m radius
-  - Queries amenity, shop, and tourism tags
-  - Supports node, way, and relation types
-  - Returns center coordinates for ways/relations
+  - 半径 80m 以内の周辺スポットを検索
+  - amenity, shop, tourism タグをクエリ
+  - ノード（node）、ウェイ（way）、リレーション（relation）タイプをサポート
+  - ウェイ/リレーションの中心座標を返却
   
 - **OsmApiClient**:
-  - Creates changesets with comments
-  - Creates new nodes with tags
-  - Updates existing node tags
-  - Handles version conflicts
-  - Properly closes changesets
+  - コメント付きでチェンジセットを作成
+  - 新しいノードの作成
+  - 既存ノードのタグ更新
+  - バージョン競合のハンドリング
+  - チェンジセットの適切なクローズ
 
-#### 4. Business Logic (`domain/`)
-- **Repository**: Central data management
-  - Combines local and remote data sources
-  - Distance calculation using Android Location API
-  - Sorting by distance
-  - Place key generation and parsing
-  - Handles OSM API interactions
+#### 4. ビジネスロジック (`domain/`)
+- **Repository**: データ管理の中心
+  - ローカルとリモートのデータソースを統合
+  - Android Location API を使用した距離計算
+  - 距離順のソート
+  - Place key の生成とパース
+  - OSM API とのインタラクションの処理
 
-#### 5. ViewModels (`ui/`)
-- **SearchViewModel**: Manages nearby search state
-- **CheckinViewModel**: Handles check-in operations with duplicate prevention
-- **HistoryViewModel**: Displays check-in history
-- **OsmEditViewModel**: Manages OSM node creation and editing
+#### 5. ViewModel (`ui/`)
+- **SearchViewModel**: 周辺検索の状態を管理
+- **CheckinViewModel**: 重複防止機能を備えたチェックイン操作を処理
+- **HistoryViewModel**: チェックイン履歴を表示
+- **OsmEditViewModel**: OSM ノードの作成と編集を管理
 
-#### 6. UI Screens (Jetpack Compose)
+#### 6. UI 画面 (Jetpack Compose)
 - **SearchScreen**: 
-  - Search button for nearby places
-  - List of places sorted by distance
-  - Edit buttons for OSM nodes
-  - Check-in button on each place
+  - 周辺検索ボタン
+  - 距離順にソートされたスポット一覧
+  - OSM ノードの編集ボタン
+  - 各スポットのチェックインボタン
   
 - **CheckinDialog**:
-  - Place information display
-  - Optional note field
-  - Loading and error states
-  - Button disable during operation
+  - スポット情報の表示
+  - 任意のメモ入力フィールド
+  - ローディングとエラー状態
+  - 操作中のボタン無効化
   
 - **HistoryScreen**:
-  - List of all check-ins
-  - Date/time display
-  - Place information
-  - Optional notes
+  - 全チェックインのリスト
+  - 日時表示
+  - スポット情報
+  - 任意のメモ
   
 - **AddPlaceScreen**:
-  - Form for creating new OSM places
-  - Coordinate input
-  - Category selection (amenity/shop/tourism)
-  - Tag editing
-  - OSM sync confirmation
+  - 新しい OSM スポットを作成するためのフォーム
+  - 座標入力
+  - カテゴリ選択 (amenity/shop/tourism)
+  - タグ編集
+  - OSM 同期確認
   
 - **EditTagsScreen**:
-  - Display existing tags
-  - Edit tag values
-  - Add new tags
-  - Delete tags
-  - OSM sync confirmation
+  - 既存タグの表示
+  - タグ値の編集
+  - 新しいタグの追加
+  - タグの削除
+  - OSM 同期確認
   
 - **SettingsScreen**:
-  - OSM account connection
-  - Google Drive backup trigger
-  - App information
+  - OSM アカウント連携
+  - Google ドライブ バックアップの実行
+  - アプリ情報
 
-#### 7. Main Activity
-- Location permission handling
-- Google Play Services location client
-- Navigation between screens
-- Bottom navigation bar
-- Floating action button for adding places
-- OAuth and backup placeholders
+#### 7. メインアクティビティ
+- 位置情報権限のハンドリング
+- Google Play Services の位置情報クライアント
+- 画面間のナビゲーション
+- 下部ナビゲーションバー
+- スポット追加用のフローティングアクションボタン
+- OAuth とバックアップのプレースホルダー
 
-#### 8. Google Drive Backup (`data/`)
+#### 8. Google ドライブ バックアップ (`data/`)
 - **DriveBackupManager**:
-  - Google Sign-In integration
-  - Database file backup (.db and .db-wal)
-  - Single generation backup (replaces previous)
-  - Restore functionality
+  - Google サインインの統合
+  - データベースファイル（.db および .db-wal）のバックアップ
+  - 単一世代のバックアップ（前回分を上書き）
+  - 復元機能
 
-#### 9. Additional Features
-- **NetworkUtil**: Network connectivity checking
-- **Unit tests**: Data model validation
-- Comprehensive documentation (README, IMPLEMENTATION_GUIDE)
-- Proper error handling structure
-- Material 3 design system
-- Launcher icons
+#### 9. 追加機能
+- **NetworkUtil**: ネットワーク接続チェック
+- **ユニットテスト**: データモデルの検証
+- 包括的なドキュメント（README, IMPLEMENTATION_GUIDE）
+- 適切なエラーハンドリング構造
+- Material 3 デザインシステム
+- ランチャーアイコン
 
-### 📋 Data Schema (Exactly as Specified)
+### 📋 データスキーマ（指定通り）
 
-#### places table
+#### places テーブル
 ```sql
-place_key TEXT PRIMARY KEY    -- Format: osm:node:123, osm:way:456, etc.
+place_key TEXT PRIMARY KEY    -- 形式: osm:node:123, osm:way:456 など
 name TEXT
 category TEXT
 lat REAL
 lon REAL
-updated_at INTEGER            -- epoch milliseconds
+updated_at INTEGER            -- エポックミリ秒
 ```
 
-#### checkins table
+#### checkins テーブル
 ```sql
 id INTEGER PRIMARY KEY AUTOINCREMENT
 place_key TEXT
-visited_at INTEGER            -- epoch milliseconds, UTC
+visited_at INTEGER            -- エポックミリ秒 (UTC)
 note TEXT
-visited_at_bucket INTEGER     -- visited_at / 1800000 (30-minute buckets)
+visited_at_bucket INTEGER     -- visited_at / 1800000 (30分バケット)
 
--- Unique constraint prevents duplicate check-ins within 30 minutes
+-- ユニーク制約により 30 分以内の重複チェックインを防止
 CREATE UNIQUE INDEX ux_checkins_place_bucket_30m 
   ON checkins(place_key, visited_at_bucket);
 ```
 
-### 🔒 Constraints Enforced
+### 🔒 適用されている制約
 
-1. ✅ Same place_key cannot be checked-in within 30 minutes (database constraint)
-2. ✅ Only node editing (no way/relation shape editing)
-3. ✅ Manual check-in only (no auto check-in features)
-4. ✅ UTC timestamp storage
-5. ✅ WAL mode enabled for SQLite
-6. ✅ Overpass 80m radius
-7. ✅ Distance calculation and sorting
-8. ✅ No social/friend features
-9. ✅ No constant location tracking
-10. ✅ Local-first data storage
+1. ✅ 同一 place_key の 30 分以内のチェックイン禁止（データベース制約）
+2. ✅ ノード（Node）編集のみ（ウェイ/リレーションの形状編集は不可）
+3. ✅ 手動チェックインのみ（自動チェックイン機能なし）
+4. ✅ UTC タイムスタンプでの保存
+5. ✅ SQLite の WAL モード有効化
+6. ✅ Overpass 半径 80m 検索
+7. ✅ 距離計算とソート
+8. ✅ ソーシャル/フレンド機能なし
+9. ✅ 常時位置追跡なし
+10. ✅ ローカルファーストのデータ保存
 
-### 🚫 Prohibited Features (Not Implemented)
+### 🚫 制限事項（実装されていない機能）
 
-- ❌ Auto check-in
-- ❌ Way/relation creation or shape editing
-- ❌ Friend/social features
-- ❌ Constant location tracking
-- ❌ Cloud sync (only backup)
+- ❌ 自動チェックイン
+- ❌ ウェイ/リレーションの作成または形状編集
+- ❌ フレンド/ソーシャル機能
+- ❌ 常時位置追跡
+- ❌ クラウド同期（バックアップのみ）
 
-### 🔧 What Needs Configuration
+### 🔧 設定が必要な事項
 
-The following features are implemented but require external service setup:
+以下の機能は実装されていますが、外部サービスの設定が必要です：
 
 1. **OSM OAuth 2.0**:
-   - Code structure is complete
-   - Needs OAuth app registration at openstreetmap.org
-   - Needs client credentials in code
-   - See IMPLEMENTATION_GUIDE.md for details
+   - コード構造は完了しています
+   - openstreetmap.org での OAuth アプリ登録が必要です
+   - コード内にクライアントクレデンシャルを設定する必要があります
+   - 詳細は `IMPLEMENTATION_GUIDE.md` を参照してください
 
 2. **Google Drive API**:
-   - DriveBackupManager is implemented
-   - Needs Google Cloud project setup
-   - Needs google-services.json file
-   - Needs OAuth credentials
-   - See IMPLEMENTATION_GUIDE.md for details
+   - `DriveBackupManager` は実装されています
+   - Google Cloud プロジェクトの設定が必要です
+   - `google-services.json` ファイルが必要です
+   - OAuth クレデンシャルが必要です
+   - 詳細は `IMPLEMENTATION_GUIDE.md` を参照してください
 
-3. **Network Error Handling**:
-   - NetworkUtil implemented
-   - Integration points marked with TODOs
-   - Needs testing with real network conditions
+3. **ネットワークエラーハンドリング**:
+   - `NetworkUtil` は実装済みです
+   - 統合ポイントは TODO としてマークされています
+   - 実ネットワーク環境でのテストが必要です
 
-### 📦 Dependencies
+### 📦 依存関係
 
-All dependencies are properly configured in build.gradle.kts:
+すべての依存関係は `build.gradle.kts` で適切に設定されています：
 - Jetpack Compose & Material 3
-- Room with KSP
-- OkHttp for HTTP
+- Room (KSP 使用)
+- OkHttp (HTTP 通信)
 - Google Play Services (Location, Auth, Drive)
 - Kotlin Coroutines
 - Navigation Compose
 
-### 🏗️ Architecture
+### 🏗️ アーキテクチャ
 
 ```
-Clean Architecture with MVVM pattern:
+MVVM パターンを用いたクリーンアーキテクチャ:
 
-UI Layer (Compose)
+UI レイヤー (Compose)
     ↓
-ViewModel Layer
+ViewModel レイヤー
     ↓
-Repository (Domain)
+リポジトリ (Domain)
     ↓
-Data Sources (Local DB + Remote APIs)
+データソース (ローカル DB + リモート API)
 ```
 
-### 🎯 Requirements Compliance
+### 🎯 要件遵守状況
 
-| Requirement | Status | Notes |
+| 要件 | 状況 | 備考 |
 |------------|--------|-------|
 | Android + Kotlin | ✅ | minSdk 26, targetSdk 34 |
-| Jetpack Compose | ✅ | Material 3 design |
-| Room with WAL | ✅ | Configured in AppDatabase |
-| Coroutines | ✅ | Used throughout |
-| OkHttp | ✅ | For Overpass and OSM APIs |
-| Overpass 80m search | ✅ | Implemented in OverpassClient |
-| Manual check-in | ✅ | CheckinViewModel + UI |
-| 30-min duplicate prevention | ✅ | Database constraint |
-| Check-in history | ✅ | HistoryScreen + ViewModel |
-| OSM node creation | ✅ | OsmApiClient.createNode |
-| OSM tag editing | ✅ | OsmApiClient.updateNode |
-| place_key format | ✅ | osm:{type}:{id} |
-| Drive backup | ✅ | DriveBackupManager |
-| Distance calculation | ✅ | Location.distanceBetween |
-| OAuth write_api | ✅ | Structure ready for OAuth |
+| Jetpack Compose | ✅ | Material 3 デザイン |
+| Room (WAL) | ✅ | AppDatabase で設定済み |
+| Coroutines | ✅ | 全体で使用 |
+| OkHttp | ✅ | Overpass および OSM API 用 |
+| Overpass 80m 検索 | ✅ | OverpassClient で実装 |
+| 手動チェックイン | ✅ | CheckinViewModel + UI |
+| 30分重複防止 | ✅ | データベース制約 |
+| チェックイン履歴 | ✅ | HistoryScreen + ViewModel |
+| OSM ノード作成 | ✅ | OsmApiClient.createNode |
+| OSM タグ編集 | ✅ | OsmApiClient.updateNode |
+| place_key 形式 | ✅ | osm:{type}:{id} |
+| Drive バックアップ | ✅ | DriveBackupManager |
+| 距離計算 | ✅ | Location.distanceBetween |
+| OAuth write_api | ✅ | OAuth 用の構造を準備済み |
 
-### 🧪 Testing
+### 🧪 テスト
 
-- Unit tests for data models created
-- Tests verify:
-  - place_key format
-  - 30-minute bucket calculation
-  - Entity field mappings
+- データモデル検証用のユニットテストを作成
+- テスト内容：
+  - place_key の形式
+  - 30 分バケットの計算
+  - エンティティのフィールドマッピング
 
-### 📖 Documentation
+### 📖 ドキュメント
 
-1. **README.md**: User-facing documentation
-   - Features overview
-   - Architecture explanation
-   - Build instructions
-   - API usage examples
+1. **README.md**: ユーザー向けドキュメント
+   - 機能概要
+   - アーキテクチャ説明
+   - ビルド手順
+   - API 使用例
 
-2. **IMPLEMENTATION_GUIDE.md**: Developer guide
-   - OAuth setup steps
-   - Drive API configuration
-   - Error handling patterns
-   - Testing checklist
-   - Security considerations
+2. **IMPLEMENTATION_GUIDE.md**: 開発者ガイド
+   - OAuth 設定手順
+   - Drive API 構成
+   - エラーハンドリングパターン
+   - テストチェックリスト
+   - セキュリティの考慮事項
 
-### 🔐 Security Features
+### 🔐 セキュリティ機能
 
-- OAuth token storage structure ready
-- No hardcoded credentials
-- EncryptedSharedPreferences recommended
-- Proper permission requests
-- Input validation in forms
+- OAuth トークン保存用の構造を準備済み
+- ハードコードされたクレデンシャルなし
+- EncryptedSharedPreferences を推奨
+- 適切なパーミッションリクエスト
+- フォーム内での入力バリデーション
 
-### 🎨 UI/UX Features
+### 🎨 UI/UX 機能
 
-- Material 3 design system
-- Bottom navigation
-- Floating action buttons
-- Loading states
-- Error messages
-- Empty states
-- Confirmation dialogs
-- Form validation
-- Distance formatting (m/km)
-- Date/time formatting
+- Material 3 デザインシステム
+- 下部ナビゲーション
+- フローティングアクションボタン
+- ローディング状態の表示
+- エラーメッセージの表示
+- データなしの状態（Empty state）の表示
+- 確認ダイアログ
+- フォームバリデーション
+- 距離表示のフォーマット (m/km)
+- 日時のフォーマット
 
-## Summary
+## サマリー
 
-This implementation provides a **complete, production-ready codebase** for the Oreoregeo Android app with all core features implemented according to specifications. The only remaining tasks are external service configuration (OSM OAuth and Google Drive API credentials), which are documented in detail in the IMPLEMENTATION_GUIDE.md file.
+この実装は、Oreoregeo Android アプリのすべてのコア機能を仕様に従って実装した、**完全で実運用に近いコードベース**を提供します。残っているタスクは外部サービスの設定（OSM OAuth および Google Drive API クレデンシャル）のみであり、これについては `IMPLEMENTATION_GUIDE.md` ファイルに詳細に記載されています。
 
-The codebase is:
-- ✅ Well-structured with clean architecture
-- ✅ Fully documented
-- ✅ Type-safe with Kotlin
-- ✅ Modern with Jetpack Compose
-- ✅ Testable with unit tests
-- ✅ Compliant with all requirements
-- ✅ Ready for external service integration
+このコードベースは：
+- ✅ クリーンアーキテクチャによる適切な構造
+- ✅ 完全にドキュメント化済み
+- ✅ Kotlin による型安全性の確保
+- ✅ Jetpack Compose によるモダンな設計
+- ✅ ユニットテストによるテスト可能性の確保
+- ✅ すべての要件への準拠
+- ✅ 外部サービス統合の準備完了

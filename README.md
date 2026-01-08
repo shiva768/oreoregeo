@@ -1,160 +1,160 @@
 # Oreoregeo
 
-A Swarm-compatible manual check-in Android app for OpenStreetMap places.
+OpenStreetMap のスポットに手動でチェックインできる、Swarm 互換の Android アプリです。
 
-## Overview
+## 概要
 
-Oreoregeo is an Android application that allows users to:
-- Search for nearby places using OpenStreetMap and Overpass API
-- Manually check-in to places
-- View check-in history
-- Add new places to OpenStreetMap
-- Edit tags on existing OSM nodes
-- Backup check-in data to Google Drive
+Oreoregeo は、以下の機能を持つ Android アプリケーションです：
+- OpenStreetMap と Overpass API を使用した周辺スポットの検索
+- スポットへの手動チェックイン
+- チェックイン履歴の閲覧
+- OpenStreetMap への新しいスポットの追加
+- 既存の OSM ノードのタグ編集
+- Google ドライブへのチェックインデータのバックアップ
 
-## Technical Stack
+## 技術スタック
 
-- **Platform**: Android (minSdk 26, targetSdk 34)
-- **Language**: Kotlin
-- **UI**: Jetpack Compose with Material 3
-- **Database**: Room (SQLite with WAL mode enabled)
-- **Async**: Kotlin Coroutines
-- **HTTP**: OkHttp
-- **APIs**: 
-  - Overpass API for place search
-  - OSM API v0.6 for editing
-  - Google Drive API for backups
+- **プラットフォーム**: Android (minSdk 26, targetSdk 34)
+- **言語**: Kotlin
+- **UI**: Jetpack Compose (Material 3)
+- **データベース**: Room (SQLite, WAL モード有効)
+- **非同期処理**: Kotlin Coroutines
+- **HTTP 通信**: OkHttp
+- **使用 API**: 
+  - スポット検索用 Overpass API
+  - 編集用 OSM API v0.6
+  - バックアップ用 Google Drive API
 
-## Features
+## 機能
 
-### Implemented
+### 実装済み
 
-1. **Nearby Search**
-   - Uses Overpass API with 80m radius
-   - Searches for amenity, shop, and tourism tags
-   - Calculates distance from current location
-   - Sorts results by distance
+1. **周辺検索**
+   - 半径 80m 以内を Overpass API で検索
+   - amenity, shop, tourism タグを対象に検索
+   - 現在地からの距離を計算
+   - 距離順でソート
 
-2. **Manual Check-in**
-   - Complete manual process (no auto check-in)
-   - 30-minute duplicate prevention via database constraint
-   - UTC timestamp storage
-   - Optional notes
+2. **手動チェックイン**
+   - 完全に手動でのプロセス（自動チェックインなし）
+   - データベース制約による 30 分以内の重複チェックイン防止
+   - UTC タイムスタンプでの保存
+   - 任意のメモ入力
 
-3. **Check-in History**
-   - Display all check-ins with place information
-   - Sorted by date (newest first)
+3. **チェックイン履歴**
+   - スポット情報を含む全チェックインの表示
+   - 日付順（新しい順）でのソート
 
-4. **Database**
-   - `places` table with place_key (osm:type:id format)
-   - `checkins` table with unique constraint on place+30min bucket
-   - WAL mode enabled for better concurrency
+4. **データベース**
+   - `places` テーブル：place_key（osm:type:id 形式）を使用
+   - `checkins` テーブル：場所と 30 分単位のバケットによるユニーク制約
+   - 並行性向上のための WAL モード有効化
 
-5. **OSM Integration**
-   - Add new nodes with tags
-   - Update existing node tags
-   - Changeset management
-   - Version conflict handling
+5. **OSM 連携**
+   - タグを指定して新しいノードを追加
+   - 既存ノードのタグを更新
+   - チェンジセット（Changeset）管理
+   - バージョン競合のハンドリング
 
-6. **Google Drive Backup**
-   - Backup database and WAL files
-   - Single generation backup (replaces previous)
+6. **Google ドライブ バックアップ**
+   - データベースファイル（.db）および WAL ファイルのバックアップ
+   - 単一世代のバックアップ（前回分を上書き）
 
-### Data Schema
+### データスキーマ
 
-#### places table
+#### places テーブル
 ```sql
 CREATE TABLE places (
-  place_key TEXT PRIMARY KEY,  -- Format: osm:{type}:{id}
+  place_key TEXT PRIMARY KEY,  -- 形式: osm:{type}:{id}
   name TEXT,
   category TEXT,
   lat REAL,
   lon REAL,
-  updated_at INTEGER  -- epoch milliseconds
+  updated_at INTEGER  -- エポックミリ秒
 );
 ```
 
-#### checkins table
+#### checkins テーブル
 ```sql
 CREATE TABLE checkins (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   place_key TEXT,
-  visited_at INTEGER,  -- epoch milliseconds, UTC
+  visited_at INTEGER,  -- エポックミリ秒 (UTC)
   note TEXT,
-  visited_at_bucket INTEGER  -- visited_at / 1800000 (30min)
+  visited_at_bucket INTEGER  -- visited_at / 1800000 (30分単位)
 );
 
 CREATE UNIQUE INDEX ux_checkins_place_bucket_30m 
   ON checkins(place_key, visited_at_bucket);
 ```
 
-## Architecture
+## アーキテクチャ
 
 ```
 app/
 ├── data/
-│   ├── local/          # Room entities and DAOs
-│   ├── remote/         # API clients (Overpass, OSM)
+│   ├── local/          # Room エンティティと DAO
+│   ├── remote/         # API クライアント (Overpass, OSM)
 │   └── DriveBackupManager.kt
-├── domain/             # Business logic and repository
+├── domain/             # ビジネスロジックとリポジトリ
 │   ├── Models.kt
 │   └── Repository.kt
-└── ui/                 # Compose UI and ViewModels
+└── ui/                 # Compose UI と ViewModel
     ├── SearchScreen.kt
     ├── CheckinDialog.kt
     ├── HistoryScreen.kt
     ├── AddPlaceScreen.kt
     ├── EditTagsScreen.kt
     ├── SettingsScreen.kt
-    └── *ViewModel.kt files
+    └── *ViewModel.kt ファイル
 ```
 
-## Requirements
+## 必要要件
 
-- Android 8.0 (API 26) or higher
-- Location permissions for nearby search
-- Internet access for API calls
-- Google account for Drive backups
-- OSM account for editing features
+- Android 8.0 (API 26) 以上
+- 周辺検索用の位置情報権限
+- API コール用のインターネットアクセス
+- バックアップ用の Google アカウント
+- 編集機能用の OSM アカウント
 
-## Building
+## ビルド方法
 
 ```bash
 ./gradlew assembleDebug
 ```
 
-## Configuration
+## 設定
 
 ### OSM OAuth
-To enable OSM editing features, you need to configure OAuth credentials:
-1. Register an application at https://www.openstreetmap.org/oauth2/applications
-2. Request `write_api` scope only
-3. Implement OAuth flow in the app
+OSM の編集機能を有効にするには、OAuth クレデンシャルの設定が必要です：
+1. https://www.openstreetmap.org/oauth2/applications でアプリケーションを登録
+2. `write_api` スコープのみをリクエスト
+3. アプリに OAuth フローを実装
 
 ### Google Drive API
-To enable backup features:
-1. Enable Drive API in Google Cloud Console
-2. Add OAuth 2.0 credentials
-3. Add google-services.json to app directory
+バックアップ機能を有効にするには：
+1. Google Cloud Console で Drive API を有効にする
+2. OAuth 2.0 クレデンシャルを追加
+3. google-services.json を app ディレクトリに追加
 
-## Constraints
+## 制約事項
 
-- **Manual check-in only** - No automatic check-in features
-- **Node editing only** - Cannot create/edit ways or relations
-- **No social features** - No friends, sharing, or feed
-- **No location tracking** - Location is only accessed on demand
-- **Local-first** - All data stored locally, cloud sync only for backups
+- **手動チェックインのみ** - 自動チェックイン機能はありません
+- **ノード（Node）編集のみ** - ウェイ（Way）やリレーション（Relation）の作成・編集はできません
+- **ソーシャル機能なし** - フレンド、共有、フィード機能はありません
+- **位置追跡なし** - 位置情報はオンデマンドでのみアクセスされます
+- **ローカルファースト** - すべてのデータはローカルに保存され、クラウド同期はバックアップのみです
 
-## Database Backup
+## データベースのバックアップ
 
-- Backs up to Google Drive
-- Includes both .db and .db-wal files
-- Keeps only the latest version
-- Manual trigger from settings
+- Google ドライブにバックアップ
+- .db と .db-wal ファイルの両方を含みます
+- 最新バージョンのみを保持
+- 設定画面から手動で実行
 
-## API Usage
+## API の使用
 
-### Overpass Query Example
+### Overpass クエリ例
 ```
 [out:json];
 (
@@ -171,28 +171,28 @@ To enable backup features:
 out center tags;
 ```
 
-### OSM Changeset Workflow
-1. Create changeset with comment
-2. Create/update node
-3. Close changeset
-4. Handle version conflicts by refetching
+### OSM チェンジセットのワークフロー
+1. コメント付きでチェンジセットを作成
+2. ノードを作成または更新
+3. チェンジセットを閉じる
+4. 再取得によるバージョン競合の処理
 
-## Error Handling
+## エラーハンドリング
 
-- **Offline**: History viewing available, search/check-in disabled
-- **Overpass failure**: Error message displayed, retry option
-- **OSM delay**: User notified that changes may take time to reflect
-- **Version conflict**: Automatic refetch and retry
+- **オフライン**: 履歴の閲覧は可能、検索とチェックインは無効
+- **Overpass 失敗**: エラーメッセージを表示し、再試行オプションを提供
+- **OSM 反映遅延**: 変更が反映されるまで時間がかかる場合があることをユーザーに通知
+- **バージョン競合**: 自動的に再取得して再試行
 
-## License
+## ライセンス
 
-See LICENSE file for details.
+詳細は LICENSE ファイルを参照してください。
 
-## Contributing
+## 貢献について
 
-This is an initial implementation. Contributions welcome for:
-- OAuth implementation
-- Drive API integration
-- UI improvements
-- Bug fixes
-- Documentation
+これは初期の実装です。以下の貢献を歓迎します：
+- OAuth の実装
+- Drive API の統合
+- UI の改善
+- バグ修正
+- ドキュメントの整備
