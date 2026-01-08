@@ -72,22 +72,23 @@ class OverpassClient {
     }
 
     private fun buildQuery(lat: Double, lon: Double, radius: Int, language: String?): String {
-        language?.let { " [\"name:$it\"]" } ?: ""
-        return """
-            [out:json];
-            (
-              node["amenity"](around:$radius,$lat,$lon);
-              way["amenity"](around:$radius,$lat,$lon);
-              relation["amenity"](around:$radius,$lat,$lon);
-              node["shop"](around:$radius,$lat,$lon);
-              way["shop"](around:$radius,$lat,$lon);
-              relation["shop"](around:$radius,$lat,$lon);
-              node["tourism"](around:$radius,$lat,$lon);
-              way["tourism"](around:$radius,$lat,$lon);
-              relation["tourism"](around:$radius,$lat,$lon);
-            );
-            out center tags;
-        """.trimIndent()
+        // language は結果の name 選択時（Repository 側）で利用するため、
+        // Overpass クエリ自体ではフィルタしない（結果の網羅性を保つ）。
+        val types = listOf("node", "way", "relation")
+        val keys = listOf("amenity", "shop", "tourism")
+
+        val body = buildString {
+            appendLine("[out:json];")
+            appendLine("(")
+            for (t in types) {
+                for (k in keys) {
+                    appendLine("  $t[\"$k\"](around:$radius,$lat,$lon);")
+                }
+            }
+            appendLine(")")
+            append("out center tags;")
+        }
+        return body
     }
 
     private fun parseResponse(json: String): List<OverpassElement> {
