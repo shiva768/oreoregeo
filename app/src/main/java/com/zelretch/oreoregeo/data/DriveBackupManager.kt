@@ -132,7 +132,7 @@ class DriveBackupManager(private val context: Context) {
                 Timber.d("Attempting to restore WAL file")
                 restoreFile(driveService, "oreoregeo_database.db-wal", walPath)
             } catch (e: Exception) {
-                // WALファイルは存在しない可能性があるため、ログ出力して継続
+                // WAL file may not exist in backup, continue without it
                 Timber.w(e, "WAL file not found in backup, continuing without it")
             }
 

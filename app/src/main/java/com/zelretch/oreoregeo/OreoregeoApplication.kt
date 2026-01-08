@@ -13,7 +13,7 @@ class OreoregeoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Timberの初期化
+        // Initialize Timber
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
