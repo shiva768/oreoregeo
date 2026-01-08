@@ -45,7 +45,7 @@ fun EditTagsScreen(
 ) {
     // place_key (osm:node:12345) からノードIDを抽出
     val nodeId = placeKey.split(":").lastOrNull()?.toLongOrNull()
-    
+
     var tags by remember { mutableStateOf(existingTags) }
     var newKey by remember { mutableStateOf("") }
     var newValue by remember { mutableStateOf("") }
@@ -91,14 +91,14 @@ fun EditTagsScreen(
                         )
                         OutlinedTextField(
                             value = value,
-                            onValueChange = { newVal -> 
+                            onValueChange = { newVal ->
                                 tags = tags.toMutableMap().apply { this[key] = newVal }
                             },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
                     IconButton(
-                        onClick = { 
+                        onClick = {
                             tags = tags.toMutableMap().apply { remove(key) }
                         }
                     ) {
@@ -132,8 +132,8 @@ fun EditTagsScreen(
         OutlinedButton(
             onClick = {
                 if (newKey.isNotBlank() && newValue.isNotBlank()) {
-                    tags = tags.toMutableMap().apply { 
-                        this[newKey] = newValue 
+                    tags = tags.toMutableMap().apply {
+                        this[newKey] = newValue
                     }
                     newKey = ""
                     newValue = ""

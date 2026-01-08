@@ -2,8 +2,8 @@ package com.zelretch.oreoregeo
 
 import com.zelretch.oreoregeo.data.local.CheckinEntity
 import com.zelretch.oreoregeo.data.local.PlaceEntity
-import org.junit.Test
 import org.junit.Assert.*
+import org.junit.Test
 
 class DataModelTest {
 
@@ -22,7 +22,7 @@ class DataModelTest {
             lon = 139.7671,
             updated_at = System.currentTimeMillis()
         )
-        
+
         assertTrue(place.place_key.startsWith("osm:"))
         val parts = place.place_key.split(":")
         assertEquals(3, parts.size)
@@ -38,11 +38,11 @@ class DataModelTest {
             visited_at = visitedAt,
             note = "Test note"
         )
-        
+
         // Verify bucket calculation (30 minutes = 1800000 ms)
         val expectedBucket = visitedAt / THIRTY_MINUTES_MS
         assertEquals(expectedBucket, checkin.visited_at_bucket)
-        
+
         // Two check-ins within 30 minutes should have the same bucket
         val checkin2 = CheckinEntity(
             place_key = "osm:node:12345",
@@ -50,7 +50,7 @@ class DataModelTest {
             note = "Test note 2"
         )
         assertEquals(checkin.visited_at_bucket, checkin2.visited_at_bucket)
-        
+
         // Check-in after 30 minutes should have different bucket
         val checkin3 = CheckinEntity(
             place_key = "osm:node:12345",
@@ -71,7 +71,7 @@ class DataModelTest {
             lon = 139.7671,
             updated_at = now
         )
-        
+
         assertEquals("osm:way:67890", place.place_key)
         assertEquals("Test Shop", place.name)
         assertEquals("shop", place.category)
@@ -89,7 +89,7 @@ class DataModelTest {
             visited_at = now,
             note = "Great place!"
         )
-        
+
         assertEquals(1L, checkin.id)
         assertEquals("osm:node:12345", checkin.place_key)
         assertEquals(now, checkin.visited_at)

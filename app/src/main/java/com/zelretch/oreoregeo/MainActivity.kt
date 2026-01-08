@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setContent {
@@ -161,10 +161,7 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(
-    currentLocation: Pair<Double, Double>?,
-    onRequestLocation: ((Double, Double) -> Unit) -> Unit
-) {
+fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Double, Double) -> Unit) -> Unit) {
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(0) }
 
@@ -206,7 +203,9 @@ fun MainScreen(
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.History, contentDescription = stringResource(R.string.checkin_history)) },
+                    icon = {
+                        Icon(Icons.Default.History, contentDescription = stringResource(R.string.checkin_history))
+                    },
                     label = { Text(stringResource(R.string.checkin_history)) },
                     selected = selectedItem == 1,
                     onClick = {
@@ -217,7 +216,9 @@ fun MainScreen(
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_title)) },
+                    icon = {
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_title))
+                    },
                     label = { Text(stringResource(R.string.settings_title)) },
                     selected = selectedItem == 2,
                     onClick = {
@@ -242,17 +243,17 @@ fun MainScreen(
                 val checkinViewModel: CheckinViewModel = viewModel(
                     factory = CheckinViewModelFactory(repository)
                 )
-                
+
                 val searchState by searchViewModel.searchState.collectAsState()
                 val checkinState by checkinViewModel.checkinState.collectAsState()
-                
+
                 var showCheckinDialog by remember { mutableStateOf(false) }
                 var selectedPlaceKey by remember { mutableStateOf("") }
                 var selectedPlaceName by remember { mutableStateOf<String?>(null) }
 
                 val searchRadius by searchViewModel.searchRadius.collectAsState()
                 val excludeUnnamed by searchViewModel.excludeUnnamed.collectAsState()
-                
+
                 SearchScreen(
                     searchState = searchState,
                     searchRadius = searchRadius,
@@ -271,14 +272,18 @@ fun MainScreen(
                         selectedPlaceName = if (searchState is SearchState.Success) {
                             (searchState as SearchState.Success).places
                                 .find { it.place.placeKey == placeKey }?.place?.name
-                        } else null
+                        } else {
+                            null
+                        }
                     },
                     onCheckinClick = { placeKey ->
                         selectedPlaceKey = placeKey
                         selectedPlaceName = if (searchState is SearchState.Success) {
                             (searchState as SearchState.Success).places
                                 .find { it.place.placeKey == placeKey }?.place?.name
-                        } else null
+                        } else {
+                            null
+                        }
                         showCheckinDialog = true
                         checkinViewModel.reset()
                     },
@@ -302,7 +307,7 @@ fun MainScreen(
                     )
                 }
             }
-            
+
             composable("history") {
                 val checkins by historyViewModel.checkins.collectAsState()
 
@@ -311,11 +316,11 @@ fun MainScreen(
                     onDeleteClick = { historyViewModel.deleteCheckin(it) }
                 )
             }
-            
+
             composable("settings") {
                 val scope = rememberCoroutineScope()
                 val context = androidx.compose.ui.platform.LocalContext.current
-                
+
                 val signInLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.StartActivityForResult()
                 ) { result ->
@@ -325,11 +330,19 @@ fun MainScreen(
                         scope.launch {
                             val backupResult = repository.backupToGoogleDrive(account)
                             val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
-                            android.widget.Toast.makeText(context, context.getString(messageId), android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(
+                                context,
+                                context.getString(messageId),
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
                         }
                     } catch (e: ApiException) {
                         e.printStackTrace()
-                        android.widget.Toast.makeText(context, context.getString(R.string.backup_failed), android.widget.Toast.LENGTH_LONG).show()
+                        android.widget.Toast.makeText(
+                            context,
+                            context.getString(R.string.backup_failed),
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
 
@@ -340,7 +353,11 @@ fun MainScreen(
                             scope.launch {
                                 val backupResult = repository.backupToGoogleDrive(lastAccount)
                                 val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
-                                android.widget.Toast.makeText(context, context.getString(messageId), android.widget.Toast.LENGTH_LONG).show()
+                                android.widget.Toast.makeText(
+                                    context,
+                                    context.getString(messageId),
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
                             }
                         } else {
                             signInLauncher.launch(repository.getGoogleSignInIntent())
@@ -357,7 +374,7 @@ fun MainScreen(
                     factory = OsmEditViewModelFactory(repository)
                 )
                 val editState by osmEditViewModel.editState.collectAsState()
-                
+
                 var currentLat by remember { mutableStateOf<Double?>(null) }
                 var currentLon by remember { mutableStateOf<Double?>(null) }
 

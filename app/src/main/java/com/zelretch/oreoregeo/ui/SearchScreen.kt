@@ -100,7 +100,7 @@ fun SearchScreen(
                 text = stringResource(R.string.search_radius_label, searchRadius),
                 style = MaterialTheme.typography.labelLarge
             )
-            
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(R.string.exclude_unnamed_label),
@@ -113,7 +113,7 @@ fun SearchScreen(
                 )
             }
         }
-        
+
         Slider(
             value = searchRadius.toFloat(),
             onValueChange = { onRadiusChange(it.toInt()) },
@@ -169,17 +169,22 @@ fun SearchScreen(
                             PlaceCard(
                                 placeWithDistance = placeWithDistance,
                                 isSelected = isSelected,
-                                onClick = { 
+                                onClick = {
                                     selectedPlaceLocation = placeWithDistance.place.lat to placeWithDistance.place.lon
                                     selectedPlaceKey = placeWithDistance.place.placeKey
-                                    onPlaceClick(placeWithDistance.place.placeKey) 
+                                    onPlaceClick(placeWithDistance.place.placeKey)
                                 },
                                 onCheckinClick = {
                                     onCheckinClick(placeWithDistance.place.placeKey)
                                 },
-                                onEditClick = if (canEdit && placeWithDistance.place.placeKey.contains(":node:") && onEditPlace != null) {
+                                onEditClick = if (canEdit &&
+                                    placeWithDistance.place.placeKey.contains(":node:") &&
+                                    onEditPlace != null
+                                ) {
                                     { onEditPlace(placeWithDistance.place.placeKey) }
-                                } else null
+                                } else {
+                                    null
+                                }
                             )
                         }
                     }
@@ -212,7 +217,7 @@ fun MapViewContainer(
     selectedPlaceLocation: Pair<Double, Double>? = null
 ) {
     val context = LocalContext.current
-    
+
     // 半径に基づいた適切なズームレベルを計算
     // 50m -> ~18.5, 500m -> ~15.5
     val targetZoom = when {
@@ -231,7 +236,7 @@ fun MapViewContainer(
                 setMultiTouchControls(true)
                 controller.setZoom(targetZoom)
                 controller.setCenter(GeoPoint(location.first, location.second))
-                
+
                 // 現在地のマーカーを追加
                 val marker = Marker(this)
                 marker.position = GeoPoint(location.first, location.second)
@@ -239,7 +244,7 @@ fun MapViewContainer(
                 marker.icon = context.getDrawable(R.drawable.ic_current_location)
                 marker.title = context.getString(R.string.current_location)
                 overlays.add(marker)
-                
+
                 // 検索半径の円を追加
                 val circle = Polygon.pointsAsCircle(GeoPoint(location.first, location.second), radiusMeters.toDouble())
                 val circleOverlay = Polygon(this)
@@ -252,12 +257,12 @@ fun MapViewContainer(
         },
         update = { mapView ->
             mapView.overlays.clear()
-            
+
             // スポットが選択されていない場合、半径に基づいてズームを更新
             if (selectedPlaceLocation == null) {
                 mapView.controller.setZoom(targetZoom)
             }
-            
+
             // 現在地のマーカー
             val marker = Marker(mapView)
             marker.position = GeoPoint(location.first, location.second)
@@ -265,7 +270,7 @@ fun MapViewContainer(
             marker.icon = context.getDrawable(R.drawable.ic_current_location)
             marker.title = context.getString(R.string.current_location)
             mapView.overlays.add(marker)
-            
+
             // 検索半径の円
             val circle = Polygon.pointsAsCircle(GeoPoint(location.first, location.second), radiusMeters.toDouble())
             val circleOverlay = Polygon(mapView)
@@ -283,14 +288,14 @@ fun MapViewContainer(
                 selectedMarker.icon = context.getDrawable(R.drawable.ic_selected_place)
                 selectedMarker.title = context.getString(R.string.selected_place)
                 mapView.overlays.add(selectedMarker)
-                
+
                 // 選択された場所にアニメーションで移動
                 mapView.controller.animateTo(GeoPoint(it.first, it.second))
             } ?: run {
                 // 何も選択されていない場合、現在地を中心に表示
                 mapView.controller.setCenter(GeoPoint(location.first, location.second))
             }
-            
+
             mapView.invalidate()
         },
         modifier = Modifier.fillMaxSize()
@@ -350,7 +355,7 @@ fun PlaceCard(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (isSelected) {
                     Button(
@@ -362,7 +367,7 @@ fun PlaceCard(
                     }
                     Spacer(Modifier.width(8.dp))
                 }
-                
+
                 if (onEditClick != null) {
                     IconButton(onClick = onEditClick) {
                         Icon(

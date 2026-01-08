@@ -1,10 +1,10 @@
 package com.zelretch.oreoregeo
 
-import com.zelretch.oreoregeo.domain.Place
 import com.zelretch.oreoregeo.domain.Checkin
+import com.zelretch.oreoregeo.domain.Place
 import com.zelretch.oreoregeo.domain.PlaceWithDistance
-import org.junit.Test
 import org.junit.Assert.*
+import org.junit.Test
 
 class DomainModelsTest {
 
@@ -18,7 +18,7 @@ class DomainModelsTest {
             lon = 139.7671,
             updatedAt = 1672531200000L
         )
-        
+
         assertEquals("osm:node:12345", place.placeKey)
         assertEquals("Test Cafe", place.name)
         assertEquals("amenity", place.category)
@@ -39,7 +39,7 @@ class DomainModelsTest {
             updatedAt = System.currentTimeMillis(),
             distance = 50.5f
         )
-        
+
         assertNotNull(place.distance)
         assertEquals(50.5f, place.distance!!, 0.01f)
     }
@@ -52,7 +52,7 @@ class DomainModelsTest {
             visitedAt = 1672531200000L,
             note = "Great coffee!"
         )
-        
+
         assertEquals(1L, checkin.id)
         assertEquals("osm:node:12345", checkin.placeKey)
         assertEquals(1672531200000L, checkin.visitedAt)
@@ -70,7 +70,7 @@ class DomainModelsTest {
             lon = 139.7671,
             updatedAt = 1672531200000L
         )
-        
+
         val checkin = Checkin(
             id = 1,
             placeKey = "osm:node:12345",
@@ -78,7 +78,7 @@ class DomainModelsTest {
             note = "Great coffee!",
             place = place
         )
-        
+
         assertNotNull(checkin.place)
         assertEquals(place, checkin.place)
         assertEquals("Test Cafe", checkin.place?.name)
@@ -94,12 +94,12 @@ class DomainModelsTest {
             lon = 139.7671,
             updatedAt = System.currentTimeMillis()
         )
-        
+
         val placeWithDistance = PlaceWithDistance(
             place = place,
             distanceMeters = 75.5f
         )
-        
+
         assertEquals(place, placeWithDistance.place)
         assertEquals(75.5f, placeWithDistance.distanceMeters, 0.01f)
     }
@@ -114,7 +114,7 @@ class DomainModelsTest {
             lon = 139.0,
             updatedAt = System.currentTimeMillis()
         )
-        
+
         val wayPlace = Place(
             placeKey = "osm:way:67890",
             name = "Way Place",
@@ -123,7 +123,7 @@ class DomainModelsTest {
             lon = 139.0,
             updatedAt = System.currentTimeMillis()
         )
-        
+
         val relationPlace = Place(
             placeKey = "osm:relation:11111",
             name = "Relation Place",
@@ -132,7 +132,7 @@ class DomainModelsTest {
             lon = 139.0,
             updatedAt = System.currentTimeMillis()
         )
-        
+
         assertTrue(nodePlace.placeKey.contains("node"))
         assertTrue(wayPlace.placeKey.contains("way"))
         assertTrue(relationPlace.placeKey.contains("relation"))
@@ -141,7 +141,7 @@ class DomainModelsTest {
     @Test
     fun testCategoryTypes() {
         val categories = listOf("amenity", "shop", "tourism", "other", "leisure")
-        
+
         categories.forEach { category ->
             val place = Place(
                 placeKey = "osm:node:12345",
@@ -151,7 +151,7 @@ class DomainModelsTest {
                 lon = 139.0,
                 updatedAt = System.currentTimeMillis()
             )
-            
+
             assertEquals(category, place.category)
         }
     }
@@ -164,7 +164,7 @@ class DomainModelsTest {
             visitedAt = System.currentTimeMillis(),
             note = ""
         )
-        
+
         assertEquals("", checkin.note)
     }
 
@@ -175,7 +175,7 @@ class DomainModelsTest {
             visitedAt = System.currentTimeMillis(),
             note = "Test"
         )
-        
+
         assertEquals(0L, checkin.id)
     }
 }

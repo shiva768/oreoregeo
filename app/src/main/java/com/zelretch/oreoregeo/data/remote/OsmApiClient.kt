@@ -22,9 +22,7 @@ import javax.xml.transform.stream.StreamResult
 // This implementation uses a constructor parameter for simplicity but should be refactored
 // to use secure token storage (see IMPLEMENTATION_GUIDE.md for details).
 class OsmApiClient(private val accessToken: String? = "dummy_token") {
-    fun isLoggedIn(): Boolean {
-        return !accessToken.isNullOrBlank() && accessToken != "dummy_token"
-    }
+    fun isLoggedIn(): Boolean = !accessToken.isNullOrBlank() && accessToken != "dummy_token"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -62,7 +60,7 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
 
             val changesetId = response.body?.string()?.toLongOrNull()
                 ?: return@withContext Result.failure(IOException("Invalid changeset ID"))
-            
+
             Result.success(changesetId)
         } catch (e: Exception) {
             Result.failure(e)
@@ -92,12 +90,7 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
         }
     }
 
-    suspend fun createNode(
-        changesetId: Long,
-        lat: Double,
-        lon: Double,
-        tags: Map<String, String>
-    ): Result<Long> = withContext(Dispatchers.IO) {
+    suspend fun createNode(changesetId: Long, lat: Double, lon: Double, tags: Map<String, String>): Result<Long> = withContext(Dispatchers.IO) {
         if (accessToken == null) {
             return@withContext Result.failure(IllegalStateException("Not authenticated"))
         }
@@ -118,7 +111,7 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
 
             val nodeId = response.body?.string()?.toLongOrNull()
                 ?: return@withContext Result.failure(IOException("Invalid node ID"))
-            
+
             Result.success(nodeId)
         } catch (e: Exception) {
             Result.failure(e)
@@ -176,7 +169,7 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
 
             val newVersion = response.body?.string()?.toLongOrNull()
                 ?: return@withContext Result.failure(IOException("Invalid version"))
-            
+
             Result.success(newVersion)
         } catch (e: Exception) {
             Result.failure(e)
@@ -220,7 +213,7 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
     private fun parseNodeXml(xml: String): OsmNode {
         val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
             .parse(ByteArrayInputStream(xml.toByteArray()))
-        
+
         val nodeElement = doc.getElementsByTagName("node").item(0) as org.w3c.dom.Element
         val id = nodeElement.getAttribute("id").toLongOrNull()
         val lat = nodeElement.getAttribute("lat").toDouble()

@@ -154,7 +154,7 @@ fun AddPlaceScreen(
                             "name" to name,
                             category to categoryValue
                         )
-                        
+
                         // 追加タグをパース
                         if (additionalTags.isNotBlank()) {
                             additionalTags.split(",").forEach { tagPair ->
@@ -164,16 +164,17 @@ fun AddPlaceScreen(
                                 }
                             }
                         }
-                        
+
                         isSaving = true
                         onSave(latValue, lonValue, tags)
                     }
                 },
                 modifier = Modifier.weight(1f),
-                enabled = !isSaving && lat.toDoubleOrNull() != null && 
-                         lon.toDoubleOrNull() != null && 
-                         name.isNotBlank() && 
-                         categoryValue.isNotBlank()
+                enabled = !isSaving &&
+                    lat.toDoubleOrNull() != null &&
+                    lon.toDoubleOrNull() != null &&
+                    name.isNotBlank() &&
+                    categoryValue.isNotBlank()
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(

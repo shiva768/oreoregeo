@@ -23,11 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.zelretch.oreoregeo.R
 
 @Composable
-fun SettingsScreen(
-    onBackupClick: () -> Unit,
-    onOsmLoginClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()

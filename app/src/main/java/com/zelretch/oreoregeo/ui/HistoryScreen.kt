@@ -30,11 +30,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun HistoryScreen(
-    checkins: List<Checkin>,
-    onDeleteClick: (Long) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun HistoryScreen(checkins: List<Checkin>, onDeleteClick: (Long) -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -69,11 +65,7 @@ fun HistoryScreen(
 }
 
 @Composable
-fun CheckinCard(
-    checkin: Checkin,
-    onDeleteClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun CheckinCard(checkin: Checkin, onDeleteClick: () -> Unit, modifier: Modifier = Modifier) {
     val dateFormat = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault())
     val dateText = dateFormat.format(Date(checkin.visitedAt))
 
@@ -106,7 +98,7 @@ fun CheckinCard(
                     )
                 }
             }
-            
+
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     Icons.Default.Delete,
