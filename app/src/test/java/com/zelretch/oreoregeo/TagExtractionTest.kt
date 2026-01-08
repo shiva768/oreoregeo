@@ -257,7 +257,8 @@ class TagExtractionTest {
             "amenity" to ""
         )
         
-        // Empty string should be treated as present
+        // Empty string should be filtered out and fall back to "other"
+        // This tests the edge case where a tag key exists but has an empty value
         val category = tags["amenity"]?.takeIf { it.isNotEmpty() } 
             ?: tags["shop"]?.takeIf { it.isNotEmpty() }
             ?: tags["tourism"]?.takeIf { it.isNotEmpty() }
