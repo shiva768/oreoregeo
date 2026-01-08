@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">オレオレジオ</string>
+    <string name="app_name">Oreoregeo</string>
     <string name="nearby_search">周辺検索</string>
     <string name="checkin_history">チェックイン履歴</string>
     <string name="search">検索</string>
@@ -65,4 +65,8 @@
     <string name="app_desc">OpenStreetMapのスポットに手動でチェックインするためのアプリです</string>
     <string name="checkin_at">%1$sにチェックイン</string>
     <string name="note_optional">メモ (任意)</string>
+    <string name="search_radius_label">検索半径: %1$dm</string>
+    <string name="exclude_unnamed_label">名前のないスポットを除外</string>
+    <string name="current_location">現在地</string>
+    <string name="selected_place">選択したスポット</string>
 </resources>

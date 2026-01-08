@@ -6,8 +6,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
-import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
@@ -117,11 +117,13 @@ class DriveBackupManager(private val context: Context) {
             try {
                 restoreFile(driveService, "oreoregeo_database.db-wal", walPath)
             } catch (e: Exception) {
-                // WAL file might not exist, ignore
+                // WALファイルは存在しない可能性があるため、ログ出力して継続
+                e.printStackTrace()
             }
 
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

@@ -1,12 +1,21 @@
 package com.zelretch.oreoregeo
 
 import android.app.Application
+import com.zelretch.oreoregeo.data.DriveBackupManager
 import com.zelretch.oreoregeo.data.local.AppDatabase
 import com.zelretch.oreoregeo.data.remote.OsmApiClient
 import com.zelretch.oreoregeo.data.remote.OverpassClient
 import com.zelretch.oreoregeo.domain.Repository
+import org.osmdroid.config.Configuration
 
 class OreoregeoApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        // osmdroidの設定を初期化
+        Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
+        Configuration.getInstance().userAgentValue = packageName
+    }
+
     private val database by lazy { AppDatabase.getDatabase(this) }
     
     val repository by lazy {
@@ -14,7 +23,8 @@ class OreoregeoApplication : Application() {
             placeDao = database.placeDao(),
             checkinDao = database.checkinDao(),
             overpassClient = OverpassClient(),
-            osmApiClient = OsmApiClient()
+            osmApiClient = OsmApiClient(),
+            driveBackupManager = DriveBackupManager(this)
         )
     }
 }

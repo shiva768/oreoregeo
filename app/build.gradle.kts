@@ -62,6 +62,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
     
     // Compose
     implementation(platform("androidx.compose:compose-bom:2025.01.00"))
@@ -78,6 +79,9 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     "ksp"("androidx.room:room-compiler:$roomVersion")
+    
+    // OpenStreetMap (osmdroid)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
     
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

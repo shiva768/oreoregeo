@@ -28,10 +28,11 @@ class OverpassClient {
     suspend fun searchNearby(
         lat: Double,
         lon: Double,
-        radiusMeters: Int = 80
+        radiusMeters: Int = 80,
+        language: String? = null
     ): Result<List<OverpassElement>> = withContext(Dispatchers.IO) {
         try {
-            val query = buildQuery(lat, lon, radiusMeters)
+            val query = buildQuery(lat, lon, radiusMeters, language)
             val requestBody = query.toRequestBody("text/plain".toMediaType())
             
             // Try endpoints in order until one succeeds
@@ -70,7 +71,8 @@ class OverpassClient {
         }
     }
 
-    private fun buildQuery(lat: Double, lon: Double, radius: Int): String {
+    private fun buildQuery(lat: Double, lon: Double, radius: Int, language: String?): String {
+        language?.let { " [\"name:$it\"]" } ?: ""
         return """
             [out:json];
             (

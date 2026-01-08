@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [PlaceEntity::class, CheckinEntity::class],
@@ -27,12 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "oreoregeo_database"
                 )
                     .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING) // Enable WAL
-                    .addCallback(object : Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            // WAL is enabled via setJournalMode
-                        }
-                    })
+                    .addCallback(object : Callback() {})
                     .build()
                 INSTANCE = instance
                 instance

@@ -5,14 +5,36 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -20,12 +42,29 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.compose.ui.res.stringResource
-import com.zelretch.oreoregeo.ui.*
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.zelretch.oreoregeo.ui.AddPlaceScreen
+import com.zelretch.oreoregeo.ui.CheckinDialog
+import com.zelretch.oreoregeo.ui.CheckinViewModel
+import com.zelretch.oreoregeo.ui.CheckinViewModelFactory
+import com.zelretch.oreoregeo.ui.EditTagsScreen
+import com.zelretch.oreoregeo.ui.HistoryScreen
+import com.zelretch.oreoregeo.ui.HistoryViewModel
+import com.zelretch.oreoregeo.ui.HistoryViewModelFactory
+import com.zelretch.oreoregeo.ui.OsmEditState
+import com.zelretch.oreoregeo.ui.OsmEditViewModel
+import com.zelretch.oreoregeo.ui.OsmEditViewModelFactory
+import com.zelretch.oreoregeo.ui.SearchScreen
+import com.zelretch.oreoregeo.ui.SearchState
+import com.zelretch.oreoregeo.ui.SearchViewModel
+import com.zelretch.oreoregeo.ui.SearchViewModelFactory
+import com.zelretch.oreoregeo.ui.SettingsScreen
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -53,10 +92,16 @@ class MainActivity : ComponentActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setContent {
+            var currentLocationPair by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
             OreoregeoTheme {
                 MainScreen(
+                    currentLocation = currentLocationPair,
                     onRequestLocation = { callback ->
-                        requestLocationAndSearch(callback)
+                        requestLocationAndSearch { lat, lon ->
+                            currentLocationPair = lat to lon
+                            callback(lat, lon)
+                        }
                     }
                 )
             }
@@ -69,11 +114,13 @@ class MainActivity : ComponentActivity() {
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
+                // 位置情報が許可されている場合、現在地を取得
                 getCurrentLocation { lat, lon ->
                     callback(lat, lon)
                 }
             }
             else -> {
+                // 権限を要求
                 locationPermissionRequest.launch(
                     arrayOf(
                         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -115,14 +162,18 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    currentLocation: Pair<Double, Double>?,
     onRequestLocation: ((Double, Double) -> Unit) -> Unit
 ) {
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(0) }
-    var showFab by remember { mutableStateOf(true) }
 
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
     val repository = app.repository
+
+    val historyViewModel: HistoryViewModel = viewModel(
+        factory = HistoryViewModelFactory(repository)
+    )
 
     Scaffold(
         topBar = {
@@ -133,8 +184,10 @@ fun MainScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
-                    IconButton(onClick = { navController.navigate("add_place") }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_place))
+                    if (repository.isOsmAuthenticated()) {
+                        IconButton(onClick = { navController.navigate("add_place") }) {
+                            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_place))
+                        }
                     }
                 }
             )
@@ -197,18 +250,30 @@ fun MainScreen(
                 var selectedPlaceKey by remember { mutableStateOf("") }
                 var selectedPlaceName by remember { mutableStateOf<String?>(null) }
 
-                LaunchedEffect(Unit) {
-                    showFab = true
-                }
-
+                val searchRadius by searchViewModel.searchRadius.collectAsState()
+                val excludeUnnamed by searchViewModel.excludeUnnamed.collectAsState()
+                
                 SearchScreen(
                     searchState = searchState,
+                    searchRadius = searchRadius,
+                    onRadiusChange = { searchViewModel.setSearchRadius(it) },
+                    excludeUnnamed = excludeUnnamed,
+                    onExcludeUnnamedChange = { searchViewModel.setExcludeUnnamed(it) },
+                    canEdit = repository.isOsmAuthenticated(),
+                    currentLocation = currentLocation,
                     onSearchClick = {
                         onRequestLocation { lat, lon ->
                             searchViewModel.searchNearby(lat, lon)
                         }
                     },
                     onPlaceClick = { placeKey ->
+                        selectedPlaceKey = placeKey
+                        selectedPlaceName = if (searchState is SearchState.Success) {
+                            (searchState as SearchState.Success).places
+                                .find { it.place.placeKey == placeKey }?.place?.name
+                        } else null
+                    },
+                    onCheckinClick = { placeKey ->
                         selectedPlaceKey = placeKey
                         selectedPlaceName = if (searchState is SearchState.Success) {
                             (searchState as SearchState.Success).places
@@ -239,29 +304,50 @@ fun MainScreen(
             }
             
             composable("history") {
-                val historyViewModel: HistoryViewModel = viewModel(
-                    factory = HistoryViewModelFactory(repository)
-                )
                 val checkins by historyViewModel.checkins.collectAsState()
 
-                LaunchedEffect(Unit) {
-                    showFab = false
-                }
-
-                HistoryScreen(checkins = checkins)
+                HistoryScreen(
+                    checkins = checkins,
+                    onDeleteClick = { historyViewModel.deleteCheckin(it) }
+                )
             }
             
             composable("settings") {
-                LaunchedEffect(Unit) {
-                    showFab = false
+                val scope = rememberCoroutineScope()
+                val context = androidx.compose.ui.platform.LocalContext.current
+                
+                val signInLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.StartActivityForResult()
+                ) { result ->
+                    val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                    try {
+                        val account = task.getResult(ApiException::class.java)
+                        scope.launch {
+                            val backupResult = repository.backupToGoogleDrive(account)
+                            val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
+                            android.widget.Toast.makeText(context, context.getString(messageId), android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    } catch (e: ApiException) {
+                        e.printStackTrace()
+                        android.widget.Toast.makeText(context, context.getString(R.string.backup_failed), android.widget.Toast.LENGTH_LONG).show()
+                    }
                 }
 
                 SettingsScreen(
                     onBackupClick = {
-                        // TODO: Implement backup with Google Drive
+                        val lastAccount = GoogleSignIn.getLastSignedInAccount(context)
+                        if (lastAccount != null) {
+                            scope.launch {
+                                val backupResult = repository.backupToGoogleDrive(lastAccount)
+                                val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
+                                android.widget.Toast.makeText(context, context.getString(messageId), android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        } else {
+                            signInLauncher.launch(repository.getGoogleSignInIntent())
+                        }
                     },
                     onOsmLoginClick = {
-                        // TODO: Implement OSM OAuth
+                        // TODO: OSM OAuth の実装
                     }
                 )
             }
@@ -276,7 +362,6 @@ fun MainScreen(
                 var currentLon by remember { mutableStateOf<Double?>(null) }
 
                 LaunchedEffect(Unit) {
-                    showFab = false
                     // Try to get current location for convenience
                     onRequestLocation { lat, lon ->
                         currentLat = lat
@@ -312,10 +397,6 @@ fun MainScreen(
                     factory = OsmEditViewModelFactory(repository)
                 )
                 val editState by osmEditViewModel.editState.collectAsState()
-
-                LaunchedEffect(Unit) {
-                    showFab = false
-                }
 
                 LaunchedEffect(editState) {
                     if (editState is OsmEditState.Success) {

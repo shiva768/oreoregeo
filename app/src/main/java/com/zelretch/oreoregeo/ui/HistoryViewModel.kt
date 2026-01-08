@@ -8,6 +8,7 @@ import com.zelretch.oreoregeo.domain.Repository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class HistoryViewModel(
     private val repository: Repository
@@ -19,6 +20,12 @@ class HistoryViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun deleteCheckin(checkinId: Long) {
+        viewModelScope.launch {
+            repository.deleteCheckin(checkinId)
+        }
+    }
 }
 
 class HistoryViewModelFactory(
