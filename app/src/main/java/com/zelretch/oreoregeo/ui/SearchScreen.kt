@@ -12,6 +12,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.zelretch.oreoregeo.R
 import com.zelretch.oreoregeo.domain.PlaceWithDistance
 import java.text.DecimalFormat
 
@@ -34,7 +36,7 @@ fun SearchScreen(
         ) {
             Icon(Icons.Default.LocationOn, contentDescription = null)
             Spacer(Modifier.width(8.dp))
-            Text("Search Nearby Places")
+            Text(stringResource(R.string.search_nearby_places))
         }
 
         Spacer(Modifier.height(16.dp))
@@ -45,7 +47,7 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Tap the button to search for nearby places")
+                    Text(stringResource(R.string.tap_to_search))
                 }
             }
             is SearchState.Loading -> {
@@ -62,7 +64,7 @@ fun SearchScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No places found nearby")
+                        Text(stringResource(R.string.no_places_found))
                     }
                 } else {
                     LazyColumn(

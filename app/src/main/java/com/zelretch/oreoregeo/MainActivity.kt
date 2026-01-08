@@ -20,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.ui.res.stringResource
 import com.zelretch.oreoregeo.ui.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -133,7 +134,7 @@ fun MainScreen(
                 ),
                 actions = {
                     IconButton(onClick = { navController.navigate("add_place") }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Place")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_place))
                     }
                 }
             )
@@ -141,8 +142,8 @@ fun MainScreen(
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                    label = { Text("Search") },
+                    icon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search)) },
+                    label = { Text(stringResource(R.string.search)) },
                     selected = selectedItem == 0,
                     onClick = {
                         selectedItem = 0
@@ -152,8 +153,8 @@ fun MainScreen(
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.History, contentDescription = "History") },
-                    label = { Text("History") },
+                    icon = { Icon(Icons.Default.History, contentDescription = stringResource(R.string.checkin_history)) },
+                    label = { Text(stringResource(R.string.checkin_history)) },
                     selected = selectedItem == 1,
                     onClick = {
                         selectedItem = 1
@@ -163,8 +164,8 @@ fun MainScreen(
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                    label = { Text("Settings") },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_title)) },
+                    label = { Text(stringResource(R.string.settings_title)) },
                     selected = selectedItem == 2,
                     onClick = {
                         selectedItem = 2

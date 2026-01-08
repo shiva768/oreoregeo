@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zelretch.oreoregeo.R
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -36,18 +38,18 @@ fun EditTagsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Edit Tags",
+            text = stringResource(R.string.edit_tags_title),
             style = MaterialTheme.typography.headlineMedium
         )
 
         Text(
-            text = "Place: $placeKey",
+            text = stringResource(R.string.place_label, placeKey),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Text(
-            text = "Existing Tags",
+            text = stringResource(R.string.existing_tags),
             style = MaterialTheme.typography.titleMedium
         )
 
@@ -79,30 +81,30 @@ fun EditTagsScreen(
                             tags = tags.toMutableMap().apply { remove(key) }
                         }
                     ) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete tag")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_tag))
                     }
                 }
             }
         }
 
-        Divider()
+        HorizontalDivider()
 
         Text(
-            text = "Add New Tag",
+            text = stringResource(R.string.add_new_tag),
             style = MaterialTheme.typography.titleMedium
         )
 
         OutlinedTextField(
             value = newKey,
             onValueChange = { newKey = it },
-            label = { Text("Key") },
+            label = { Text(stringResource(R.string.key_label)) },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = newValue,
             onValueChange = { newValue = it },
-            label = { Text("Value") },
+            label = { Text(stringResource(R.string.value_label)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -121,11 +123,11 @@ fun EditTagsScreen(
         ) {
             Icon(Icons.Default.Add, contentDescription = null)
             Spacer(Modifier.width(8.dp))
-            Text("Add Tag")
+            Text(stringResource(R.string.add_tag))
         }
 
         Text(
-            text = "Note: Changes will be synced to OpenStreetMap. Please ensure accuracy.",
+            text = stringResource(R.string.osm_accuracy_notice),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -138,7 +140,7 @@ fun EditTagsScreen(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
 
             Button(
@@ -159,7 +161,7 @@ fun EditTagsScreen(
                 } else {
                     Icon(Icons.Default.Save, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Save to OSM")
+                    Text(stringResource(R.string.save_to_osm))
                 }
             }
         }

@@ -11,6 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zelretch.oreoregeo.R
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
@@ -39,21 +41,21 @@ fun AddPlaceScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Add New Place",
+            text = stringResource(R.string.add_new_place),
             style = MaterialTheme.typography.headlineMedium
         )
 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Name *") },
+            label = { Text(stringResource(R.string.name_required)) },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = lat,
             onValueChange = { lat = it },
-            label = { Text("Latitude *") },
+            label = { Text(stringResource(R.string.latitude_required)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth()
         )
@@ -61,13 +63,13 @@ fun AddPlaceScreen(
         OutlinedTextField(
             value = lon,
             onValueChange = { lon = it },
-            label = { Text("Longitude *") },
+            label = { Text(stringResource(R.string.longitude_required)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth()
         )
 
         Text(
-            text = "Category",
+            text = stringResource(R.string.category),
             style = MaterialTheme.typography.titleSmall
         )
 
@@ -78,38 +80,38 @@ fun AddPlaceScreen(
             FilterChip(
                 selected = category == "amenity",
                 onClick = { category = "amenity" },
-                label = { Text("Amenity") }
+                label = { Text(stringResource(R.string.amenity)) }
             )
             FilterChip(
                 selected = category == "shop",
                 onClick = { category = "shop" },
-                label = { Text("Shop") }
+                label = { Text(stringResource(R.string.shop)) }
             )
             FilterChip(
                 selected = category == "tourism",
                 onClick = { category = "tourism" },
-                label = { Text("Tourism") }
+                label = { Text(stringResource(R.string.tourism)) }
             )
         }
 
         OutlinedTextField(
             value = categoryValue,
             onValueChange = { categoryValue = it },
-            label = { Text("$category value (e.g., restaurant, cafe) *") },
+            label = { Text(stringResource(R.string.category_value_label, category)) },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = additionalTags,
             onValueChange = { additionalTags = it },
-            label = { Text("Additional tags (optional)") },
-            placeholder = { Text("key1=value1, key2=value2") },
+            label = { Text(stringResource(R.string.additional_tags_label)) },
+            placeholder = { Text(stringResource(R.string.additional_tags_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3
         )
 
         Text(
-            text = "Note: Changes will be synced to OpenStreetMap. Please ensure accuracy.",
+            text = stringResource(R.string.osm_accuracy_notice),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -122,7 +124,7 @@ fun AddPlaceScreen(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
 
             Button(
@@ -163,7 +165,7 @@ fun AddPlaceScreen(
                 } else {
                     Icon(Icons.Default.Save, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Save to OSM")
+                    Text(stringResource(R.string.save_to_osm))
                 }
             }
         }
