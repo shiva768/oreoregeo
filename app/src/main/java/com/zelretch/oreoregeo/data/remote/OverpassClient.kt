@@ -72,7 +72,7 @@ class OverpassClient {
     }
 
     private fun buildQuery(lat: Double, lon: Double, radius: Int, language: String?): String {
-        val languageTag = language?.let { " [\"name:$it\"]" } ?: ""
+        language?.let { " [\"name:$it\"]" } ?: ""
         return """
             [out:json];
             (

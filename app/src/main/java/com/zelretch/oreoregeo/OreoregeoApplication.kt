@@ -5,9 +5,7 @@ import com.zelretch.oreoregeo.data.local.AppDatabase
 import com.zelretch.oreoregeo.data.remote.OsmApiClient
 import com.zelretch.oreoregeo.data.remote.OverpassClient
 import com.zelretch.oreoregeo.domain.Repository
-
 import org.osmdroid.config.Configuration
-import java.io.File
 
 class OreoregeoApplication : Application() {
     override fun onCreate() {

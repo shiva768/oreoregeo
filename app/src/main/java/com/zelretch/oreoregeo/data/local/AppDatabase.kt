@@ -27,12 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "oreoregeo_database"
                 )
                     .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING) // Enable WAL
-                    .addCallback(object : Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            // WAL is enabled via setJournalMode
-                        }
-                    })
+                    .addCallback(object : Callback() {})
                     .build()
                 INSTANCE = instance
                 instance
