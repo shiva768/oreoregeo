@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import timber.log.Timber
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -32,6 +33,7 @@ class OverpassClient {
         language: String? = null
     ): Result<List<OverpassElement>> = withContext(Dispatchers.IO) {
         try {
+            Timber.d("Searching nearby places: lat=$lat, lon=$lon, radius=$radiusMeters, language=$language")
             val query = buildQuery(lat, lon, radiusMeters, language)
             val requestBody = query.toRequestBody("text/plain".toMediaType())
 
@@ -42,6 +44,7 @@ class OverpassClient {
                 val endpoint = endpoints[endpointIndex]
 
                 try {
+                    Timber.d("Trying endpoint: $endpoint")
                     val request = Request.Builder()
                         .url(endpoint)
                         .post(requestBody)
@@ -49,6 +52,7 @@ class OverpassClient {
 
                     val response = client.newCall(request).execute()
                     if (!response.isSuccessful) {
+                        Timber.w("Endpoint $endpoint returned unsuccessful response: ${response.code}")
                         continue // Try next endpoint
                     }
 
@@ -57,16 +61,20 @@ class OverpassClient {
 
                     // Success - update current endpoint for next request
                     currentEndpointIndex = endpointIndex
+                    Timber.i("Successfully retrieved ${elements.size} places from $endpoint")
                     return@withContext Result.success(elements)
                 } catch (e: Exception) {
+                    Timber.w(e, "Failed to query endpoint: $endpoint")
                     lastException = e
                     continue // Try next endpoint
                 }
             }
 
             // All endpoints failed
+            Timber.e(lastException, "All Overpass endpoints failed")
             Result.failure(lastException ?: IOException("All Overpass endpoints failed"))
         } catch (e: Exception) {
+            Timber.e(e, "Unexpected error during nearby search")
             Result.failure(e)
         }
     }

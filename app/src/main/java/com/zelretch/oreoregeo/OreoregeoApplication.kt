@@ -7,10 +7,17 @@ import com.zelretch.oreoregeo.data.remote.OsmApiClient
 import com.zelretch.oreoregeo.data.remote.OverpassClient
 import com.zelretch.oreoregeo.domain.Repository
 import org.osmdroid.config.Configuration
+import timber.log.Timber
 
 class OreoregeoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+
+        // Initialize Timber
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+
         // osmdroidの設定を初期化
         Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
         Configuration.getInstance().userAgentValue = packageName

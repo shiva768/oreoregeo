@@ -10,6 +10,7 @@ import com.zelretch.oreoregeo.data.remote.OverpassClient
 import com.zelretch.oreoregeo.data.remote.OverpassElement
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 
 class Repository(
     private val placeDao: PlaceDao,
@@ -27,10 +28,12 @@ class Repository(
 
     suspend fun performCheckin(placeKey: String, note: String): Result<Long> {
         return try {
+            Timber.d("Performing checkin for place: $placeKey")
             val lastCheckin = checkinDao.getLastCheckinByPlace(placeKey)
             val visitedAt = System.currentTimeMillis()
 
             if (lastCheckin != null && (visitedAt - lastCheckin.visited_at) < 30 * 60 * 1000) {
+                Timber.w("Duplicate checkin prevented for place: $placeKey")
                 return Result.failure(Exception("duplicate_checkin"))
             }
 
@@ -40,8 +43,10 @@ class Repository(
                 note = note
             )
             val id = checkinDao.insert(checkin)
+            Timber.i("Checkin successful for place $placeKey: id=$id")
             Result.success(id)
         } catch (e: Exception) {
+            Timber.e(e, "Error performing checkin for place: $placeKey")
             Result.failure(e)
         }
     }
@@ -53,6 +58,7 @@ class Repository(
         excludeUnnamed: Boolean = true,
         language: String? = null
     ): Result<List<PlaceWithDistance>> {
+        Timber.d("Searching nearby places: lat=$currentLat, lon=$currentLon, radius=$radiusMeters")
         val result = overpassClient.searchNearby(currentLat, currentLon, radiusMeters, language)
 
         return result.map { elements ->
@@ -77,13 +83,16 @@ class Repository(
                 placeDao.insert(placeWithDistance.place.toEntity())
             }
 
+            Timber.i("Found and saved ${places.size} nearby places")
             places
         }
     }
 
     suspend fun createOsmNode(lat: Double, lon: Double, tags: Map<String, String>, comment: String): Result<String> {
+        Timber.d("Creating OSM node at ($lat, $lon) with tags: $tags")
         val changesetResult = osmApiClient.createChangeset(comment)
         if (changesetResult.isFailure) {
+            Timber.e("Failed to create changeset for new node")
             return Result.failure(changesetResult.exceptionOrNull()!!)
         }
 
@@ -107,13 +116,16 @@ class Repository(
             )
             placeDao.insert(place)
 
+            Timber.i("Created OSM node and saved to local DB: $placeKey")
             placeKey
         }
     }
 
     suspend fun updateOsmNodeTags(nodeId: Long, newTags: Map<String, String>, comment: String): Result<Unit> {
+        Timber.d("Updating OSM node $nodeId tags: $newTags")
         val nodeResult = osmApiClient.getNode(nodeId)
         if (nodeResult.isFailure) {
+            Timber.e("Failed to get node $nodeId for update")
             return Result.failure(nodeResult.exceptionOrNull()!!)
         }
 
@@ -122,6 +134,7 @@ class Repository(
 
         val changesetResult = osmApiClient.createChangeset(comment)
         if (changesetResult.isFailure) {
+            Timber.e("Failed to create changeset for node update")
             return Result.failure(changesetResult.exceptionOrNull()!!)
         }
 
@@ -151,6 +164,8 @@ class Repository(
                 updated_at = System.currentTimeMillis()
             )
             placeDao.insert(place)
+
+            Timber.i("Updated OSM node tags and saved to local DB: $placeKey")
         }
     }
 
@@ -160,6 +175,7 @@ class Repository(
     }
 
     suspend fun deleteCheckin(checkinId: Long) {
+        Timber.d("Deleting checkin: $checkinId")
         checkinDao.delete(checkinId)
     }
 
