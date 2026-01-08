@@ -158,6 +158,7 @@ class Repository(
         }
     }
 
+    @Suppress("unused")
     fun setOsmAccessToken(token: String) {
         osmApiClient = OsmApiClient(token)
     }

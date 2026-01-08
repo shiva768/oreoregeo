@@ -55,6 +55,7 @@ fun CheckinDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.checkin)) },
+        modifier = modifier,
         text = {
             Column {
                 Text(stringResource(R.string.place_label, placeName ?: placeKey))

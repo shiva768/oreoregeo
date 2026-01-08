@@ -46,7 +46,7 @@ fun EditTagsScreen(
     // place_key (osm:node:12345) からノードIDを抽出
     val nodeId = placeKey.split(":").lastOrNull()?.toLongOrNull()
     
-    var tags by remember { mutableStateOf(existingTags.toMutableMap()) }
+    var tags by remember { mutableStateOf(existingTags) }
     var newKey by remember { mutableStateOf("") }
     var newValue by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }

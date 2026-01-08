@@ -60,12 +60,12 @@ fun SearchScreen(
     excludeUnnamed: Boolean,
     onExcludeUnnamedChange: (Boolean) -> Unit,
     canEdit: Boolean,
+    modifier: Modifier = Modifier,
     currentLocation: Pair<Double, Double>? = null,
     onSearchClick: () -> Unit,
     onPlaceClick: (String) -> Unit,
     onCheckinClick: (String) -> Unit,
-    onEditPlace: ((String) -> Unit)? = null,
-    modifier: Modifier = Modifier
+    onEditPlace: ((String) -> Unit)? = null
 ) {
     var selectedPlaceLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var selectedPlaceKey by remember { mutableStateOf<String?>(null) }
@@ -302,10 +302,10 @@ fun MapViewContainer(
 fun PlaceCard(
     placeWithDistance: PlaceWithDistance,
     isSelected: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onCheckinClick: () -> Unit,
-    onEditClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    onEditClick: (() -> Unit)? = null
 ) {
     val place = placeWithDistance.place
     val distanceMeters = placeWithDistance.distanceMeters

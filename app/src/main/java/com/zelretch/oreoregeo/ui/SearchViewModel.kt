@@ -56,6 +56,7 @@ class SearchViewModel(
         }
     }
 
+    @Suppress("unused")
     fun reset() {
         _searchState.value = SearchState.Idle
     }

@@ -117,11 +117,13 @@ class DriveBackupManager(private val context: Context) {
             try {
                 restoreFile(driveService, "oreoregeo_database.db-wal", walPath)
             } catch (e: Exception) {
-                // WAL file might not exist, ignore
+                // WALファイルは存在しない可能性があるため、ログ出力して継続
+                e.printStackTrace()
             }
 
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

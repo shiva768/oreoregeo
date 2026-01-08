@@ -167,7 +167,6 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(0) }
-    var showFab by remember { mutableStateOf(true) }
 
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
     val repository = app.repository
@@ -251,10 +250,6 @@ fun MainScreen(
                 var selectedPlaceKey by remember { mutableStateOf("") }
                 var selectedPlaceName by remember { mutableStateOf<String?>(null) }
 
-                LaunchedEffect(Unit) {
-                    showFab = true
-                }
-
                 val searchRadius by searchViewModel.searchRadius.collectAsState()
                 val excludeUnnamed by searchViewModel.excludeUnnamed.collectAsState()
                 
@@ -311,10 +306,6 @@ fun MainScreen(
             composable("history") {
                 val checkins by historyViewModel.checkins.collectAsState()
 
-                LaunchedEffect(Unit) {
-                    showFab = false
-                }
-
                 HistoryScreen(
                     checkins = checkins,
                     onDeleteClick = { historyViewModel.deleteCheckin(it) }
@@ -322,10 +313,6 @@ fun MainScreen(
             }
             
             composable("settings") {
-                LaunchedEffect(Unit) {
-                    showFab = false
-                }
-                
                 val scope = rememberCoroutineScope()
                 val context = androidx.compose.ui.platform.LocalContext.current
                 
@@ -341,6 +328,7 @@ fun MainScreen(
                             android.widget.Toast.makeText(context, context.getString(messageId), android.widget.Toast.LENGTH_LONG).show()
                         }
                     } catch (e: ApiException) {
+                        e.printStackTrace()
                         android.widget.Toast.makeText(context, context.getString(R.string.backup_failed), android.widget.Toast.LENGTH_LONG).show()
                     }
                 }
@@ -374,7 +362,6 @@ fun MainScreen(
                 var currentLon by remember { mutableStateOf<Double?>(null) }
 
                 LaunchedEffect(Unit) {
-                    showFab = false
                     // Try to get current location for convenience
                     onRequestLocation { lat, lon ->
                         currentLat = lat
@@ -410,10 +397,6 @@ fun MainScreen(
                     factory = OsmEditViewModelFactory(repository)
                 )
                 val editState by osmEditViewModel.editState.collectAsState()
-
-                LaunchedEffect(Unit) {
-                    showFab = false
-                }
 
                 LaunchedEffect(editState) {
                     if (editState is OsmEditState.Success) {
