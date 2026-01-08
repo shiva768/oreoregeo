@@ -17,13 +17,13 @@ import kotlinx.coroutines.withContext
 import java.io.FileOutputStream
 
 class DriveBackupManager(private val context: Context) {
-    
+
     fun getSignInIntent(): Intent {
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
             .requestScopes(Scope(DriveScopes.DRIVE_FILE))
             .build()
-        
+
         val client = GoogleSignIn.getClient(context, signInOptions)
         return client.signInIntent
     }
@@ -49,7 +49,7 @@ class DriveBackupManager(private val context: Context) {
 
             // Backup main database file
             backupFile(driveService, dbPath, "oreoregeo_database.db")
-            
+
             // Backup WAL file if it exists
             if (walPath.exists()) {
                 backupFile(driveService, walPath, "oreoregeo_database.db-wal")
@@ -112,7 +112,7 @@ class DriveBackupManager(private val context: Context) {
 
             // Restore main database file
             restoreFile(driveService, "oreoregeo_database.db", dbPath)
-            
+
             // Restore WAL file if it exists
             try {
                 restoreFile(driveService, "oreoregeo_database.db-wal", walPath)

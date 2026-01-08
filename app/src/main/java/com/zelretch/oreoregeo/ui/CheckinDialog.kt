@@ -67,7 +67,7 @@ fun CheckinDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
-                
+
                 when (checkinState) {
                     is CheckinState.Loading -> {
                         CircularProgressIndicator(

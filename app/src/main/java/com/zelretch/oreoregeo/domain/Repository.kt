@@ -18,12 +18,10 @@ class Repository(
     private var osmApiClient: OsmApiClient,
     private val driveBackupManager: com.zelretch.oreoregeo.data.DriveBackupManager
 ) {
-    fun getAllCheckins(): Flow<List<Checkin>> {
-        return checkinDao.getAllCheckins().map { entities ->
-            entities.map { entity ->
-                val place = placeDao.getPlaceByKey(entity.place_key)?.toDomain()
-                entity.toDomain(place)
-            }
+    fun getAllCheckins(): Flow<List<Checkin>> = checkinDao.getAllCheckins().map { entities ->
+        entities.map { entity ->
+            val place = placeDao.getPlaceByKey(entity.place_key)?.toDomain()
+            entity.toDomain(place)
         }
     }
 
@@ -31,7 +29,7 @@ class Repository(
         return try {
             val lastCheckin = checkinDao.getLastCheckinByPlace(placeKey)
             val visitedAt = System.currentTimeMillis()
-            
+
             if (lastCheckin != null && (visitedAt - lastCheckin.visited_at) < 30 * 60 * 1000) {
                 return Result.failure(Exception("duplicate_checkin"))
             }
@@ -56,7 +54,7 @@ class Repository(
         language: String? = null
     ): Result<List<PlaceWithDistance>> {
         val result = overpassClient.searchNearby(currentLat, currentLon, radiusMeters, language)
-        
+
         return result.map { elements ->
             val places = elements.mapNotNull { element ->
                 element.toPlace(language)?.let { place ->
@@ -64,44 +62,41 @@ class Repository(
                         null
                     } else {
                         val distance = calculateDistance(
-                            currentLat, currentLon,
-                            place.lat, place.lon
+                            currentLat,
+                            currentLon,
+                            place.lat,
+                            place.lon
                         )
                         PlaceWithDistance(place, distance)
                     }
                 }
             }.sortedBy { it.distanceMeters }
-            
+
             // ローカルDBに保存
             places.forEach { placeWithDistance ->
                 placeDao.insert(placeWithDistance.place.toEntity())
             }
-            
+
             places
         }
     }
 
-    suspend fun createOsmNode(
-        lat: Double,
-        lon: Double,
-        tags: Map<String, String>,
-        comment: String
-    ): Result<String> {
+    suspend fun createOsmNode(lat: Double, lon: Double, tags: Map<String, String>, comment: String): Result<String> {
         val changesetResult = osmApiClient.createChangeset(comment)
         if (changesetResult.isFailure) {
             return Result.failure(changesetResult.exceptionOrNull()!!)
         }
-        
+
         val changesetId = changesetResult.getOrThrow()
         val nodeResult = osmApiClient.createNode(changesetId, lat, lon, tags)
-        
+
         osmApiClient.closeChangeset(changesetId)
-        
+
         return nodeResult.map { nodeId ->
             val placeKey = "osm:node:$nodeId"
             val name = tags["name"] ?: "Unnamed"
             val category = tags["amenity"] ?: tags["shop"] ?: tags["tourism"] ?: "other"
-            
+
             val place = PlaceEntity(
                 place_key = placeKey,
                 name = name,
@@ -111,41 +106,42 @@ class Repository(
                 updated_at = System.currentTimeMillis()
             )
             placeDao.insert(place)
-            
+
             placeKey
         }
     }
 
-    suspend fun updateOsmNodeTags(
-        nodeId: Long,
-        newTags: Map<String, String>,
-        comment: String
-    ): Result<Unit> {
+    suspend fun updateOsmNodeTags(nodeId: Long, newTags: Map<String, String>, comment: String): Result<Unit> {
         val nodeResult = osmApiClient.getNode(nodeId)
         if (nodeResult.isFailure) {
             return Result.failure(nodeResult.exceptionOrNull()!!)
         }
-        
+
         val node = nodeResult.getOrThrow()
         val version = node.version ?: return Result.failure(IllegalStateException("Node has no version"))
-        
+
         val changesetResult = osmApiClient.createChangeset(comment)
         if (changesetResult.isFailure) {
             return Result.failure(changesetResult.exceptionOrNull()!!)
         }
-        
+
         val changesetId = changesetResult.getOrThrow()
         val updateResult = osmApiClient.updateNode(
-            nodeId, node.lat, node.lon, newTags, changesetId, version
+            nodeId,
+            node.lat,
+            node.lon,
+            newTags,
+            changesetId,
+            version
         )
-        
+
         osmApiClient.closeChangeset(changesetId)
-        
+
         return updateResult.map {
             val placeKey = "osm:node:$nodeId"
             val name = newTags["name"] ?: "Unnamed"
             val category = newTags["amenity"] ?: newTags["shop"] ?: newTags["tourism"] ?: "other"
-            
+
             val place = PlaceEntity(
                 place_key = placeKey,
                 name = name,
@@ -168,21 +164,15 @@ class Repository(
     }
 
     @Suppress("unused")
-    suspend fun restoreDatabaseFromGoogleDrive(account: com.google.android.gms.auth.api.signin.GoogleSignInAccount): Result<Unit> {
-        return driveBackupManager.restoreDatabase(account)
-    }
+    suspend fun restoreDatabaseFromGoogleDrive(
+        account: com.google.android.gms.auth.api.signin.GoogleSignInAccount
+    ): Result<Unit> = driveBackupManager.restoreDatabase(account)
 
-    fun getGoogleSignInIntent(): android.content.Intent {
-        return driveBackupManager.getSignInIntent()
-    }
+    fun getGoogleSignInIntent(): android.content.Intent = driveBackupManager.getSignInIntent()
 
-    suspend fun backupToGoogleDrive(account: com.google.android.gms.auth.api.signin.GoogleSignInAccount): Result<Unit> {
-        return driveBackupManager.backupDatabase(account)
-    }
+    suspend fun backupToGoogleDrive(account: com.google.android.gms.auth.api.signin.GoogleSignInAccount): Result<Unit> = driveBackupManager.backupDatabase(account)
 
-    fun isOsmAuthenticated(): Boolean {
-        return osmApiClient.isLoggedIn()
-    }
+    fun isOsmAuthenticated(): Boolean = osmApiClient.isLoggedIn()
 
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
         val results = FloatArray(1)
@@ -193,10 +183,10 @@ class Repository(
     private fun OverpassElement.toPlace(language: String? = null): Place? {
         val latitude = lat ?: center?.lat ?: return null
         val longitude = lon ?: center?.lon ?: return null
-        
+
         val name = language?.let { tags?.get("name:$it") } ?: tags?.get("name") ?: "Unnamed"
         val category = tags?.get("amenity") ?: tags?.get("shop") ?: tags?.get("tourism") ?: "other"
-        
+
         return Place(
             placeKey = "osm:$type:$id",
             name = name,

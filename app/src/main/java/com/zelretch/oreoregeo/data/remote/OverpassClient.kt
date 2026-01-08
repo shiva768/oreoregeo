@@ -34,13 +34,13 @@ class OverpassClient {
         try {
             val query = buildQuery(lat, lon, radiusMeters, language)
             val requestBody = query.toRequestBody("text/plain".toMediaType())
-            
+
             // Try endpoints in order until one succeeds
             var lastException: Exception? = null
             for (i in endpoints.indices) {
                 val endpointIndex = (currentEndpointIndex + i) % endpoints.size
                 val endpoint = endpoints[endpointIndex]
-                
+
                 try {
                     val request = Request.Builder()
                         .url(endpoint)
@@ -54,7 +54,7 @@ class OverpassClient {
 
                     val responseBody = response.body?.string() ?: ""
                     val elements = parseResponse(responseBody)
-                    
+
                     // Success - update current endpoint for next request
                     currentEndpointIndex = endpointIndex
                     return@withContext Result.success(elements)
@@ -63,7 +63,7 @@ class OverpassClient {
                     continue // Try next endpoint
                 }
             }
-            
+
             // All endpoints failed
             Result.failure(lastException ?: IOException("All Overpass endpoints failed"))
         } catch (e: Exception) {
@@ -99,18 +99,20 @@ class OverpassClient {
             val element = elementsArray.getJSONObject(i)
             val type = element.getString("type")
             val id = element.getLong("id")
-            
+
             val lat = element.optDouble("lat", Double.NaN)
             val lon = element.optDouble("lon", Double.NaN)
-            
+
             val center = if (element.has("center")) {
                 val centerObj = element.getJSONObject("center")
                 Center(
                     lat = centerObj.getDouble("lat"),
                     lon = centerObj.getDouble("lon")
                 )
-            } else null
-            
+            } else {
+                null
+            }
+
             val tags = if (element.has("tags")) {
                 val tagsObj = element.getJSONObject("tags")
                 val tagMap = mutableMapOf<String, String>()
@@ -118,7 +120,9 @@ class OverpassClient {
                     tagMap[key] = tagsObj.getString(key)
                 }
                 tagMap
-            } else null
+            } else {
+                null
+            }
 
             elements.add(
                 OverpassElement(

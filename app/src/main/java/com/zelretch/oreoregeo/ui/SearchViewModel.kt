@@ -44,8 +44,9 @@ class SearchViewModel(
             _searchState.value = SearchState.Loading
             val language = Locale.getDefault().language
             val result = repository.searchNearbyPlaces(
-                lat, lon, 
-                radiusMeters = _searchRadius.value, 
+                lat,
+                lon,
+                radiusMeters = _searchRadius.value,
                 excludeUnnamed = _excludeUnnamed.value,
                 language = language
             )

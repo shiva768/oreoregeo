@@ -18,19 +18,17 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        fun getDatabase(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "oreoregeo_database"
-                )
-                    .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING) // Enable WAL
-                    .addCallback(object : Callback() {})
-                    .build()
-                INSTANCE = instance
-                instance
-            }
+        fun getDatabase(context: Context): AppDatabase = INSTANCE ?: synchronized(this) {
+            val instance = Room.databaseBuilder(
+                context.applicationContext,
+                AppDatabase::class.java,
+                "oreoregeo_database"
+            )
+                .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING) // Enable WAL
+                .addCallback(object : Callback() {})
+                .build()
+            INSTANCE = instance
+            instance
         }
     }
 }

@@ -29,7 +29,7 @@ class CheckinViewModel(
             val result = repository.performCheckin(placeKey, note)
             _checkinState.value = result.fold(
                 onSuccess = { CheckinState.Success(it) },
-                onFailure = { 
+                onFailure = {
                     val message = if (it.message?.contains("UNIQUE constraint failed") == true) {
                         "Cannot check-in within 30 minutes of previous check-in"
                     } else {

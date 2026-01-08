@@ -1,14 +1,14 @@
 package com.zelretch.oreoregeo
 
-import org.junit.Test
 import org.junit.Assert.*
+import org.junit.Test
 
 class PlaceKeyTest {
 
     @Test
     fun testNodePlaceKeyFormat() {
         val placeKey = "osm:node:12345"
-        
+
         assertTrue(placeKey.startsWith("osm:"))
         val parts = placeKey.split(":")
         assertEquals(3, parts.size)
@@ -20,7 +20,7 @@ class PlaceKeyTest {
     @Test
     fun testWayPlaceKeyFormat() {
         val placeKey = "osm:way:67890"
-        
+
         val parts = placeKey.split(":")
         assertEquals("way", parts[1])
         assertTrue(parts[2].toLongOrNull() != null)
@@ -29,7 +29,7 @@ class PlaceKeyTest {
     @Test
     fun testRelationPlaceKeyFormat() {
         val placeKey = "osm:relation:11111"
-        
+
         val parts = placeKey.split(":")
         assertEquals("relation", parts[1])
         assertTrue(parts[2].toLongOrNull() != null)
@@ -38,7 +38,7 @@ class PlaceKeyTest {
     @Test
     fun testValidPlaceKeyTypes() {
         val validTypes = listOf("node", "way", "relation")
-        
+
         validTypes.forEach { type ->
             val placeKey = "osm:$type:12345"
             val parts = placeKey.split(":")
@@ -51,7 +51,7 @@ class PlaceKeyTest {
         val nodeKey = "osm:node:12345"
         val wayKey = "osm:way:67890"
         val relationKey = "osm:relation:11111"
-        
+
         assertEquals(12345L, nodeKey.split(":")[2].toLong())
         assertEquals(67890L, wayKey.split(":")[2].toLong())
         assertEquals(11111L, relationKey.split(":")[2].toLong())
@@ -64,7 +64,7 @@ class PlaceKeyTest {
             "osm:way:2" to "way",
             "osm:relation:3" to "relation"
         )
-        
+
         keys.forEach { (key, expectedType) ->
             val parts = key.split(":")
             assertEquals(expectedType, parts[1])
@@ -75,7 +75,7 @@ class PlaceKeyTest {
     fun testLargePlaceKeyId() {
         val placeKey = "osm:node:9876543210"
         val parts = placeKey.split(":")
-        
+
         val id = parts[2].toLong()
         assertEquals(9876543210L, id)
         assertTrue(id > Int.MAX_VALUE)
@@ -84,17 +84,17 @@ class PlaceKeyTest {
     @Test
     fun testPlaceKeyStructure() {
         val placeKey = "osm:node:12345"
-        
+
         // Should have exactly 3 parts
         val parts = placeKey.split(":")
         assertEquals(3, parts.size)
-        
+
         // First part should be "osm"
         assertEquals("osm", parts[0])
-        
+
         // Second part should be a valid type
         assertTrue(parts[1] in listOf("node", "way", "relation"))
-        
+
         // Third part should be a valid number
         assertNotNull(parts[2].toLongOrNull())
     }
@@ -103,7 +103,7 @@ class PlaceKeyTest {
     fun testPlaceKeyWithZeroId() {
         val placeKey = "osm:node:0"
         val parts = placeKey.split(":")
-        
+
         assertEquals(0L, parts[2].toLong())
     }
 
@@ -116,10 +116,10 @@ class PlaceKeyTest {
             "osm:way:2",
             "osm:relation:1"
         )
-        
+
         // All keys should be unique
         assertEquals(5, keys.size)
-        
+
         // Same ID but different types should be different keys
         assertTrue(keys.contains("osm:node:1"))
         assertTrue(keys.contains("osm:way:1"))
@@ -133,7 +133,7 @@ class PlaceKeyTest {
             "osm:way:2",
             "osm:relation:3"
         )
-        
+
         validKeys.forEach { key ->
             assertTrue("Key $key should start with osm:", key.startsWith("osm:"))
         }
@@ -144,7 +144,7 @@ class PlaceKeyTest {
         val type = "node"
         val id = 12345L
         val placeKey = "osm:$type:$id"
-        
+
         assertEquals("osm:node:12345", placeKey)
     }
 
@@ -153,7 +153,7 @@ class PlaceKeyTest {
         val placeKey = "osm:way:67890"
         val regex = Regex("^osm:(node|way|relation):(\\d+)$")
         val match = regex.find(placeKey)
-        
+
         assertNotNull(match)
         assertEquals("way", match?.groupValues?.get(1))
         assertEquals("67890", match?.groupValues?.get(2))
