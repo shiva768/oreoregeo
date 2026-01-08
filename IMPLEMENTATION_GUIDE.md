@@ -1,27 +1,27 @@
-# Implementation Guide for Remaining Features
+# 未実装機能の実装ガイド
 
-This document provides guidance for implementing the remaining features that require external service configuration.
+このドキュメントでは、外部サービスの構成が必要な未実装機能の実装方法について説明します。
 
-## OSM OAuth 2.0 Implementation
+## OSM OAuth 2.0 の実装
 
-### 1. Register OAuth Application
+### 1. OAuth アプリケーションの登録
 
-1. Go to https://www.openstreetmap.org/oauth2/applications/new
-2. Fill in the form:
+1. https://www.openstreetmap.org/oauth2/applications/new にアクセスします。
+2. フォームに入力します：
    - Name: Oreoregeo
    - Redirect URIs: `oreoregeo://oauth/callback`
-   - Scopes: Select only `write_api`
-3. Save the Client ID and Client Secret
+   - Scopes: `write_api` のみを選択
+3. Client ID と Client Secret を保存します。
 
-### 2. Add OAuth Dependencies
+### 2. OAuth 依存関係の追加
 
-Already included in build.gradle.kts:
-- Use Android AccountManager or custom OAuth implementation
-- Store tokens securely using EncryptedSharedPreferences
+`build.gradle.kts` には既に含まれています：
+- Android の AccountManager またはカスタムの OAuth 実装を使用します。
+- EncryptedSharedPreferences を使用してトークンを安全に保存します。
 
-### 3. Implement OAuth Flow
+### 3. OAuth フローの実装
 
-Create `OsmOAuthManager.kt`:
+`OsmOAuthManager.kt` を作成します：
 
 ```kotlin
 class OsmOAuthManager(private val context: Context) {
@@ -38,42 +38,42 @@ class OsmOAuthManager(private val context: Context) {
     }
     
     suspend fun exchangeCodeForToken(code: String): String {
-        // Implement token exchange
-        // POST to https://www.openstreetmap.org/oauth2/token
-        // with code, client_id, client_secret, grant_type=authorization_code
+        // トークン交換の実装
+        // https://www.openstreetmap.org/oauth2/token に POST
+        // code, client_id, client_secret, grant_type=authorization_code を送信
     }
     
     fun saveToken(token: String) {
-        // Save to EncryptedSharedPreferences
+        // EncryptedSharedPreferences に保存
     }
     
     fun getToken(): String? {
-        // Retrieve from EncryptedSharedPreferences
+        // EncryptedSharedPreferences から取得
     }
 }
 ```
 
-### 4. Update SettingsScreen
+### 4. SettingsScreen の更新
 
 ```kotlin
 val osmOAuthManager = remember { OsmOAuthManager(context) }
 val launcher = rememberLauncherForActivityResult(
     ActivityResultContracts.StartActivityForResult()
 ) { result ->
-    // Handle OAuth callback
+    // OAuth コールバックの処理
 }
 
 Button(onClick = {
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(osmOAuthManager.getAuthorizationUrl()))
     launcher.launch(intent)
 }) {
-    Text("Connect OSM Account")
+    Text("OSM アカウントを連携")
 }
 ```
 
-### 5. Handle OAuth Callback
+### 5. OAuth コールバックの処理
 
-Add to AndroidManifest.xml:
+`AndroidManifest.xml` に追加：
 ```xml
 <activity android:name=".OAuthCallbackActivity">
     <intent-filter>
@@ -85,7 +85,7 @@ Add to AndroidManifest.xml:
 </activity>
 ```
 
-Create `OAuthCallbackActivity.kt`:
+`OAuthCallbackActivity.kt` を作成：
 ```kotlin
 class OAuthCallbackActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,7 +95,7 @@ class OAuthCallbackActivity : ComponentActivity() {
             lifecycleScope.launch {
                 val token = OsmOAuthManager(this@OAuthCallbackActivity)
                     .exchangeCodeForToken(code)
-                // Update repository with token
+                // リポジトリにトークンを設定
                 val app = application as OreoregeoApplication
                 app.repository.setOsmAccessToken(token)
                 finish()
@@ -105,25 +105,25 @@ class OAuthCallbackActivity : ComponentActivity() {
 }
 ```
 
-## Google Drive API Implementation
+## Google Drive API の実装
 
-### 1. Setup Google Cloud Project
+### 1. Google Cloud プロジェクトの設定
 
-1. Go to https://console.cloud.google.com
-2. Create a new project or select existing
-3. Enable Google Drive API
-4. Create OAuth 2.0 credentials:
-   - Application type: Android
-   - Package name: com.example.oreoregeo
-   - SHA-1 certificate fingerprint (get from debug keystore)
+1. https://console.cloud.google.com にアクセスします。
+2. 新しいプロジェクトを作成するか、既存のプロジェクトを選択します。
+3. Google Drive API を有効にします。
+4. OAuth 2.0 クレデンシャルを作成します：
+   - アプリケーションの種類: Android
+   - パッケージ名: com.example.oreoregeo
+   - SHA-1 証明書のフィンガープリント (デバッグ用キーストアから取得)
 
-### 2. Add google-services.json
+### 2. google-services.json の追加
 
-Download from Google Cloud Console and place in `app/` directory.
+Google Cloud Console からダウンロードし、`app/` ディレクトリに配置します。
 
-### 3. Implement Backup Flow
+### 3. バックアップフローの実装
 
-Create `BackupViewModel.kt`:
+`BackupViewModel.kt` を作成：
 
 ```kotlin
 class BackupViewModel(
@@ -136,7 +136,7 @@ class BackupViewModel(
     fun performBackup() {
         viewModelScope.launch {
             _backupState.value = BackupState.Loading
-            // Get signed in account
+            // サインイン済みのアカウントを取得
             val account = GoogleSignIn.getLastSignedInAccount(context)
             if (account == null) {
                 _backupState.value = BackupState.NeedSignIn
@@ -153,14 +153,14 @@ class BackupViewModel(
 }
 ```
 
-### 4. Update SettingsScreen with Drive Integration
+### 4. SettingsScreen の更新（Drive 連携）
 
 ```kotlin
 val signInLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.StartActivityForResult()
 ) { result ->
     if (result.resultCode == Activity.RESULT_OK) {
-        // Perform backup after sign in
+        // サインイン後にバックアップを実行
         backupViewModel.performBackup()
     }
 }
@@ -176,15 +176,15 @@ Button(onClick = {
 }) {
     Icon(Icons.Default.Backup, contentDescription = null)
     Spacer(Modifier.width(8.dp))
-    Text("Backup to Google Drive")
+    Text("Google ドライブにバックアップ")
 }
 ```
 
-## Error Handling Implementation
+## エラーハンドリングの実装
 
-### 1. Network Connectivity Check
+### 1. ネットワーク接続チェック
 
-Create `NetworkUtil.kt`:
+`NetworkUtil.kt` を作成：
 
 ```kotlin
 object NetworkUtil {
@@ -198,26 +198,26 @@ object NetworkUtil {
 }
 ```
 
-### 2. Update ViewModels
+### 2. ViewModel の更新
 
-Add network checks before API calls:
+API コールの前にネットワークチェックを追加：
 
 ```kotlin
 fun searchNearby(lat: Double, lon: Double) {
     viewModelScope.launch {
         if (!NetworkUtil.isNetworkAvailable(context)) {
-            _searchState.value = SearchState.Error("No internet connection")
+            _searchState.value = SearchState.Error("インターネット接続がありません")
             return@launch
         }
         _searchState.value = SearchState.Loading
-        // ... rest of implementation
+        // ... 残りの実装
     }
 }
 ```
 
-### 3. Add Retry Logic
+### 3. 再試行ロジックの追加
 
-Implement exponential backoff for failed requests:
+失敗したリクエストに対して指数バックオフを実装：
 
 ```kotlin
 suspend fun <T> retryWithBackoff(
@@ -236,46 +236,46 @@ suspend fun <T> retryWithBackoff(
             currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
         }
     }
-    return block() // last attempt
+    return block() // 最後の試行
 }
 ```
 
-## Testing Checklist
+## テストチェックリスト
 
-Once OAuth and Drive are configured:
+OAuth と Drive の設定が完了したら：
 
-- [ ] Test nearby search with real location
-- [ ] Test check-in functionality
-- [ ] Verify 30-minute duplicate prevention works
-- [ ] Test OSM node creation
-- [ ] Test OSM node tag editing
-- [ ] Test version conflict handling
-- [ ] Test Drive backup and restore
-- [ ] Test offline mode (history view only)
-- [ ] Test error messages and retry
-- [ ] Verify WAL mode is active in database
-- [ ] Test with poor network conditions
-- [ ] Verify Overpass timeout handling
-- [ ] Test OAuth token refresh if needed
+- [ ] 実位置での周辺検索テスト
+- [ ] チェックイン機能のテスト
+- [ ] 30 分以内の重複防止機能の確認
+- [ ] OSM ノード作成のテスト
+- [ ] OSM ノードのタグ編集テスト
+- [ ] バージョン競合ハンドリングのテスト
+- [ ] Drive バックアップと復元のテスト
+- [ ] オフラインモードのテスト（履歴閲覧のみ）
+- [ ] エラーメッセージと再試行のテスト
+- [ ] データベースでの WAL モード有効化の確認
+- [ ] 低速ネットワーク環境でのテスト
+- [ ] Overpass タイムアウト処理のテスト
+- [ ] OAuth トークンのリフレッシュ（必要な場合）のテスト
 
-## Security Considerations
+## セキュリティに関する考慮事項
 
-1. **Never commit OAuth credentials** to git
-2. Use `BuildConfig` fields for sensitive data
-3. Store tokens in EncryptedSharedPreferences
-4. Validate all user input before OSM API calls
-5. Implement rate limiting for API calls
-6. Add certificate pinning for OSM API (optional)
-7. Clear tokens on logout
-8. Handle token expiration gracefully
+1. **OAuth クレデンシャルを Git にコミットしない**
+2. 機密データには `BuildConfig` フィールドを使用する
+3. トークンは EncryptedSharedPreferences に保存する
+4. OSM API コールの前にすべてのユーザー入力を検証する
+5. API コールのレート制限を実装する
+6. OSM API の証明書ピンニング（任意）を追加する
+7. ログアウト時にトークンを消去する
+8. トークンの期限切れを適切に処理する
 
-## Performance Optimizations
+## パフォーマンスの最適化
 
-1. Cache Overpass results for short duration
-2. Implement pagination for check-in history
-3. Use Room's Flow for reactive updates
-4. Optimize image loading if adding photos later
-5. Use WorkManager for background backups
-6. Implement proper loading states
-7. Add pull-to-refresh on search screen
-8. Cache place details to reduce API calls
+1. Overpass の結果を短期間キャッシュする
+2. チェックイン履歴のページネーション（順次読み込み）を実装する
+3. リアクティブな更新のために Room の Flow を使用する
+4. （将来的に写真を追加する場合）画像読み込みを最適化する
+5. バックグラウンドバックアップに WorkManager を使用する
+6. 適切なローディング状態を実装する
+7. 検索画面にプルダウン更新を追加する
+8. API コールを減らすためにスポット詳細をキャッシュする
