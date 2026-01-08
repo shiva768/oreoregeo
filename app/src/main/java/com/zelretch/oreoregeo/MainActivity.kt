@@ -53,10 +53,16 @@ class MainActivity : ComponentActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setContent {
+            var currentLocationPair by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
             OreoregeoTheme {
                 MainScreen(
+                    currentLocation = currentLocationPair,
                     onRequestLocation = { callback ->
-                        requestLocationAndSearch(callback)
+                        requestLocationAndSearch { lat, lon ->
+                            currentLocationPair = lat to lon
+                            callback(lat, lon)
+                        }
                     }
                 )
             }
@@ -115,6 +121,7 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    currentLocation: Pair<Double, Double>?,
     onRequestLocation: ((Double, Double) -> Unit) -> Unit
 ) {
     val navController = rememberNavController()
@@ -133,8 +140,10 @@ fun MainScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
-                    IconButton(onClick = { navController.navigate("add_place") }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_place))
+                    if (repository.isOsmAuthenticated()) {
+                        IconButton(onClick = { navController.navigate("add_place") }) {
+                            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_place))
+                        }
                     }
                 }
             )
@@ -201,14 +210,30 @@ fun MainScreen(
                     showFab = true
                 }
 
+                val searchRadius by searchViewModel.searchRadius.collectAsState()
+                val excludeUnnamed by searchViewModel.excludeUnnamed.collectAsState()
+                
                 SearchScreen(
                     searchState = searchState,
+                    searchRadius = searchRadius,
+                    onRadiusChange = { searchViewModel.setSearchRadius(it) },
+                    excludeUnnamed = excludeUnnamed,
+                    onExcludeUnnamedChange = { searchViewModel.setExcludeUnnamed(it) },
+                    canEdit = repository.isOsmAuthenticated(),
+                    currentLocation = currentLocation,
                     onSearchClick = {
                         onRequestLocation { lat, lon ->
                             searchViewModel.searchNearby(lat, lon)
                         }
                     },
                     onPlaceClick = { placeKey ->
+                        selectedPlaceKey = placeKey
+                        selectedPlaceName = if (searchState is SearchState.Success) {
+                            (searchState as SearchState.Success).places
+                                .find { it.place.placeKey == placeKey }?.place?.name
+                        } else null
+                    },
+                    onCheckinClick = { placeKey ->
                         selectedPlaceKey = placeKey
                         selectedPlaceName = if (searchState is SearchState.Success) {
                             (searchState as SearchState.Success).places
@@ -248,7 +273,10 @@ fun MainScreen(
                     showFab = false
                 }
 
-                HistoryScreen(checkins = checkins)
+                HistoryScreen(
+                    checkins = checkins,
+                    onDeleteClick = { historyViewModel.deleteCheckin(it) }
+                )
             }
             
             composable("settings") {

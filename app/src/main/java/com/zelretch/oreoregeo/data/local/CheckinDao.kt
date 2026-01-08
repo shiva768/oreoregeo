@@ -19,6 +19,9 @@ interface CheckinDao {
     @Query("SELECT * FROM checkins WHERE id = :id")
     suspend fun getCheckinById(id: Long): CheckinEntity?
 
+    @Query("SELECT * FROM checkins WHERE place_key = :placeKey ORDER BY visited_at DESC LIMIT 1")
+    suspend fun getLastCheckinByPlace(placeKey: String): CheckinEntity?
+
     @Query("DELETE FROM checkins WHERE id = :id")
     suspend fun delete(id: Long)
 }

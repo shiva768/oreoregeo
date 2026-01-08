@@ -28,7 +28,13 @@ class Repository(
 
     suspend fun performCheckin(placeKey: String, note: String): Result<Long> {
         return try {
+            val lastCheckin = checkinDao.getLastCheckinByPlace(placeKey)
             val visitedAt = System.currentTimeMillis()
+            
+            if (lastCheckin != null && (visitedAt - lastCheckin.visited_at) < 30 * 60 * 1000) {
+                return Result.failure(Exception("duplicate_checkin"))
+            }
+
             val checkin = CheckinEntity(
                 place_key = placeKey,
                 visited_at = visitedAt,
@@ -43,18 +49,25 @@ class Repository(
 
     suspend fun searchNearbyPlaces(
         currentLat: Double,
-        currentLon: Double
+        currentLon: Double,
+        radiusMeters: Int = 80,
+        excludeUnnamed: Boolean = true,
+        language: String? = null
     ): Result<List<PlaceWithDistance>> {
-        val result = overpassClient.searchNearby(currentLat, currentLon)
+        val result = overpassClient.searchNearby(currentLat, currentLon, radiusMeters, language)
         
         return result.map { elements ->
             val places = elements.mapNotNull { element ->
-                element.toPlace()?.let { place ->
-                    val distance = calculateDistance(
-                        currentLat, currentLon,
-                        place.lat, place.lon
-                    )
-                    PlaceWithDistance(place, distance)
+                element.toPlace(language)?.let { place ->
+                    if (excludeUnnamed && place.name == "Unnamed") {
+                        null
+                    } else {
+                        val distance = calculateDistance(
+                            currentLat, currentLon,
+                            place.lat, place.lon
+                        )
+                        PlaceWithDistance(place, distance)
+                    }
                 }
             }.sortedBy { it.distanceMeters }
             
@@ -148,16 +161,25 @@ class Repository(
         osmApiClient = OsmApiClient(token)
     }
 
+    suspend fun deleteCheckin(checkinId: Long) {
+        checkinDao.delete(checkinId)
+    }
+
+    fun isOsmAuthenticated(): Boolean {
+        return osmApiClient.isLoggedIn()
+    }
+
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
         val results = FloatArray(1)
         Location.distanceBetween(lat1, lon1, lat2, lon2, results)
         return results[0]
     }
 
-    private fun OverpassElement.toPlace(): Place? {
+    private fun OverpassElement.toPlace(language: String? = null): Place? {
         val latitude = lat ?: center?.lat ?: return null
         val longitude = lon ?: center?.lon ?: return null
-        val name = tags?.get("name") ?: "Unnamed"
+        
+        val name = language?.let { tags?.get("name:$it") } ?: tags?.get("name") ?: "Unnamed"
         val category = tags?.get("amenity") ?: tags?.get("shop") ?: tags?.get("tourism") ?: "other"
         
         return Place(

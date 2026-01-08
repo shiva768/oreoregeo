@@ -68,4 +68,8 @@
     <string name="app_desc">A manual check-in app for OpenStreetMap places</string>
     <string name="checkin_at">Check-in at %1$s</string>
     <string name="note_optional">Note (optional)</string>
+    <string name="search_radius_label">Search Radius: %1$dm</string>
+    <string name="exclude_unnamed_label">Exclude unnamed places</string>
+    <string name="current_location">Current Location</string>
+    <string name="selected_place">Selected Place</string>
 </resources>

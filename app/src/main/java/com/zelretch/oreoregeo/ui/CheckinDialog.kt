@@ -9,6 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.res.stringResource
+import com.zelretch.oreoregeo.R
+
 @Composable
 fun CheckinDialog(
     placeKey: String,
@@ -36,15 +39,15 @@ fun CheckinDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Check-in") },
+        title = { Text(stringResource(R.string.checkin)) },
         text = {
             Column {
-                Text("Place: ${placeName ?: placeKey}")
+                Text(stringResource(R.string.place_label, placeName ?: placeKey))
                 Spacer(Modifier.height(16.dp))
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("Note (optional)") },
+                    label = { Text(stringResource(R.string.note_optional)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
@@ -57,14 +60,19 @@ fun CheckinDialog(
                     }
                     is CheckinState.Success -> {
                         Text(
-                            "Check-in successful!",
+                            stringResource(R.string.checkin_success),
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
                     }
                     is CheckinState.Error -> {
+                        val errorMessage = if (checkinState.message == "duplicate_checkin") {
+                            stringResource(R.string.duplicate_checkin)
+                        } else {
+                            checkinState.message
+                        }
                         Text(
-                            checkinState.message,
+                            errorMessage,
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -80,12 +88,12 @@ fun CheckinDialog(
             ) {
                 Icon(Icons.Default.Check, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Check-in")
+                Text(stringResource(R.string.checkin))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

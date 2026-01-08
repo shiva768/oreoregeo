@@ -79,6 +79,9 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     "ksp"("androidx.room:room-compiler:$roomVersion")
     
+    // OpenStreetMap (osmdroid)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+    
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")

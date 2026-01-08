@@ -23,6 +23,10 @@ import javax.xml.transform.stream.StreamResult
 // This implementation uses a constructor parameter for simplicity but should be refactored
 // to use secure token storage (see IMPLEMENTATION_GUIDE.md for details).
 class OsmApiClient(private val accessToken: String? = "dummy_token") {
+    fun isLoggedIn(): Boolean {
+        return !accessToken.isNullOrBlank() && accessToken != "dummy_token"
+    }
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
