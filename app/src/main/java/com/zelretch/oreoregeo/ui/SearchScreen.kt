@@ -190,7 +190,7 @@ fun MapViewContainer(
 ) {
     val context = LocalContext.current
     
-    // Calculate appropriate zoom level based on radius
+    // 半径に基づいた適切なズームレベルを計算
     // 50m -> ~18.5, 500m -> ~15.5
     val targetZoom = when {
         radiusMeters <= 50 -> 18.5
@@ -209,7 +209,7 @@ fun MapViewContainer(
                 controller.setZoom(targetZoom)
                 controller.setCenter(GeoPoint(location.first, location.second))
                 
-                // Add marker for current location
+                // 現在地のマーカーを追加
                 val marker = Marker(this)
                 marker.position = GeoPoint(location.first, location.second)
                 marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
@@ -217,7 +217,7 @@ fun MapViewContainer(
                 marker.title = context.getString(R.string.current_location)
                 overlays.add(marker)
                 
-                // Add radius circle
+                // 検索半径の円を追加
                 val circle = Polygon.pointsAsCircle(GeoPoint(location.first, location.second), radiusMeters.toDouble())
                 val circleOverlay = Polygon(this)
                 circleOverlay.points = circle
@@ -230,12 +230,12 @@ fun MapViewContainer(
         update = { mapView ->
             mapView.overlays.clear()
             
-            // Update zoom based on radius if no place is selected
+            // スポットが選択されていない場合、半径に基づいてズームを更新
             if (selectedPlaceLocation == null) {
                 mapView.controller.setZoom(targetZoom)
             }
             
-            // Current location marker
+            // 現在地のマーカー
             val marker = Marker(mapView)
             marker.position = GeoPoint(location.first, location.second)
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
@@ -243,7 +243,7 @@ fun MapViewContainer(
             marker.title = context.getString(R.string.current_location)
             mapView.overlays.add(marker)
             
-            // Search radius circle
+            // 検索半径の円
             val circle = Polygon.pointsAsCircle(GeoPoint(location.first, location.second), radiusMeters.toDouble())
             val circleOverlay = Polygon(mapView)
             circleOverlay.points = circle
@@ -252,7 +252,7 @@ fun MapViewContainer(
             circleOverlay.outlinePaint.strokeWidth = 2f
             mapView.overlays.add(circleOverlay)
 
-            // Selected place marker
+            // 選択された場所のマーカー
             selectedPlaceLocation?.let {
                 val selectedMarker = Marker(mapView)
                 selectedMarker.position = GeoPoint(it.first, it.second)
@@ -261,10 +261,10 @@ fun MapViewContainer(
                 selectedMarker.title = context.getString(R.string.selected_place)
                 mapView.overlays.add(selectedMarker)
                 
-                // Animate to selected place
+                // 選択された場所にアニメーションで移動
                 mapView.controller.animateTo(GeoPoint(it.first, it.second))
             } ?: run {
-                // If nothing selected, center on current location
+                // 何も選択されていない場合、現在地を中心に表示
                 mapView.controller.setCenter(GeoPoint(location.first, location.second))
             }
             

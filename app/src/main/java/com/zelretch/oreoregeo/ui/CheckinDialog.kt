@@ -28,7 +28,7 @@ fun CheckinDialog(
         when (checkinState) {
             is CheckinState.Loading -> isButtonEnabled = false
             is CheckinState.Success -> {
-                // Keep dialog open briefly to show success, then dismiss
+                // 成功を表示するためにダイアログを少し開いたままにしてから閉じる
                 kotlinx.coroutines.delay(1000)
                 onDismiss()
             }

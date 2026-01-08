@@ -71,7 +71,7 @@ class Repository(
                 }
             }.sortedBy { it.distanceMeters }
             
-            // Save to local DB
+            // ローカルDBに保存
             places.forEach { placeWithDistance ->
                 placeDao.insert(placeWithDistance.place.toEntity())
             }

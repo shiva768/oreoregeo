@@ -137,7 +137,7 @@ fun AddPlaceScreen(
                             category to categoryValue
                         )
                         
-                        // Parse additional tags
+                        // 追加タグをパース
                         if (additionalTags.isNotBlank()) {
                             additionalTags.split(",").forEach { tagPair ->
                                 val parts = tagPair.trim().split("=")

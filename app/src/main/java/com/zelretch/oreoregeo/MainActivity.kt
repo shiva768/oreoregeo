@@ -75,11 +75,13 @@ class MainActivity : ComponentActivity() {
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
+                // 位置情報が許可されている場合、現在地を取得
                 getCurrentLocation { lat, lon ->
                     callback(lat, lon)
                 }
             }
             else -> {
+                // 権限を要求
                 locationPermissionRequest.launch(
                     arrayOf(
                         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -283,13 +285,12 @@ fun MainScreen(
                 LaunchedEffect(Unit) {
                     showFab = false
                 }
-
                 SettingsScreen(
                     onBackupClick = {
-                        // TODO: Implement backup with Google Drive
+                        // TODO: Google ドライブを使用したバックアップの実装
                     },
                     onOsmLoginClick = {
-                        // TODO: Implement OSM OAuth
+                        // TODO: OSM OAuth の実装
                     }
                 )
             }

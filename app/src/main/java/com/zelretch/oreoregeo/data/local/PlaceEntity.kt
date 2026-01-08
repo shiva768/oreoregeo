@@ -11,5 +11,5 @@ data class PlaceEntity(
     val category: String,
     val lat: Double,
     val lon: Double,
-    val updated_at: Long // epoch ms
+    val updated_at: Long // エポックミリ秒
 )
