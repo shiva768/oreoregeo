@@ -22,7 +22,7 @@ import javax.xml.transform.stream.StreamResult
 // within each method rather than stored as a class member for better security.
 // This implementation uses a constructor parameter for simplicity but should be refactored
 // to use secure token storage (see IMPLEMENTATION_GUIDE.md for details).
-class OsmApiClient(private val accessToken: String? = null) {
+class OsmApiClient(private val accessToken: String? = "dummy_token") {
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)

@@ -28,4 +28,7 @@
     <string name="backup_to_drive">Backup to Google Drive</string>
     <string name="backup_success">Backup successful</string>
     <string name="backup_failed">Backup failed</string>
+    <string name="osm_client_id">YOUR_OSM_CLIENT_ID</string>
+    <string name="osm_client_secret">YOUR_OSM_CLIENT_SECRET</string>
+    <string name="osm_redirect_uri">oreoregeo://auth</string>
 </resources>
