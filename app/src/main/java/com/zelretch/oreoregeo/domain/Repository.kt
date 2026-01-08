@@ -15,7 +15,8 @@ class Repository(
     private val placeDao: PlaceDao,
     private val checkinDao: CheckinDao,
     private val overpassClient: OverpassClient,
-    private var osmApiClient: OsmApiClient
+    private var osmApiClient: OsmApiClient,
+    private val driveBackupManager: com.zelretch.oreoregeo.data.DriveBackupManager
 ) {
     fun getAllCheckins(): Flow<List<Checkin>> {
         return checkinDao.getAllCheckins().map { entities ->
@@ -163,6 +164,19 @@ class Repository(
 
     suspend fun deleteCheckin(checkinId: Long) {
         checkinDao.delete(checkinId)
+    }
+
+    @Suppress("unused")
+    suspend fun restoreDatabaseFromGoogleDrive(account: com.google.android.gms.auth.api.signin.GoogleSignInAccount): Result<Unit> {
+        return driveBackupManager.restoreDatabase(account)
+    }
+
+    fun getGoogleSignInIntent(): android.content.Intent {
+        return driveBackupManager.getSignInIntent()
+    }
+
+    suspend fun backupToGoogleDrive(account: com.google.android.gms.auth.api.signin.GoogleSignInAccount): Result<Unit> {
+        return driveBackupManager.backupDatabase(account)
     }
 
     fun isOsmAuthenticated(): Boolean {

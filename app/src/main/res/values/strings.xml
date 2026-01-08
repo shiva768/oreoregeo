@@ -50,4 +50,23 @@
     <string name="exclude_unnamed_label">Exclude unnamed places</string>
     <string name="current_location">Current Location</string>
     <string name="selected_place">Selected Place</string>
+    <string name="nearby_search">Nearby Search</string>
+    <string name="edit_tags">Edit Tags</string>
+    <string name="backup">Backup</string>
+    <string name="searching">Searching nearby places...</string>
+    <string name="error_occurred">An error occurred</string>
+    <string name="offline_mode">You are offline. Some features are unavailable.</string>
+    <string name="osm_sync_delay">OSM changes may take time to reflect</string>
+    <string name="place_name">Place Name</string>
+    <string name="note">Note</string>
+    <string name="distance">Distance</string>
+    <string name="visited_at">Visited At</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="save">Save</string>
+    <string name="login_osm">Login to OSM</string>
+    <string name="backup_success">Backup successful</string>
+    <string name="backup_failed">Backup failed</string>
+    <string name="no_checkins_yet">No check-ins yet</string>
+    <string name="checkin_at">Check-in at %1$s</string>
 </resources>

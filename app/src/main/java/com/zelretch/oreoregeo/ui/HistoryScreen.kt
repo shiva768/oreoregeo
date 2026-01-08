@@ -51,7 +51,7 @@ fun HistoryScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No check-ins yet")
+                Text(stringResource(R.string.no_checkins_yet))
             }
         } else {
             LazyColumn(

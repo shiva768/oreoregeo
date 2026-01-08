@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
@@ -30,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -40,6 +42,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -60,6 +64,7 @@ import com.zelretch.oreoregeo.ui.SearchState
 import com.zelretch.oreoregeo.ui.SearchViewModel
 import com.zelretch.oreoregeo.ui.SearchViewModelFactory
 import com.zelretch.oreoregeo.ui.SettingsScreen
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -166,6 +171,10 @@ fun MainScreen(
 
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
     val repository = app.repository
+
+    val historyViewModel: HistoryViewModel = viewModel(
+        factory = HistoryViewModelFactory(repository)
+    )
 
     Scaffold(
         topBar = {
@@ -300,9 +309,6 @@ fun MainScreen(
             }
             
             composable("history") {
-                val historyViewModel: HistoryViewModel = viewModel(
-                    factory = HistoryViewModelFactory(repository)
-                )
                 val checkins by historyViewModel.checkins.collectAsState()
 
                 LaunchedEffect(Unit) {
@@ -319,9 +325,38 @@ fun MainScreen(
                 LaunchedEffect(Unit) {
                     showFab = false
                 }
+                
+                val scope = rememberCoroutineScope()
+                val context = androidx.compose.ui.platform.LocalContext.current
+                
+                val signInLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.StartActivityForResult()
+                ) { result ->
+                    val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                    try {
+                        val account = task.getResult(ApiException::class.java)
+                        scope.launch {
+                            val backupResult = repository.backupToGoogleDrive(account)
+                            val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
+                            android.widget.Toast.makeText(context, context.getString(messageId), android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    } catch (e: ApiException) {
+                        android.widget.Toast.makeText(context, context.getString(R.string.backup_failed), android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+
                 SettingsScreen(
                     onBackupClick = {
-                        // TODO: Google ドライブを使用したバックアップの実装
+                        val lastAccount = GoogleSignIn.getLastSignedInAccount(context)
+                        if (lastAccount != null) {
+                            scope.launch {
+                                val backupResult = repository.backupToGoogleDrive(lastAccount)
+                                val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
+                                android.widget.Toast.makeText(context, context.getString(messageId), android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        } else {
+                            signInLauncher.launch(repository.getGoogleSignInIntent())
+                        }
                     },
                     onOsmLoginClick = {
                         // TODO: OSM OAuth の実装
