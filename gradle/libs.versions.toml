@@ -39,6 +39,9 @@ coroutines = "1.7.3"
 # Map
 osmdroid = "6.1.18"
 
+# Logging
+timber = "5.0.1"
+
 # Testing
 junit = "4.13.2"
 androidx-test-junit = "1.1.5"
@@ -87,6 +90,9 @@ coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 
 # Map
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
+
+# Logging
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

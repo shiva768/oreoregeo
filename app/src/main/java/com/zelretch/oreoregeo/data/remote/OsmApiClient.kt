@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.w3c.dom.Document
+import timber.log.Timber
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.StringWriter
@@ -34,10 +35,12 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
 
     suspend fun createChangeset(comment: String): Result<Long> = withContext(Dispatchers.IO) {
         if (accessToken == null) {
+            Timber.w("Attempted to create changeset without authentication")
             return@withContext Result.failure(IllegalStateException("Not authenticated"))
         }
 
         try {
+            Timber.d("Creating changeset with comment: $comment")
             val changesetXml = """
                 <osm>
                   <changeset>
@@ -55,24 +58,29 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
 
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) {
+                Timber.e("Failed to create changeset: HTTP ${response.code}")
                 return@withContext Result.failure(IOException("Failed to create changeset: ${response.code}"))
             }
 
             val changesetId = response.body?.string()?.toLongOrNull()
                 ?: return@withContext Result.failure(IOException("Invalid changeset ID"))
 
+            Timber.i("Created changeset: $changesetId")
             Result.success(changesetId)
         } catch (e: Exception) {
+            Timber.e(e, "Error creating changeset")
             Result.failure(e)
         }
     }
 
     suspend fun closeChangeset(changesetId: Long): Result<Unit> = withContext(Dispatchers.IO) {
         if (accessToken == null) {
+            Timber.w("Attempted to close changeset without authentication")
             return@withContext Result.failure(IllegalStateException("Not authenticated"))
         }
 
         try {
+            Timber.d("Closing changeset: $changesetId")
             val request = Request.Builder()
                 .url("$baseUrl/changeset/$changesetId/close")
                 .put("".toRequestBody())
@@ -81,21 +89,26 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
 
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) {
+                Timber.e("Failed to close changeset $changesetId: HTTP ${response.code}")
                 return@withContext Result.failure(IOException("Failed to close changeset: ${response.code}"))
             }
 
+            Timber.i("Closed changeset: $changesetId")
             Result.success(Unit)
         } catch (e: Exception) {
+            Timber.e(e, "Error closing changeset: $changesetId")
             Result.failure(e)
         }
     }
 
     suspend fun createNode(changesetId: Long, lat: Double, lon: Double, tags: Map<String, String>): Result<Long> = withContext(Dispatchers.IO) {
         if (accessToken == null) {
+            Timber.w("Attempted to create node without authentication")
             return@withContext Result.failure(IllegalStateException("Not authenticated"))
         }
 
         try {
+            Timber.d("Creating node in changeset $changesetId at ($lat, $lon) with tags: $tags")
             val nodeXml = buildNodeXml(null, lat, lon, tags, changesetId)
 
             val request = Request.Builder()
@@ -106,20 +119,24 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
 
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) {
+                Timber.e("Failed to create node: HTTP ${response.code}")
                 return@withContext Result.failure(IOException("Failed to create node: ${response.code}"))
             }
 
             val nodeId = response.body?.string()?.toLongOrNull()
                 ?: return@withContext Result.failure(IOException("Invalid node ID"))
 
+            Timber.i("Created node: $nodeId")
             Result.success(nodeId)
         } catch (e: Exception) {
+            Timber.e(e, "Error creating node")
             Result.failure(e)
         }
     }
 
     suspend fun getNode(nodeId: Long): Result<OsmNode> = withContext(Dispatchers.IO) {
         try {
+            Timber.d("Fetching node: $nodeId")
             val request = Request.Builder()
                 .url("$baseUrl/node/$nodeId")
                 .get()
@@ -127,13 +144,16 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
 
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) {
+                Timber.e("Failed to get node $nodeId: HTTP ${response.code}")
                 return@withContext Result.failure(IOException("Failed to get node: ${response.code}"))
             }
 
             val xml = response.body?.string() ?: ""
             val node = parseNodeXml(xml)
+            Timber.d("Retrieved node $nodeId: version=${node.version}")
             Result.success(node)
         } catch (e: Exception) {
+            Timber.e(e, "Error fetching node: $nodeId")
             Result.failure(e)
         }
     }
@@ -147,10 +167,12 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
         version: Int
     ): Result<Long> = withContext(Dispatchers.IO) {
         if (accessToken == null) {
+            Timber.w("Attempted to update node without authentication")
             return@withContext Result.failure(IllegalStateException("Not authenticated"))
         }
 
         try {
+            Timber.d("Updating node $nodeId in changeset $changesetId (version $version) with tags: $tags")
             val nodeXml = buildNodeXml(nodeId, lat, lon, tags, changesetId, version)
 
             val request = Request.Builder()
@@ -162,16 +184,20 @@ class OsmApiClient(private val accessToken: String? = "dummy_token") {
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) {
                 if (response.code == 409) {
+                    Timber.w("Version mismatch for node $nodeId - node has been modified")
                     return@withContext Result.failure(IOException("Version mismatch - node has been modified"))
                 }
+                Timber.e("Failed to update node $nodeId: HTTP ${response.code}")
                 return@withContext Result.failure(IOException("Failed to update node: ${response.code}"))
             }
 
             val newVersion = response.body?.string()?.toLongOrNull()
                 ?: return@withContext Result.failure(IOException("Invalid version"))
 
+            Timber.i("Updated node $nodeId to version $newVersion")
             Result.success(newVersion)
         } catch (e: Exception) {
+            Timber.e(e, "Error updating node: $nodeId")
             Result.failure(e)
         }
     }
