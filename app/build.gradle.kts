@@ -50,6 +50,7 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/DEPENDENCIES"
+            excludes += "/META-INF/INDEX.LIST"
         }
     }
 }
@@ -90,12 +91,20 @@ dependencies {
 
     // Google Play Services (for location and Drive)
     implementation(libs.bundles.google.play)
+    implementation(libs.identityCredentials)
+    implementation(libs.identityCredentialsPlayAuth)
+    implementation(libs.googleId)
+    implementation(libs.authBlockstore)
 
     // Coroutines
     implementation(libs.bundles.coroutines)
 
     // Logging
     implementation(libs.timber)
+
+    // Firebase
+    implementation(platform(libs.googleFirebaseBom))
+    implementation(libs.googleFirebaseAnalytics)
 
     // Testing
     testImplementation(libs.bundles.testing)

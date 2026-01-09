@@ -169,13 +169,9 @@ class Repository(
         }
     }
 
-    suspend fun getPlace(placeKey: String): Place? {
-        return placeDao.getPlaceByKey(placeKey)?.toDomain()
-    }
+    suspend fun getPlace(placeKey: String): Place? = placeDao.getPlaceByKey(placeKey)?.toDomain()
 
-    suspend fun getOsmNode(nodeId: Long): Result<com.zelretch.oreoregeo.data.remote.OsmNode> {
-        return osmApiClient.getNode(nodeId)
-    }
+    suspend fun getOsmNode(nodeId: Long): Result<com.zelretch.oreoregeo.data.remote.OsmNode> = osmApiClient.getNode(nodeId)
 
     @Suppress("unused")
     fun setOsmAccessToken(token: String) {
@@ -189,12 +185,10 @@ class Repository(
 
     @Suppress("unused")
     suspend fun restoreDatabaseFromGoogleDrive(
-        account: com.google.android.gms.auth.api.signin.GoogleSignInAccount
+        account: android.accounts.Account
     ): Result<Unit> = driveBackupManager.restoreDatabase(account)
 
-    fun getGoogleSignInIntent(): android.content.Intent = driveBackupManager.getSignInIntent()
-
-    suspend fun backupToGoogleDrive(account: com.google.android.gms.auth.api.signin.GoogleSignInAccount): Result<Unit> = driveBackupManager.backupDatabase(account)
+    suspend fun backupToGoogleDrive(account: android.accounts.Account): Result<Unit> = driveBackupManager.backupDatabase(account)
 
     fun isOsmAuthenticated(): Boolean = osmApiClient.isLoggedIn()
 

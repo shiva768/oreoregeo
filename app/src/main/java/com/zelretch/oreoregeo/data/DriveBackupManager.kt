@@ -1,11 +1,7 @@
 package com.zelretch.oreoregeo.data
 
+import android.accounts.Account
 import android.content.Context
-import android.content.Intent
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.Scope
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
@@ -19,24 +15,14 @@ import java.io.FileOutputStream
 
 class DriveBackupManager(private val context: Context) {
 
-    fun getSignInIntent(): Intent {
-        val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .requestScopes(Scope(DriveScopes.DRIVE_FILE))
-            .build()
-
-        val client = GoogleSignIn.getClient(context, signInOptions)
-        return client.signInIntent
-    }
-
-    suspend fun backupDatabase(account: GoogleSignInAccount): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun backupDatabase(account: Account): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             Timber.i("Starting database backup to Google Drive")
             val credential = GoogleAccountCredential.usingOAuth2(
                 context,
                 listOf(DriveScopes.DRIVE_FILE)
             )
-            credential.selectedAccount = account.account
+            credential.selectedAccount = account
 
             val driveService = Drive.Builder(
                 NetHttpTransport(),
@@ -103,14 +89,14 @@ class DriveBackupManager(private val context: Context) {
         Timber.d("Successfully backed up file: $remoteName")
     }
 
-    suspend fun restoreDatabase(account: GoogleSignInAccount): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun restoreDatabase(account: Account): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             Timber.i("Starting database restore from Google Drive")
             val credential = GoogleAccountCredential.usingOAuth2(
                 context,
                 listOf(DriveScopes.DRIVE_FILE)
             )
-            credential.selectedAccount = account.account
+            credential.selectedAccount = account
 
             val driveService = Drive.Builder(
                 NetHttpTransport(),

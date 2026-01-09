@@ -1,11 +1,11 @@
 package com.zelretch.oreoregeo
 
 import android.Manifest
+import android.accounts.AccountManager
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
@@ -36,18 +36,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.zelretch.oreoregeo.ui.AddPlaceScreen
 import com.zelretch.oreoregeo.ui.CheckinDialog
 import com.zelretch.oreoregeo.ui.CheckinViewModel
@@ -320,47 +321,53 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
             composable("settings") {
                 val scope = rememberCoroutineScope()
                 val context = androidx.compose.ui.platform.LocalContext.current
-
-                val signInLauncher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.StartActivityForResult()
-                ) { result ->
-                    val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                    try {
-                        val account = task.getResult(ApiException::class.java)
-                        scope.launch {
-                            val backupResult = repository.backupToGoogleDrive(account)
-                            val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
-                            android.widget.Toast.makeText(
-                                context,
-                                context.getString(messageId),
-                                android.widget.Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    } catch (e: ApiException) {
-                        e.printStackTrace()
-                        android.widget.Toast.makeText(
-                            context,
-                            context.getString(R.string.backup_failed),
-                            android.widget.Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
+                val credentialManager = CredentialManager.create(context)
 
                 SettingsScreen(
                     onBackupClick = {
-                        val lastAccount = GoogleSignIn.getLastSignedInAccount(context)
-                        if (lastAccount != null) {
-                            scope.launch {
-                                val backupResult = repository.backupToGoogleDrive(lastAccount)
-                                val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
+                        scope.launch {
+                            try {
+                                // Google ログインリクエスト
+                                val googleIdOption = GetGoogleIdOption.Builder()
+                                    .setFilterByAuthorizedAccounts(false)
+                                    .setServerClientId(context.getString(R.string.default_web_client_id)) // TODO: ID の設定
+                                    .build()
+
+                                val request = GetCredentialRequest.Builder()
+                                    .addCredentialOption(googleIdOption)
+                                    .build()
+
+                                val result = credentialManager.getCredential(context, request)
+                                val googleIdCredential = com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(result.credential.data)
+
+                                val accountManager = AccountManager.get(context)
+                                val accounts = accountManager.getAccountsByType("com.google")
+                                val account = accounts.find { it.name == googleIdCredential.id }
+                                    ?: accounts.firstOrNull() // 簡易的な選択
+
+                                if (account != null) {
+                                    val backupResult = repository.backupToGoogleDrive(account)
+                                    val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        context.getString(messageId),
+                                        android.widget.Toast.LENGTH_LONG
+                                    ).show()
+                                } else {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "Google Account not found on device",
+                                        android.widget.Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                                 android.widget.Toast.makeText(
                                     context,
-                                    context.getString(messageId),
+                                    context.getString(R.string.backup_failed),
                                     android.widget.Toast.LENGTH_LONG
                                 ).show()
                             }
-                        } else {
-                            signInLauncher.launch(repository.getGoogleSignInIntent())
                         }
                     },
                     onOsmLoginClick = {
