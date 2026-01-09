@@ -391,6 +391,8 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     onOsmDisconnectClick = suspend {
                         val osmOAuthManager = com.zelretch.oreoregeo.auth.OsmOAuthManager(context)
                         osmOAuthManager.clearToken()
+                        // Clear token from repository/OsmApiClient as well
+                        repository.setOsmAccessToken("")
                         android.widget.Toast.makeText(
                             context,
                             context.getString(R.string.osm_disconnect_success),
