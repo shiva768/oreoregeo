@@ -27,7 +27,7 @@ fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modif
     val context = androidx.compose.ui.platform.LocalContext.current
     val app = context.applicationContext as com.zelretch.oreoregeo.OreoregeoApplication
     val isOsmConnected = app.repository.isOsmAuthenticated()
-    
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -50,7 +50,7 @@ fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modif
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(Modifier.height(16.dp))
-                
+
                 if (isOsmConnected) {
                     Text(
                         text = stringResource(R.string.osm_connected),

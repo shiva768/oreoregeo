@@ -10,12 +10,12 @@ import timber.log.Timber
 class OAuthCallbackActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         Timber.d("OAuthCallbackActivity started")
-        
+
         val code = intent.data?.getQueryParameter("code")
         val error = intent.data?.getQueryParameter("error")
-        
+
         if (error != null) {
             Timber.e("OAuth error: $error")
             android.widget.Toast.makeText(
@@ -26,23 +26,23 @@ class OAuthCallbackActivity : ComponentActivity() {
             finish()
             return
         }
-        
+
         if (code != null) {
             Timber.d("Received authorization code, exchanging for token")
             val osmOAuthManager = OsmOAuthManager(this)
-            
+
             lifecycleScope.launch {
                 val result = osmOAuthManager.exchangeCodeForToken(code)
-                
+
                 result.fold(
                     onSuccess = { token ->
                         Timber.i("Successfully obtained token, saving to storage")
                         osmOAuthManager.saveToken(token)
-                        
+
                         // Update repository with the new token
                         val app = application as OreoregeoApplication
                         app.repository.setOsmAccessToken(token)
-                        
+
                         android.widget.Toast.makeText(
                             this@OAuthCallbackActivity,
                             "OSMアカウントに接続しました",
@@ -58,7 +58,7 @@ class OAuthCallbackActivity : ComponentActivity() {
                         ).show()
                     }
                 )
-                
+
                 finish()
             }
         } else {

@@ -20,7 +20,7 @@ class OsmOAuthManager(private val context: Context) {
     private val clientId = "YOUR_CLIENT_ID" // Replace with actual Client ID from OSM
     private val clientSecret = "YOUR_CLIENT_SECRET" // Replace with actual Client Secret from OSM
     private val redirectUri = "oreoregeo://oauth/callback"
-    
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -43,16 +43,16 @@ class OsmOAuthManager(private val context: Context) {
     fun getAuthorizationUrl(): String {
         Timber.d("Generating OSM OAuth authorization URL")
         return "https://www.openstreetmap.org/oauth2/authorize?" +
-                "client_id=$clientId&" +
-                "redirect_uri=$redirectUri&" +
-                "response_type=code&" +
-                "scope=write_api"
+            "client_id=$clientId&" +
+            "redirect_uri=$redirectUri&" +
+            "response_type=code&" +
+            "scope=write_api"
     }
 
     suspend fun exchangeCodeForToken(code: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             Timber.d("Exchanging authorization code for access token")
-            
+
             val formBody = FormBody.Builder()
                 .add("grant_type", "authorization_code")
                 .add("code", code)
@@ -67,7 +67,7 @@ class OsmOAuthManager(private val context: Context) {
                 .build()
 
             val response = client.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 Timber.e("Failed to exchange code for token: HTTP ${response.code}")
                 return@withContext Result.failure(IOException("Failed to get token: ${response.code}"))
@@ -78,7 +78,7 @@ class OsmOAuthManager(private val context: Context) {
 
             val json = JSONObject(responseBody)
             val accessToken = json.getString("access_token")
-            
+
             Timber.i("Successfully obtained access token")
             Result.success(accessToken)
         } catch (e: Exception) {
@@ -94,9 +94,7 @@ class OsmOAuthManager(private val context: Context) {
             .apply()
     }
 
-    fun getToken(): String? {
-        return encryptedPrefs.getString(KEY_ACCESS_TOKEN, null)
-    }
+    fun getToken(): String? = encryptedPrefs.getString(KEY_ACCESS_TOKEN, null)
 
     fun clearToken() {
         Timber.d("Clearing access token")

@@ -25,7 +25,7 @@ class OreoregeoApplication : Application() {
     }
 
     private val database by lazy { AppDatabase.getDatabase(this) }
-    
+
     private val osmOAuthManager by lazy { OsmOAuthManager(this) }
 
     val repository by lazy {
@@ -37,7 +37,7 @@ class OreoregeoApplication : Application() {
         } else {
             OsmApiClient()
         }
-        
+
         Repository(
             placeDao = database.placeDao(),
             checkinDao = database.checkinDao(),
