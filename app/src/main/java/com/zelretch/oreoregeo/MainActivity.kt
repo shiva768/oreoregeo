@@ -414,6 +414,11 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     factory = OsmEditViewModelFactory(repository)
                 )
                 val editState by osmEditViewModel.editState.collectAsState()
+                val existingTags by osmEditViewModel.existingTags.collectAsState()
+
+                LaunchedEffect(placeKey) {
+                    osmEditViewModel.loadPlace(placeKey)
+                }
 
                 LaunchedEffect(editState) {
                     if (editState is OsmEditState.Success) {
@@ -421,9 +426,6 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                         osmEditViewModel.reset()
                     }
                 }
-
-                // TODO: Load existing tags from place
-                val existingTags = mapOf("name" to "Example")
 
                 EditTagsScreen(
                     placeKey = placeKey,

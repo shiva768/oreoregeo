@@ -169,6 +169,14 @@ class Repository(
         }
     }
 
+    suspend fun getPlace(placeKey: String): Place? {
+        return placeDao.getPlaceByKey(placeKey)?.toDomain()
+    }
+
+    suspend fun getOsmNode(nodeId: Long): Result<com.zelretch.oreoregeo.data.remote.OsmNode> {
+        return osmApiClient.getNode(nodeId)
+    }
+
     @Suppress("unused")
     fun setOsmAccessToken(token: String) {
         osmApiClient = OsmApiClient(token)

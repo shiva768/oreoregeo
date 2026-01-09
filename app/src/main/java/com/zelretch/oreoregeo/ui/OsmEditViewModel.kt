@@ -23,6 +23,33 @@ class OsmEditViewModel(
     private val _editState = MutableStateFlow<OsmEditState>(OsmEditState.Idle)
     val editState: StateFlow<OsmEditState> = _editState.asStateFlow()
 
+    private val _existingTags = MutableStateFlow<Map<String, String>>(emptyMap())
+    val existingTags: StateFlow<Map<String, String>> = _existingTags.asStateFlow()
+
+    fun loadPlace(placeKey: String) {
+        viewModelScope.launch {
+            val place = repository.getPlace(placeKey)
+            if (place != null) {
+                // If it's a node, we might want to get the latest tags from OSM
+                if (placeKey.startsWith("osm:node:")) {
+                    val nodeId = placeKey.removePrefix("osm:node:").toLongOrNull()
+                    if (nodeId != null) {
+                        repository.getOsmNode(nodeId).onSuccess { node ->
+                            _existingTags.value = node.tags
+                            return@launch
+                        }
+                    }
+                }
+                // Fallback to local data if not a node or OSM fetch failed
+                // Since our local Place doesn't store all tags, we just use name/category as a starting point
+                _existingTags.value = mapOf(
+                    "name" to place.name,
+                    "amenity" to place.category // Simplification
+                )
+            }
+        }
+    }
+
     fun createPlace(lat: Double, lon: Double, tags: Map<String, String>) {
         viewModelScope.launch {
             _editState.value = OsmEditState.Loading
