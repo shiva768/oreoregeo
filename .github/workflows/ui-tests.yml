@@ -66,9 +66,6 @@ jobs:
 
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
-        env:
-          OSM_CLIENT_ID: ${{ secrets.OSM_CLIENT_ID }}
-          OSM_CLIENT_SECRET: ${{ secrets.OSM_CLIENT_SECRET }}
         with:
           api-level: 34
           target: google_apis
