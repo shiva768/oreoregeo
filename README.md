@@ -138,15 +138,19 @@ OSM の編集機能を有効にするには、OAuth クレデンシャルの設�
 3. `google-services.json` を Firebase コンソールから取得し、`app/` ディレクトリに配置する
 
 #### google-services.json の管理について
-このリポジトリには、ビルドを通すための**ダミー**の `google-services.json` が含まれています。本物のファイルは `.gitignore` により Git 管理から除外されています。
+このリポジトリには、ビルドを通すための**ダミー**の `google-services.json` があらかじめコミットされています。
 
 **CI (GitHub Actions) での利用:**
-1. 本物の `google-services.json` を Base64 エンコードします：
-   `base64 -i app/google-services.json`
-2. GitHub リポジトリの Secrets に `GOOGLE_SERVICES_JSON` という名前で値を保存します。
+- **テスト (Unit/UI Tests):** コミットされているダミーファイルがそのまま使用されます。
+- **APKビルド (Build Debug APK):**
+  1. 本物の `google-services.json` を Base64 エンコードします：
+     `base64 -i app/google-services.json`
+  2. GitHub リポジトリの Secrets に `GOOGLE_SERVICES_JSON` という名前で値を保存します。
+  3. シークレットが設定されている場合、ビルド時にダミーファイルが本物で上書きされます。設定されていない場合はダミーが使用されます。
 
 **ローカル開発:**
-Firebase コンソールからダウンロードしたファイルを `app/google-services.json` に上書きしてください。
+Firebase コンソールからダウンロードした本物のファイルを `app/google-services.json` に配置してください。
+**注意:** 本物のファイルを誤ってコミットしないよう注意してください（ダミーを上書きした状態で `git add` しないこと）。
 
 ## 制約事項
 
