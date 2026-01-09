@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -30,18 +31,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.zelretch.oreoregeo.R
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
     onBackupClick: () -> Unit,
     onOsmLoginClick: () -> Unit,
-    onOsmDisconnectClick: () -> Unit,
+    onOsmDisconnectClick: suspend () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val app = context.applicationContext as com.zelretch.oreoregeo.OreoregeoApplication
     var isOsmConnected by remember { mutableStateOf(app.repository.isOsmAuthenticated()) }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     // Poll authentication status when screen resumes
     LaunchedEffect(lifecycleOwner) {
@@ -85,8 +88,11 @@ fun SettingsScreen(
                     Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = {
-                            onOsmDisconnectClick()
-                            isOsmConnected = false
+                            scope.launch {
+                                onOsmDisconnectClick()
+                                // Immediately update the UI state after disconnect completes
+                                isOsmConnected = app.repository.isOsmAuthenticated()
+                            }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
