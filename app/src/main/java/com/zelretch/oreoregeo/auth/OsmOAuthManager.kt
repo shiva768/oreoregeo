@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.zelretch.oreoregeo.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
@@ -15,10 +16,9 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class OsmOAuthManager(private val context: Context) {
-    // TODO: These should be stored in BuildConfig or a secure configuration
-    // For now, using placeholder values that need to be configured
-    private val clientId = "YOUR_CLIENT_ID" // Replace with actual Client ID from OSM
-    private val clientSecret = "YOUR_CLIENT_SECRET" // Replace with actual Client Secret from OSM
+    // OAuth credentials injected from GitHub Secrets during build
+    private val clientId = BuildConfig.OSM_CLIENT_ID
+    private val clientSecret = BuildConfig.OSM_CLIENT_SECRET
     private val redirectUri = "oreoregeo://oauth/callback"
 
     private val client = OkHttpClient.Builder()

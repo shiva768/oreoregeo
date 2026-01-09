@@ -14,54 +14,69 @@ This file documents how to configure OpenStreetMap OAuth 2.0 credentials for the
 3. Submit the form to create the application
 4. Copy the **Client ID** and **Client Secret** that are generated
 
-### 2. Update the OAuth Manager with Your Credentials
+### 2. Configure Credentials via GitHub Secrets
 
-Open the file:
-```
-app/src/main/java/com/zelretch/oreoregeo/auth/OsmOAuthManager.kt
+The OAuth credentials are automatically injected during build from environment variables.
+
+**For GitHub Actions (CI/CD):**
+
+1. Go to your GitHub repository → Settings → Secrets and variables → Actions
+2. Add two repository secrets:
+   - Name: `OSM_CLIENT_ID`, Value: Your OSM Client ID
+   - Name: `OSM_CLIENT_SECRET`, Value: Your OSM Client Secret
+3. In your workflow file (`.github/workflows/*.yml`), set the environment variables:
+   ```yaml
+   - name: Build Debug APK
+     env:
+       OSM_CLIENT_ID: ${{ secrets.OSM_CLIENT_ID }}
+       OSM_CLIENT_SECRET: ${{ secrets.OSM_CLIENT_SECRET }}
+     run: ./gradlew assembleDebug
+   ```
+
+**For Local Development:**
+
+Set environment variables before building:
+
+```bash
+# Linux/macOS
+export OSM_CLIENT_ID="your_client_id_here"
+export OSM_CLIENT_SECRET="your_client_secret_here"
+./gradlew assembleDebug
+
+# Windows (PowerShell)
+$env:OSM_CLIENT_ID="your_client_id_here"
+$env:OSM_CLIENT_SECRET="your_client_secret_here"
+.\gradlew.bat assembleDebug
 ```
 
-Replace the placeholder values:
+Or add them to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
+```bash
+export OSM_CLIENT_ID="your_client_id_here"
+export OSM_CLIENT_SECRET="your_client_secret_here"
+```
+
+### 3. How It Works
+
+The OAuth credentials are injected at build time via `BuildConfig`:
+
+In `app/build.gradle.kts`:
 ```kotlin
-private val clientId = "YOUR_CLIENT_ID" // Replace with your actual Client ID
-private val clientSecret = "YOUR_CLIENT_SECRET" // Replace with your actual Client Secret
+defaultConfig {
+    buildConfigField("String", "OSM_CLIENT_ID", "\"${System.getenv("OSM_CLIENT_ID") ?: ""}\"")
+    buildConfigField("String", "OSM_CLIENT_SECRET", "\"${System.getenv("OSM_CLIENT_SECRET") ?: ""}\"")
+}
 ```
 
-### 3. Security Best Practices
+In `OsmOAuthManager.kt`:
+```kotlin
+private val clientId = BuildConfig.OSM_CLIENT_ID
+private val clientSecret = BuildConfig.OSM_CLIENT_SECRET
+```
 
-**For Production:**
-
-Instead of hardcoding credentials in the source code, you should:
-
-1. Use BuildConfig fields (recommended for production):
-
-   In `app/build.gradle.kts`, add:
-   ```kotlin
-   android {
-       defaultConfig {
-           buildConfigField("String", "OSM_CLIENT_ID", "\"${project.findProperty("OSM_CLIENT_ID")}\"")
-           buildConfigField("String", "OSM_CLIENT_SECRET", "\"${project.findProperty("OSM_CLIENT_SECRET")}\"")
-       }
-   }
-   ```
-
-   In `gradle.properties` (add to `.gitignore`):
-   ```properties
-   OSM_CLIENT_ID=your_client_id_here
-   OSM_CLIENT_SECRET=your_client_secret_here
-   ```
-
-   Then update `OsmOAuthManager.kt`:
-   ```kotlin
-   private val clientId = BuildConfig.OSM_CLIENT_ID
-   private val clientSecret = BuildConfig.OSM_CLIENT_SECRET
-   ```
-
-2. Or use environment variables in CI/CD:
-   ```kotlin
-   private val clientId = System.getenv("OSM_CLIENT_ID") ?: "YOUR_CLIENT_ID"
-   private val clientSecret = System.getenv("OSM_CLIENT_SECRET") ?: "YOUR_CLIENT_SECRET"
-   ```
+This ensures:
+- ✅ Credentials are never committed to source control
+- ✅ Different credentials can be used for different environments
+- ✅ GitHub Secrets integration works seamlessly in CI/CD
 
 ### 4. Testing the OAuth Flow
 
