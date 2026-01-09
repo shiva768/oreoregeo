@@ -30,6 +30,20 @@ android {
         buildConfigField("String", "OSM_CLIENT_SECRET", "\"${System.getenv("OSM_CLIENT_SECRET") ?: ""}\"")
     }
 
+    val isCI = System.getenv("CI") != null
+
+    signingConfigs {
+        // GHAビルド時のみデバッグ署名設定を適用
+        if (isCI) {
+            getByName("debug").apply {
+                storeFile = file("$rootDir/app/debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -37,6 +51,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        // GHAビルド時のみデバッグ署名を明示的に設定
+        if (isCI) {
+            getByName("debug") {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 
