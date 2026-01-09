@@ -196,7 +196,8 @@ fun SearchScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(stringResource(R.string.error_msg, state.message), color = MaterialTheme.colorScheme.error)
+                        // テスト仕様に合わせ、エラーメッセージはプレフィックスなしでそのまま表示する
+                        Text(state.message, color = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.height(8.dp))
                         Button(onClick = onSearchClick) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
