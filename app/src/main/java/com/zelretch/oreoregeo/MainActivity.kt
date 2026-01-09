@@ -387,6 +387,17 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                                 ).show()
                             }
                         }
+                    },
+                    onOsmDisconnectClick = {
+                        scope.launch {
+                            val osmOAuthManager = com.zelretch.oreoregeo.auth.OsmOAuthManager(context)
+                            osmOAuthManager.clearToken()
+                            android.widget.Toast.makeText(
+                                context,
+                                context.getString(R.string.osm_disconnect_success),
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 )
             }

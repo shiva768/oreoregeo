@@ -17,16 +17,41 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.zelretch.oreoregeo.R
+import kotlinx.coroutines.delay
 
 @Composable
-fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    onBackupClick: () -> Unit,
+    onOsmLoginClick: () -> Unit,
+    onOsmDisconnectClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val app = context.applicationContext as com.zelretch.oreoregeo.OreoregeoApplication
-    val isOsmConnected = app.repository.isOsmAuthenticated()
+    var isOsmConnected by remember { mutableStateOf(app.repository.isOsmAuthenticated()) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Poll authentication status when screen resumes
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                isOsmConnected = app.repository.isOsmAuthenticated()
+                delay(500) // Check every 500ms when screen is active
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -60,15 +85,8 @@ fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modif
                     Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = {
-                            val osmOAuthManager = com.zelretch.oreoregeo.auth.OsmOAuthManager(context)
-                            osmOAuthManager.clearToken()
-                            android.widget.Toast.makeText(
-                                context,
-                                context.getString(R.string.osm_disconnect_success),
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
-                            // Recreate the activity to refresh the UI state
-                            (context as? android.app.Activity)?.recreate()
+                            onOsmDisconnectClick()
+                            isOsmConnected = false
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
