@@ -46,8 +46,11 @@ android {
                 "proguard-rules.pro"
             )
         }
-        getByName("debug") {
-            signingConfig = signingConfigs.getByName("debug")
+        // GHAビルド時のみデバッグ署名を明示的に設定
+        if (System.getenv("CI") != null) {
+            getByName("debug") {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 
