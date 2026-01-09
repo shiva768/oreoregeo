@@ -36,12 +36,6 @@ fun HistoryScreen(checkins: List<Checkin>, onDeleteClick: (Long) -> Unit, modifi
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = stringResource(R.string.checkin_history),
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(Modifier.height(16.dp))
-
         if (checkins.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
