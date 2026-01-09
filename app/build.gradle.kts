@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.fragment.ktx)
+    implementation(libs.security.crypto)
 
     // Compose
     implementation(platform(libs.compose.bom))

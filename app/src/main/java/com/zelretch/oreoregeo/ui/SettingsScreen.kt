@@ -24,6 +24,10 @@ import com.zelretch.oreoregeo.R
 
 @Composable
 fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val app = context.applicationContext as com.zelretch.oreoregeo.OreoregeoApplication
+    val isOsmConnected = app.repository.isOsmAuthenticated()
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -46,13 +50,39 @@ fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modif
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = onOsmLoginClick,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.connect_osm_account))
+                
+                if (isOsmConnected) {
+                    Text(
+                        text = stringResource(R.string.osm_connected),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            val osmOAuthManager = com.zelretch.oreoregeo.auth.OsmOAuthManager(context)
+                            osmOAuthManager.clearToken()
+                            android.widget.Toast.makeText(
+                                context,
+                                "OSMアカウントの接続を解除しました",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                            // Recreate the activity to refresh the UI state
+                            (context as? android.app.Activity)?.recreate()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.osm_disconnect))
+                    }
+                } else {
+                    Button(
+                        onClick = onOsmLoginClick,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.connect_osm_account))
+                    }
                 }
             }
         }

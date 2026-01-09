@@ -58,6 +58,10 @@
     <string name="osm_section_title">OpenStreetMap</string>
     <string name="osm_section_desc">OSMアカウントを接続して、スポットの追加や編集を可能にします</string>
     <string name="connect_osm_account">OSMアカウントを接続</string>
+    <string name="osm_connected">OSMに接続済み</string>
+    <string name="osm_disconnect">接続を解除</string>
+    <string name="osm_auth_failed">認証に失敗しました</string>
+    <string name="osm_auth_success">OSMに接続しました</string>
     <string name="backup_restore_title">バックアップと復元</string>
     <string name="backup_drive_desc">チェックインデータをGoogle ドライブにバックアップします</string>
     <string name="about_title">このアプリについて</string>

@@ -66,6 +66,7 @@ import com.zelretch.oreoregeo.ui.SearchViewModel
 import com.zelretch.oreoregeo.ui.SearchViewModelFactory
 import com.zelretch.oreoregeo.ui.SettingsScreen
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -371,7 +372,21 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                         }
                     },
                     onOsmLoginClick = {
-                        // TODO: OSM OAuth の実装
+                        scope.launch {
+                            try {
+                                val osmOAuthManager = com.zelretch.oreoregeo.auth.OsmOAuthManager(context)
+                                val authUrl = osmOAuthManager.getAuthorizationUrl()
+                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(authUrl))
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Timber.e(e, "Failed to start OAuth flow")
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "認証の開始に失敗しました",
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
                     }
                 )
             }
