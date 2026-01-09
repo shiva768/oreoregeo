@@ -4,7 +4,8 @@ agp = "8.7.3"
 kotlin = "2.0.21"
 kotlin-compose = "2.0.21"
 ksp = "2.0.21-1.0.27"
-google-services = "4.4.2"
+google-services = "4.4.4"
+firebase-bom = "34.7.0"
 ktlint = "13.0.0"
 detekt = "1.23.8"
 
@@ -28,10 +29,15 @@ okhttp = "4.12.0"
 kotlinx-serialization-json = "1.6.2"
 
 # Google Play Services
-play-services-location = "21.1.0"
-play-services-auth = "20.7.0"
-google-api-client-android = "2.2.0"
-google-api-services-drive = "v3-rev20231120-2.0.0"
+play-services-location = "21.3.0"
+play-services-auth = "21.2.0"
+google-api-client-android = "2.6.0"
+google-api-services-drive = "v3-rev20240521-2.0.0"
+
+# Credentials
+credentials = "1.3.0"
+googleid = "1.1.1"
+play-services-auth-blockstore = "16.4.0"
 
 # Coroutines
 coroutines = "1.7.3"
@@ -84,6 +90,12 @@ play-services-auth = { group = "com.google.android.gms", name = "play-services-a
 google-api-client-android = { group = "com.google.api-client", name = "google-api-client-android", version.ref = "google-api-client-android" }
 google-api-services-drive = { group = "com.google.apis", name = "google-api-services-drive", version.ref = "google-api-services-drive" }
 
+# Credentials
+identityCredentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+identityCredentialsPlayAuth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+googleId = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
+authBlockstore = { group = "com.google.android.gms", name = "play-services-auth-blockstore", version.ref = "play-services-auth-blockstore" }
+
 # Coroutines
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
@@ -93,6 +105,10 @@ osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "o
 
 # Logging
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+
+# Firebase
+googleFirebaseBom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+googleFirebaseAnalytics = { group = "com.google.firebase", name = "firebase-analytics" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

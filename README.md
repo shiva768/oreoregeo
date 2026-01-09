@@ -135,7 +135,18 @@ OSM の編集機能を有効にするには、OAuth クレデンシャルの設�
 バックアップ機能を有効にするには：
 1. Google Cloud Console で Drive API を有効にする
 2. OAuth 2.0 クレデンシャルを追加
-3. google-services.json を app ディレクトリに追加
+3. `google-services.json` を Firebase コンソールから取得し、`app/` ディレクトリに配置する
+
+#### google-services.json の管理について
+このリポジトリには、ビルドを通すための**ダミー**の `google-services.json` が含まれています。本物のファイルは `.gitignore` により Git 管理から除外されています。
+
+**CI (GitHub Actions) での利用:**
+1. 本物の `google-services.json` を Base64 エンコードします：
+   `base64 -i app/google-services.json`
+2. GitHub リポジトリの Secrets に `GOOGLE_SERVICES_JSON` という名前で値を保存します。
+
+**ローカル開発:**
+Firebase コンソールからダウンロードしたファイルを `app/google-services.json` に上書きしてください。
 
 ## 制約事項
 
