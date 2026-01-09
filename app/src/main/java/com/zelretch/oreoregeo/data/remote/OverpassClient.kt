@@ -2,10 +2,9 @@ package com.zelretch.oreoregeo.data.remote
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
@@ -35,7 +34,9 @@ class OverpassClient {
         try {
             Timber.d("Searching nearby places: lat=$lat, lon=$lon, radius=$radiusMeters, language=$language")
             val query = buildQuery(lat, lon, radiusMeters, language)
-            val requestBody = query.toRequestBody("text/plain".toMediaType())
+            val requestBody = FormBody.Builder()
+                .add("data", query)
+                .build()
 
             // Try endpoints in order until one succeeds
             var lastException: Exception? = null
