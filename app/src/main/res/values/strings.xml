@@ -40,6 +40,15 @@
     <string name="osm_section_title">OpenStreetMap</string>
     <string name="osm_section_desc">Connect your OSM account to add and edit places</string>
     <string name="connect_osm_account">Connect OSM Account</string>
+    <string name="osm_connected">Connected to OSM</string>
+    <string name="osm_disconnect">Disconnect</string>
+    <string name="osm_auth_failed">Failed to authenticate</string>
+    <string name="osm_auth_success">Successfully connected to OSM</string>
+    <string name="osm_disconnect_success">Disconnected from OSM account</string>
+    <string name="osm_auth_error">Authentication error: %1$s</string>
+    <string name="osm_token_exchange_failed">Failed to obtain access token</string>
+    <string name="osm_no_auth_code">No authorization code received</string>
+    <string name="osm_oauth_start_failed">Failed to start authentication</string>
     <string name="backup_restore_title">Backup &amp; Restore</string>
     <string name="backup_drive_desc">Backup your check-in data to Google Drive</string>
     <string name="about_title">About</string>

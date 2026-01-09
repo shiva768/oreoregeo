@@ -17,13 +17,45 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.zelretch.oreoregeo.R
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    onBackupClick: () -> Unit,
+    onOsmLoginClick: () -> Unit,
+    onOsmDisconnectClick: suspend () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val app = context.applicationContext as com.zelretch.oreoregeo.OreoregeoApplication
+    var isOsmConnected by remember { mutableStateOf(app.repository.isOsmAuthenticated()) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    // Poll authentication status when screen resumes
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                isOsmConnected = app.repository.isOsmAuthenticated()
+                delay(500) // Check every 500ms when screen is active
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -46,13 +78,35 @@ fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modif
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = onOsmLoginClick,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.connect_osm_account))
+
+                if (isOsmConnected) {
+                    Text(
+                        text = stringResource(R.string.osm_connected),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                onOsmDisconnectClick()
+                                // Immediately update the UI state after disconnect completes
+                                isOsmConnected = app.repository.isOsmAuthenticated()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.osm_disconnect))
+                    }
+                } else {
+                    Button(
+                        onClick = onOsmLoginClick,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.connect_osm_account))
+                    }
                 }
             }
         }

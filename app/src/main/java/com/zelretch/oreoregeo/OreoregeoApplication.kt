@@ -1,6 +1,7 @@
 package com.zelretch.oreoregeo
 
 import android.app.Application
+import com.zelretch.oreoregeo.auth.OsmOAuthManager
 import com.zelretch.oreoregeo.data.DriveBackupManager
 import com.zelretch.oreoregeo.data.local.AppDatabase
 import com.zelretch.oreoregeo.data.remote.OsmApiClient
@@ -25,12 +26,23 @@ class OreoregeoApplication : Application() {
 
     private val database by lazy { AppDatabase.getDatabase(this) }
 
+    private val osmOAuthManager by lazy { OsmOAuthManager(this) }
+
     val repository by lazy {
+        // Initialize OsmApiClient with saved token if available
+        val savedToken = osmOAuthManager.getToken()
+        val osmApiClient = if (savedToken != null) {
+            Timber.d("Restoring OSM access token from storage")
+            OsmApiClient(savedToken)
+        } else {
+            OsmApiClient()
+        }
+
         Repository(
             placeDao = database.placeDao(),
             checkinDao = database.checkinDao(),
             overpassClient = OverpassClient(),
-            osmApiClient = OsmApiClient(),
+            osmApiClient = osmApiClient,
             driveBackupManager = DriveBackupManager(this)
         )
     }
