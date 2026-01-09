@@ -34,6 +34,20 @@
   - バージョン競合のハンドリング
   - チェンジセットの適切なクローズ
 
+#### 3.5. OAuth 認証 (`auth/`)
+- **OsmOAuthManager**:
+  - OAuth 2.0 Authorization Code フローの実装
+  - 認証 URL の生成
+  - 認証コードからアクセストークンへの交換
+  - EncryptedSharedPreferences による安全なトークン保存
+  - トークンのライフサイクル管理（保存/取得/削除）
+  
+- **OAuthCallbackActivity**:
+  - OAuth リダイレクトコールバックの処理
+  - 認証コードの受信
+  - トークン取得後のリポジトリ更新
+  - ユーザーフィードバック表示
+
 #### 4. ビジネスロジック (`domain/`)
 - **Repository**: データ管理の中心
   - ローカルとリモートのデータソースを統合
@@ -82,7 +96,8 @@
   - OSM 同期確認
   
 - **SettingsScreen**:
-  - OSM アカウント連携
+  - OSM アカウント連携（接続/切断）
+  - 接続ステータスの表示
   - Google ドライブ バックアップの実行
   - アプリ情報
 
@@ -92,7 +107,8 @@
 - 画面間のナビゲーション
 - 下部ナビゲーションバー
 - スポット追加用のフローティングアクションボタン
-- OAuth とバックアップのプレースホルダー
+- OAuth 認証フローの統合
+- バックアップ機能の統合
 
 #### 8. Google ドライブ バックアップ (`data/`)
 - **DriveBackupManager**:
@@ -159,11 +175,15 @@ CREATE UNIQUE INDEX ux_checkins_place_bucket_30m
 
 以下の機能は実装されていますが、外部サービスの設定が必要です：
 
-1. **OSM OAuth 2.0**:
-   - コード構造は完了しています
+1. **OSM OAuth 2.0** (✅ 実装済み):
+   - OAuth 2.0 フローの完全実装
+   - `OsmOAuthManager` で認証を管理
+   - `OAuthCallbackActivity` でコールバックを処理
+   - EncryptedSharedPreferences でトークンを安全に保存
+   - Settings 画面で接続/切断機能を提供
    - openstreetmap.org での OAuth アプリ登録が必要です
    - コード内にクライアントクレデンシャルを設定する必要があります
-   - 詳細は `IMPLEMENTATION_GUIDE.md` を参照してください
+   - 詳細は `config/OSM_OAUTH_CONFIG.md` を参照してください
 
 2. **Google Drive API**:
    - `DriveBackupManager` は実装されています
@@ -186,6 +206,7 @@ CREATE UNIQUE INDEX ux_checkins_place_bucket_30m
 - Google Play Services (Location, Auth, Drive)
 - Kotlin Coroutines
 - Navigation Compose
+- AndroidX Security Crypto (EncryptedSharedPreferences用)
 
 ### 🏗️ アーキテクチャ
 
@@ -246,11 +267,12 @@ ViewModel レイヤー
 
 ### 🔐 セキュリティ機能
 
-- OAuth トークン保存用の構造を準備済み
+- OAuth トークンの安全な保存（EncryptedSharedPreferences）
 - ハードコードされたクレデンシャルなし
-- EncryptedSharedPreferences を推奨
+- AES256-GCM 暗号化によるトークン保護
 - 適切なパーミッションリクエスト
 - フォーム内での入力バリデーション
+- OAuth 2.0 標準への準拠
 
 ### 🎨 UI/UX 機能
 
