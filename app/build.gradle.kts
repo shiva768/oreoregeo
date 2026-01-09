@@ -26,9 +26,11 @@ android {
         }
     }
 
+    val isCI = System.getenv("CI") != null
+
     signingConfigs {
         // GHAビルド時のみデバッグ署名設定を適用
-        if (System.getenv("CI") != null) {
+        if (isCI) {
             getByName("debug").apply {
                 storeFile = file("$rootDir/app/debug.keystore")
                 storePassword = "android"
@@ -47,7 +49,7 @@ android {
             )
         }
         // GHAビルド時のみデバッグ署名を明示的に設定
-        if (System.getenv("CI") != null) {
+        if (isCI) {
             getByName("debug") {
                 signingConfig = signingConfigs.getByName("debug")
             }
