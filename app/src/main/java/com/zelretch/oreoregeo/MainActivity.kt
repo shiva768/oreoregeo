@@ -382,7 +382,7 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                                 Timber.e(e, "Failed to start OAuth flow")
                                 android.widget.Toast.makeText(
                                     context,
-                                    "認証の開始に失敗しました",
+                                    context.getString(R.string.osm_oauth_start_failed),
                                     android.widget.Toast.LENGTH_LONG
                                 ).show()
                             }

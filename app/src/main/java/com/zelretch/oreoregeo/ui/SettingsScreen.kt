@@ -64,7 +64,7 @@ fun SettingsScreen(onBackupClick: () -> Unit, onOsmLoginClick: () -> Unit, modif
                             osmOAuthManager.clearToken()
                             android.widget.Toast.makeText(
                                 context,
-                                "OSMアカウントの接続を解除しました",
+                                context.getString(R.string.osm_disconnect_success),
                                 android.widget.Toast.LENGTH_SHORT
                             ).show()
                             // Recreate the activity to refresh the UI state

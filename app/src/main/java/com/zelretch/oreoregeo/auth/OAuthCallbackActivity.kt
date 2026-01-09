@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.zelretch.oreoregeo.OreoregeoApplication
+import com.zelretch.oreoregeo.R
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -20,7 +21,7 @@ class OAuthCallbackActivity : ComponentActivity() {
             Timber.e("OAuth error: $error")
             android.widget.Toast.makeText(
                 this,
-                "認証に失敗しました: $error",
+                getString(R.string.osm_auth_error, error),
                 android.widget.Toast.LENGTH_LONG
             ).show()
             finish()
@@ -45,7 +46,7 @@ class OAuthCallbackActivity : ComponentActivity() {
 
                         android.widget.Toast.makeText(
                             this@OAuthCallbackActivity,
-                            "OSMアカウントに接続しました",
+                            getString(R.string.osm_auth_success),
                             android.widget.Toast.LENGTH_SHORT
                         ).show()
                     },
@@ -53,7 +54,7 @@ class OAuthCallbackActivity : ComponentActivity() {
                         Timber.e(exception, "Failed to exchange code for token")
                         android.widget.Toast.makeText(
                             this@OAuthCallbackActivity,
-                            "トークンの取得に失敗しました",
+                            getString(R.string.osm_token_exchange_failed),
                             android.widget.Toast.LENGTH_LONG
                         ).show()
                     }
@@ -65,7 +66,7 @@ class OAuthCallbackActivity : ComponentActivity() {
             Timber.w("No authorization code received")
             android.widget.Toast.makeText(
                 this,
-                "認証コードが見つかりませんでした",
+                getString(R.string.osm_no_auth_code),
                 android.widget.Toast.LENGTH_LONG
             ).show()
             finish()
