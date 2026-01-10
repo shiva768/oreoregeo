@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,13 @@ fun EditTagsScreen(
     var newKey by remember { mutableStateOf("") }
     var newValue by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
+
+    // Update tags when existingTags changes (e.g., when loaded from OSM)
+    LaunchedEffect(existingTags) {
+        if (existingTags.isNotEmpty()) {
+            tags = existingTags
+        }
+    }
 
     Column(
         modifier = modifier
