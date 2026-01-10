@@ -127,7 +127,7 @@ class OsmOAuthManagerTest {
     @Test
     fun testEmptyTokenIsNotAuthenticated() {
         val emptyToken = ""
-        val isAuthenticated = !emptyToken.isNullOrBlank()
+        val isAuthenticated = !emptyToken.isBlank()
 
         assertFalse(isAuthenticated)
     }
@@ -143,7 +143,7 @@ class OsmOAuthManagerTest {
     @Test
     fun testValidTokenIsAuthenticated() {
         val validToken = "valid_access_token_12345"
-        val isAuthenticated = !validToken.isNullOrBlank()
+        val isAuthenticated = !validToken.isBlank()
 
         assertTrue(isAuthenticated)
     }
@@ -151,7 +151,7 @@ class OsmOAuthManagerTest {
     @Test
     fun testBlankTokenIsNotAuthenticated() {
         val blankToken = "   "
-        val isAuthenticated = !blankToken.isNullOrBlank()
+        val isAuthenticated = !blankToken.isBlank()
 
         assertFalse(isAuthenticated)
     }

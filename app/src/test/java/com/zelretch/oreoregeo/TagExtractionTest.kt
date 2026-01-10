@@ -230,7 +230,7 @@ class TagExtractionTest {
         )
 
         assertEquals("Café René", tags["name"])
-        assertTrue(tags["name"]!!.contains("é"))
+        assertTrue(tags.getValue("name").contains("é"))
     }
 
     @Test
