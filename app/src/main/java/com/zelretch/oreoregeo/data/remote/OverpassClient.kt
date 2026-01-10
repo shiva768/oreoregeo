@@ -2,9 +2,9 @@ package com.zelretch.oreoregeo.data.remote
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
@@ -34,8 +34,10 @@ class OverpassClient {
         try {
             Timber.d("Searching nearby places: lat=$lat, lon=$lon, radius=$radiusMeters, language=$language")
             val query = buildQuery(lat, lon, radiusMeters, language)
-            // Overpass API accepts POST with query in body without Content-Type header
-            val requestBody = query.toRequestBody(null)
+            // Overpass API standard: POST with form-encoded data parameter
+            val requestBody = FormBody.Builder()
+                .add("data", query)
+                .build()
 
             // Try endpoints in order until one succeeds
             var lastException: Exception? = null
