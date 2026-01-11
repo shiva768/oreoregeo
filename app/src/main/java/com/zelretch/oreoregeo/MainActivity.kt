@@ -324,11 +324,9 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                 HistoryScreen(
                     checkins = checkins,
                     placeNameQuery = placeNameQuery,
-                    locationQuery = "",
                     startDate = startDate,
                     endDate = endDate,
                     onPlaceNameQueryChange = { historyViewModel.setPlaceNameQuery(it) },
-                    onLocationQueryChange = { },
                     onStartDateChange = { historyViewModel.setStartDate(it) },
                     onEndDateChange = { historyViewModel.setEndDate(it) },
                     onClearFilters = { historyViewModel.clearFilters() },

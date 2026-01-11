@@ -44,11 +44,9 @@ import java.util.Locale
 fun HistoryScreen(
     checkins: List<Checkin>,
     placeNameQuery: String,
-    locationQuery: String,
     startDate: Long?,
     endDate: Long?,
     onPlaceNameQueryChange: (String) -> Unit,
-    onLocationQueryChange: (String) -> Unit,
     onStartDateChange: (Long?) -> Unit,
     onEndDateChange: (Long?) -> Unit,
     onClearFilters: () -> Unit,
@@ -56,7 +54,7 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     var showFilters by remember { mutableStateOf(false) }
-    val hasActiveFilters = placeNameQuery.isNotEmpty() || locationQuery.isNotEmpty() || 
+    val hasActiveFilters = placeNameQuery.isNotEmpty() || 
         startDate != null || endDate != null
 
     Column(
@@ -72,7 +70,7 @@ fun HistoryScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                    imageVector = Icons.Default.Search,
                     contentDescription = null,
                     modifier = Modifier.padding(end = 4.dp)
                 )
@@ -91,7 +89,7 @@ fun HistoryScreen(
                     onClick = { showFilters = true }
                 ) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                        imageVector = Icons.Default.Search,
                         contentDescription = null,
                         modifier = Modifier.padding(end = 4.dp)
                     )
@@ -175,7 +173,7 @@ fun SearchFilters(
             )
             IconButton(onClick = onHideFilters) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Close,
+                    imageVector = Icons.Default.Close,
                     contentDescription = stringResource(R.string.close)
                 )
             }
