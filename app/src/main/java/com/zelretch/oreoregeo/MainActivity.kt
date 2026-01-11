@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -166,7 +167,8 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Double, Double) -> Unit) -> Unit) {
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(0) }
-    var currentRoute by remember { mutableStateOf("search") }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
     val repository = app.repository
@@ -209,7 +211,6 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     selected = selectedItem == 0,
                     onClick = {
                         selectedItem = 0
-                        currentRoute = "search"
                         navController.navigate("search") {
                             popUpTo("search") { inclusive = true }
                         }
@@ -223,7 +224,6 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     selected = selectedItem == 1,
                     onClick = {
                         selectedItem = 1
-                        currentRoute = "history"
                         navController.navigate("history") {
                             popUpTo("search")
                         }
@@ -237,7 +237,6 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     selected = selectedItem == 2,
                     onClick = {
                         selectedItem = 2
-                        currentRoute = "settings"
                         navController.navigate("settings") {
                             popUpTo("search")
                         }
