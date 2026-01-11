@@ -174,6 +174,14 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
         factory = HistoryViewModelFactory(repository)
     )
 
+    val searchViewModel: SearchViewModel = viewModel(
+        factory = SearchViewModelFactory(repository)
+    )
+
+    val checkinViewModel: CheckinViewModel = viewModel(
+        factory = CheckinViewModelFactory(repository)
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -239,13 +247,6 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
             modifier = Modifier.padding(paddingValues)
         ) {
             composable("search") {
-                val searchViewModel: SearchViewModel = viewModel(
-                    factory = SearchViewModelFactory(repository)
-                )
-                val checkinViewModel: CheckinViewModel = viewModel(
-                    factory = CheckinViewModelFactory(repository)
-                )
-
                 val searchState by searchViewModel.searchState.collectAsState()
                 val checkinState by checkinViewModel.checkinState.collectAsState()
 
