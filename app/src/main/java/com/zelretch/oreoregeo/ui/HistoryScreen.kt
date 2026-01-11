@@ -151,6 +151,9 @@ fun SearchFilters(
             )
 
             // Date range filters
+            var showStartDatePicker by remember { mutableStateOf(false) }
+            var showEndDatePicker by remember { mutableStateOf(false) }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -160,8 +163,11 @@ fun SearchFilters(
                     value = startDate?.let { dateFormat.format(Date(it)) } ?: "",
                     onValueChange = { },
                     label = { Text(stringResource(R.string.filter_start_date)) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { showStartDatePicker = true },
                     readOnly = true,
+                    enabled = false,
                     trailingIcon = {
                         if (startDate != null) {
                             IconButton(onClick = { onStartDateChange(null) }) {
@@ -177,8 +183,11 @@ fun SearchFilters(
                     value = endDate?.let { dateFormat.format(Date(it)) } ?: "",
                     onValueChange = { },
                     label = { Text(stringResource(R.string.filter_end_date)) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { showEndDatePicker = true },
                     readOnly = true,
+                    enabled = false,
                     trailingIcon = {
                         if (endDate != null) {
                             IconButton(onClick = { onEndDateChange(null) }) {
@@ -190,31 +199,8 @@ fun SearchFilters(
                 )
             }
 
-            // Date pickers
-            var showStartDatePicker by remember { mutableStateOf(false) }
-            var showEndDatePicker by remember { mutableStateOf(false) }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TextButton(
-                    onClick = { showStartDatePicker = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(stringResource(R.string.select_start_date))
-                }
-
-                TextButton(
-                    onClick = { showEndDatePicker = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(stringResource(R.string.select_end_date))
-                }
-            }
-
             if (showStartDatePicker) {
-                SimpleDatePicker(
+                MaterialDatePickerDialog(
                     initialDate = startDate,
                     onDateSelected = { date ->
                         onStartDateChange(date)
@@ -225,7 +211,7 @@ fun SearchFilters(
             }
 
             if (showEndDatePicker) {
-                SimpleDatePicker(
+                MaterialDatePickerDialog(
                     initialDate = endDate,
                     onDateSelected = { date ->
                         onEndDateChange(date)
@@ -249,29 +235,34 @@ fun SearchFilters(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun SimpleDatePicker(
+fun MaterialDatePickerDialog(
     initialDate: Long?,
     onDateSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val calendar = Calendar.getInstance()
-    if (initialDate != null) {
-        calendar.timeInMillis = initialDate
-    }
+    val datePickerState = androidx.compose.material3.rememberDatePickerState(
+        initialSelectedDateMillis = initialDate ?: System.currentTimeMillis()
+    )
 
-    androidx.compose.material3.AlertDialog(
+    androidx.compose.material3.DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
-                val selectedDate = calendar.apply {
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
-                onDateSelected(selectedDate)
-            }) {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        // Set to start of day in user's timezone
+                        val calendar = Calendar.getInstance()
+                        calendar.timeInMillis = millis
+                        calendar.set(Calendar.HOUR_OF_DAY, 0)
+                        calendar.set(Calendar.MINUTE, 0)
+                        calendar.set(Calendar.SECOND, 0)
+                        calendar.set(Calendar.MILLISECOND, 0)
+                        onDateSelected(calendar.timeInMillis)
+                    }
+                }
+            ) {
                 Text(stringResource(R.string.save))
             }
         },
@@ -279,18 +270,12 @@ fun SimpleDatePicker(
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
             }
-        },
-        text = {
-            Column {
-                Text(stringResource(R.string.select_date))
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.date_picker_placeholder),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
         }
-    )
+    ) {
+        androidx.compose.material3.DatePicker(
+            state = datePickerState
+        )
+    }
 }
 
 @Composable
