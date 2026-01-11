@@ -179,7 +179,7 @@ fun SearchScreen(
                                     onCheckinClick(placeWithDistance.place.placeKey)
                                 },
                                 onEditClick = if (canEdit &&
-                                    placeWithDistance.place.placeKey.contains(":node:") &&
+                                    placeWithDistance.place.placeKey.split(":").getOrNull(1) == "node" &&
                                     onEditPlace != null
                                 ) {
                                     { onEditPlace(placeWithDistance.place.placeKey) }

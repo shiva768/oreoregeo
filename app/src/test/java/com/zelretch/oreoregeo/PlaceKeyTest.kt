@@ -158,4 +158,32 @@ class PlaceKeyTest {
         assertEquals("way", match?.groupValues?.get(1))
         assertEquals("67890", match?.groupValues?.get(2))
     }
+
+    @Test
+    fun testEditButtonVisibilityCheckForNodes() {
+        // Edit button should be visible only for nodes
+        val nodePlaceKey = "osm:node:12345"
+        val wayPlaceKey = "osm:way:67890"
+        val relationPlaceKey = "osm:relation:11111"
+
+        // Test using the same logic as SearchScreen.kt
+        assertTrue("Node should be editable", nodePlaceKey.split(":").getOrNull(1) == "node")
+        assertFalse("Way should not be editable", wayPlaceKey.split(":").getOrNull(1) == "node")
+        assertFalse("Relation should not be editable", relationPlaceKey.split(":").getOrNull(1) == "node")
+    }
+
+    @Test
+    fun testEditButtonVisibilityCheckRobustness() {
+        // Test edge cases to ensure the check is robust
+        
+        // Valid cases
+        assertEquals("node", "osm:node:123".split(":").getOrNull(1))
+        assertEquals("way", "osm:way:456".split(":").getOrNull(1))
+        assertEquals("relation", "osm:relation:789".split(":").getOrNull(1))
+        
+        // Edge cases - malformed keys should not match
+        assertNotEquals("node", "invalid:format".split(":").getOrNull(1))
+        assertNull("".split(":").getOrNull(1))
+        assertNotEquals("node", "osm".split(":").getOrNull(1))
+    }
 }
