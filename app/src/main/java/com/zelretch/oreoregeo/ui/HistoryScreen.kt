@@ -167,7 +167,6 @@ fun SearchFilters(
                         .weight(1f)
                         .clickable { showStartDatePicker = true },
                     readOnly = true,
-                    enabled = false,
                     trailingIcon = {
                         if (startDate != null) {
                             IconButton(onClick = { onStartDateChange(null) }) {
@@ -187,7 +186,6 @@ fun SearchFilters(
                         .weight(1f)
                         .clickable { showEndDatePicker = true },
                     readOnly = true,
-                    enabled = false,
                     trailingIcon = {
                         if (endDate != null) {
                             IconButton(onClick = { onEndDateChange(null) }) {
