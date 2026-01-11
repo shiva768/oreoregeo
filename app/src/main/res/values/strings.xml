@@ -88,4 +88,6 @@
     <string name="select_end_date">Select End Date</string>
     <string name="clear_filters">Clear All Filters</string>
     <string name="date_picker_placeholder">Use the buttons below to set dates</string>
+    <string name="filter_active">Filters Active</string>
+    <string name="close">Close</string>
 </resources>

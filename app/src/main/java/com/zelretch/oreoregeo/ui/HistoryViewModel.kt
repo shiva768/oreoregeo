@@ -21,9 +21,6 @@ class HistoryViewModel(
     private val _placeNameQuery = MutableStateFlow("")
     val placeNameQuery: StateFlow<String> = _placeNameQuery
 
-    private val _locationQuery = MutableStateFlow("")
-    val locationQuery: StateFlow<String> = _locationQuery
-
     private val _startDate = MutableStateFlow<Long?>(null)
     val startDate: StateFlow<Long?> = _startDate
 
@@ -32,33 +29,30 @@ class HistoryViewModel(
 
     private data class SearchFilters(
         val placeName: String,
-        val location: String,
         val startDate: Long?,
         val endDate: Long?
     )
 
     private val searchFilters: StateFlow<SearchFilters> = combine(
         _placeNameQuery,
-        _locationQuery,
         _startDate,
         _endDate
-    ) { placeName, location, start, end ->
-        SearchFilters(placeName, location, start, end)
+    ) { placeName, start, end ->
+        SearchFilters(placeName, start, end)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SearchFilters("", "", null, null)
+        initialValue = SearchFilters("", null, null)
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val checkins: StateFlow<List<Checkin>> = searchFilters.flatMapLatest { filters ->
-        if (filters.placeName.isBlank() && filters.location.isBlank() && 
+        if (filters.placeName.isBlank() && 
             filters.startDate == null && filters.endDate == null) {
             repository.getAllCheckins()
         } else {
             repository.searchCheckins(
                 placeNameQuery = filters.placeName.ifBlank { null },
-                locationQuery = filters.location.ifBlank { null },
                 startDate = filters.startDate,
                 endDate = filters.endDate
             )
@@ -73,10 +67,6 @@ class HistoryViewModel(
         _placeNameQuery.value = query
     }
 
-    fun setLocationQuery(query: String) {
-        _locationQuery.value = query
-    }
-
     fun setStartDate(date: Long?) {
         _startDate.value = date
     }
@@ -87,7 +77,6 @@ class HistoryViewModel(
 
     fun clearFilters() {
         _placeNameQuery.value = ""
-        _locationQuery.value = ""
         _startDate.value = null
         _endDate.value = null
     }

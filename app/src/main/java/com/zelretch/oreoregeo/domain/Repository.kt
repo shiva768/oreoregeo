@@ -28,7 +28,6 @@ class Repository(
 
     fun searchCheckins(
         placeNameQuery: String?,
-        locationQuery: String?,
         startDate: Long?,
         endDate: Long?
     ): Flow<List<Checkin>> = checkinDao.searchCheckins(startDate, endDate).map { entities ->
@@ -40,13 +39,7 @@ class Repository(
             val matchesPlaceName = placeNameQuery.isNullOrBlank() || 
                 place?.name?.contains(placeNameQuery, ignoreCase = true) == true
             
-            // Filter by location/city if query is provided
-            // Note: For OSM data, we could extract city info from tags if available
-            // For now, we'll search in the place name which often contains location info
-            val matchesLocation = locationQuery.isNullOrBlank() || 
-                place?.name?.contains(locationQuery, ignoreCase = true) == true
-            
-            if (matchesPlaceName && matchesLocation) checkin else null
+            if (matchesPlaceName) checkin else null
         }
     }
 

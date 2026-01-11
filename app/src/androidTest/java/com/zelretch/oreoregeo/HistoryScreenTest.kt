@@ -92,7 +92,7 @@ class HistoryScreenTest {
     }
 
     @Test
-    fun historyScreen_displaysSearchFilters() {
+    fun historyScreen_displaysSearchButton() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         composeTestRule.setContent {
             OreoregeoTheme {
@@ -112,17 +112,9 @@ class HistoryScreenTest {
             }
         }
 
-        // Search filter UI should be displayed
+        // Search button should be displayed when no filters are active
         composeTestRule.onNodeWithText(
-            context.getString(R.string.search_filters)
-        ).assertIsDisplayed()
-        
-        composeTestRule.onNodeWithText(
-            context.getString(R.string.filter_place_name)
-        ).assertIsDisplayed()
-        
-        composeTestRule.onNodeWithText(
-            context.getString(R.string.filter_location)
+            context.getString(R.string.search)
         ).assertIsDisplayed()
     }
 }

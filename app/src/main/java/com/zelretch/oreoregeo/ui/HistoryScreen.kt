@@ -13,8 +13,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,25 +55,71 @@ fun HistoryScreen(
     onDeleteClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showFilters by remember { mutableStateOf(false) }
+    val hasActiveFilters = placeNameQuery.isNotEmpty() || locationQuery.isNotEmpty() || 
+        startDate != null || endDate != null
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Search filters
-        SearchFilters(
-            placeNameQuery = placeNameQuery,
-            locationQuery = locationQuery,
-            startDate = startDate,
-            endDate = endDate,
-            onPlaceNameQueryChange = onPlaceNameQueryChange,
-            onLocationQueryChange = onLocationQueryChange,
-            onStartDateChange = onStartDateChange,
-            onEndDateChange = onEndDateChange,
-            onClearFilters = onClearFilters
-        )
+        // Search button/indicator
+        if (!showFilters && !hasActiveFilters) {
+            // Show search button when filters are hidden and no active filters
+            TextButton(
+                onClick = { showFilters = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                Text(stringResource(R.string.search))
+            }
+        } else if (!showFilters && hasActiveFilters) {
+            // Show active filters indicator
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = { showFilters = true }
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                    Text(stringResource(R.string.filter_active))
+                }
+                IconButton(onClick = onClearFilters) {
+                    Icon(
+                        Icons.Default.Clear,
+                        contentDescription = stringResource(R.string.clear_filters)
+                    )
+                }
+            }
+        }
 
-        Spacer(Modifier.height(16.dp))
+        // Search filters (collapsible)
+        if (showFilters) {
+            SearchFilters(
+                placeNameQuery = placeNameQuery,
+                startDate = startDate,
+                endDate = endDate,
+                onPlaceNameQueryChange = onPlaceNameQueryChange,
+                onStartDateChange = onStartDateChange,
+                onEndDateChange = onEndDateChange,
+                onClearFilters = onClearFilters,
+                onHideFilters = { showFilters = false }
+            )
+            Spacer(Modifier.height(16.dp))
+        }
 
         if (checkins.isEmpty()) {
             Box(
@@ -98,14 +146,13 @@ fun HistoryScreen(
 @Composable
 fun SearchFilters(
     placeNameQuery: String,
-    locationQuery: String,
     startDate: Long?,
     endDate: Long?,
     onPlaceNameQueryChange: (String) -> Unit,
-    onLocationQueryChange: (String) -> Unit,
     onStartDateChange: (Long?) -> Unit,
     onEndDateChange: (Long?) -> Unit,
     onClearFilters: () -> Unit,
+    onHideFilters: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
@@ -116,7 +163,25 @@ fun SearchFilters(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Place name filter - single field always visible
+        // Header with close button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.search_filters),
+                style = MaterialTheme.typography.titleMedium
+            )
+            IconButton(onClick = onHideFilters) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Close,
+                    contentDescription = stringResource(R.string.close)
+                )
+            }
+        }
+
+        // Place name filter
         OutlinedTextField(
             value = placeNameQuery,
             onValueChange = onPlaceNameQueryChange,
@@ -126,22 +191,6 @@ fun SearchFilters(
             trailingIcon = {
                 if (placeNameQuery.isNotEmpty()) {
                     IconButton(onClick = { onPlaceNameQueryChange("") }) {
-                        Icon(Icons.Default.Clear, contentDescription = null)
-                    }
-                }
-            }
-        )
-
-        // Location/city filter
-        OutlinedTextField(
-            value = locationQuery,
-            onValueChange = onLocationQueryChange,
-            label = { Text(stringResource(R.string.filter_location)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            trailingIcon = {
-                if (locationQuery.isNotEmpty()) {
-                    IconButton(onClick = { onLocationQueryChange("") }) {
                         Icon(Icons.Default.Clear, contentDescription = null)
                     }
                 }
@@ -211,8 +260,8 @@ fun SearchFilters(
             }
         }
 
-        // Clear filters button - more compact
-        val hasActiveFilters = placeNameQuery.isNotEmpty() || locationQuery.isNotEmpty() || 
+        // Clear filters button
+        val hasActiveFilters = placeNameQuery.isNotEmpty() || 
             startDate != null || endDate != null
         
         if (hasActiveFilters) {
