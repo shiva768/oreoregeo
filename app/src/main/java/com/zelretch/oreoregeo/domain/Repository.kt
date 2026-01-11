@@ -26,6 +26,30 @@ class Repository(
         }
     }
 
+    fun searchCheckins(
+        placeNameQuery: String?,
+        locationQuery: String?,
+        startDate: Long?,
+        endDate: Long?
+    ): Flow<List<Checkin>> = checkinDao.searchCheckins(startDate, endDate).map { entities ->
+        entities.mapNotNull { entity ->
+            val place = placeDao.getPlaceByKey(entity.place_key)?.toDomain()
+            val checkin = entity.toDomain(place)
+            
+            // Filter by place name if query is provided
+            val matchesPlaceName = placeNameQuery.isNullOrBlank() || 
+                place?.name?.contains(placeNameQuery, ignoreCase = true) == true
+            
+            // Filter by location/city if query is provided
+            // Note: For OSM data, we could extract city info from tags if available
+            // For now, we'll search in the place name which often contains location info
+            val matchesLocation = locationQuery.isNullOrBlank() || 
+                place?.name?.contains(locationQuery, ignoreCase = true) == true
+            
+            if (matchesPlaceName && matchesLocation) checkin else null
+        }
+    }
+
     suspend fun performCheckin(placeKey: String, note: String): Result<Long> {
         return try {
             Timber.d("Performing checkin for place: $placeKey")

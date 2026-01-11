@@ -24,4 +24,15 @@ interface CheckinDao {
 
     @Query("DELETE FROM checkins WHERE id = :id")
     suspend fun delete(id: Long)
+
+    @Query("""
+        SELECT * FROM checkins 
+        WHERE (:startDate IS NULL OR visited_at >= :startDate)
+        AND (:endDate IS NULL OR visited_at <= :endDate)
+        ORDER BY visited_at DESC
+    """)
+    fun searchCheckins(
+        startDate: Long?,
+        endDate: Long?
+    ): Flow<List<CheckinEntity>>
 }

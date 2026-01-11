@@ -78,4 +78,14 @@
     <string name="backup_failed">Backup failed</string>
     <string name="no_checkins_yet">No check-ins yet</string>
     <string name="checkin_at">Check-in at %1$s</string>
+    <string name="search_filters">Search Filters</string>
+    <string name="filter_place_name">Place Name</string>
+    <string name="filter_location">City/Location</string>
+    <string name="filter_start_date">Start Date</string>
+    <string name="filter_end_date">End Date</string>
+    <string name="select_date">Select Date</string>
+    <string name="select_start_date">Select Start Date</string>
+    <string name="select_end_date">Select End Date</string>
+    <string name="clear_filters">Clear All Filters</string>
+    <string name="date_picker_placeholder">Use the buttons below to set dates</string>
 </resources>
