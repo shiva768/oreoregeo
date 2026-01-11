@@ -37,5 +37,12 @@ data class CheckinEntity(
     val cityName: String? = null,
     
     @ColumnInfo(name = "area_search")
-    val areaSearch: String? = null
+    val areaSearch: String? = null,
+    
+    // Added in version 3 for bilingual search support
+    @ColumnInfo(name = "pref_name_en")
+    val prefNameEn: String? = null,
+    
+    @ColumnInfo(name = "city_name_en")
+    val cityNameEn: String? = null
 )

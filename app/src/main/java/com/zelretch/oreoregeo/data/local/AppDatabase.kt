@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [PlaceEntity::class, CheckinEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,6 +30,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add English columns for bilingual search support
+                database.execSQL("ALTER TABLE checkins ADD COLUMN pref_name_en TEXT")
+                database.execSQL("ALTER TABLE checkins ADD COLUMN city_name_en TEXT")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase = INSTANCE ?: synchronized(this) {
             val instance = Room.databaseBuilder(
                 context.applicationContext,
@@ -37,7 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
                 "oreoregeo_database"
             )
                 .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING) // Enable WAL
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .addCallback(object : Callback() {})
                 .build()
             INSTANCE = instance

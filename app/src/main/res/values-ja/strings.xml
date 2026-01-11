@@ -78,4 +78,18 @@
     <string name="exclude_unnamed_label">名前のないスポットを除外</string>
     <string name="current_location">現在地</string>
     <string name="selected_place">選択したスポット</string>
+    <string name="search_filters">検索フィルター</string>
+    <string name="filter_place_name">場所名</string>
+    <string name="filter_location">市区町村</string>
+    <string name="filter_city_location">都道府県/市区町村</string>
+    <string name="filter_city_location_hint">東京、東京都、足立、足立区、草加</string>
+    <string name="filter_start_date">開始日</string>
+    <string name="filter_end_date">終了日</string>
+    <string name="select_date">日付を選択</string>
+    <string name="select_start_date">開始日を選択</string>
+    <string name="select_end_date">終了日を選択</string>
+    <string name="clear_filters">すべてクリア</string>
+    <string name="date_picker_placeholder">下のボタンで日付を設定してください</string>
+    <string name="filter_active">フィルター有効</string>
+    <string name="close">閉じる</string>
 </resources>

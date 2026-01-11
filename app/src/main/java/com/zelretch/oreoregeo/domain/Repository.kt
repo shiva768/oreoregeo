@@ -73,9 +73,11 @@ class Repository(
             val place = placeDao.getPlaceByKey(placeKey)
             val placeName = place?.name
             
-            // Perform reverse geocoding to get pref and city names
+            // Perform reverse geocoding to get pref and city names (Japanese and English)
             var prefName: String? = null
             var cityName: String? = null
+            var prefNameEn: String? = null
+            var cityNameEn: String? = null
             var areaSearch: String? = null
             
             if (place != null) {
@@ -84,17 +86,30 @@ class Repository(
                     val result = geocodeResult.getOrNull()
                     prefName = result?.prefName
                     cityName = result?.cityName
+                    prefNameEn = result?.prefNameEn
+                    cityNameEn = result?.cityNameEn
                     
-                    // Build area_search string
+                    // Build area_search string with both Japanese and English
+                    // Format: "Japanese Japanese English English"
                     areaSearch = buildString {
+                        // Japanese versions
                         if (prefName != null) append(prefName)
                         if (cityName != null) {
                             if (isNotEmpty()) append(" ")
                             append(cityName)
                         }
+                        // English versions (if different from Japanese)
+                        if (prefNameEn != null && prefNameEn != prefName) {
+                            if (isNotEmpty()) append(" ")
+                            append(prefNameEn)
+                        }
+                        if (cityNameEn != null && cityNameEn != cityName) {
+                            if (isNotEmpty()) append(" ")
+                            append(cityNameEn)
+                        }
                     }.takeIf { it.isNotBlank() }
                     
-                    Timber.d("Reverse geocode result: pref=$prefName, city=$cityName, areaSearch=$areaSearch")
+                    Timber.d("Reverse geocode result: pref=$prefName, city=$cityName, prefEn=$prefNameEn, cityEn=$cityNameEn, areaSearch=$areaSearch")
                 } else {
                     Timber.w("Reverse geocoding failed: ${geocodeResult.exceptionOrNull()}")
                 }
@@ -107,7 +122,9 @@ class Repository(
                 placeName = placeName,
                 prefName = prefName,
                 cityName = cityName,
-                areaSearch = areaSearch
+                areaSearch = areaSearch,
+                prefNameEn = prefNameEn,
+                cityNameEn = cityNameEn
             )
             val id = checkinDao.insert(checkin)
             Timber.i("Checkin successful for place $placeKey: id=$id")
