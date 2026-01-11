@@ -27,12 +27,16 @@ interface CheckinDao {
 
     @Query("""
         SELECT * FROM checkins 
-        WHERE (:startDate IS NULL OR visited_at >= :startDate)
-        AND (:endDate IS NULL OR visited_at <= :endDate)
+        WHERE (:placeQuery = '' OR place_name LIKE '%' || :placeQuery || '%')
+        AND (:areaQuery = '' OR area_search LIKE '%' || :areaQuery || '%')
+        AND (:startDate IS NULL OR visited_at >= :startDate)
+        AND (:endExclusive IS NULL OR visited_at < :endExclusive)
         ORDER BY visited_at DESC
     """)
     fun searchCheckins(
+        placeQuery: String,
+        areaQuery: String,
         startDate: Long?,
-        endDate: Long?
+        endExclusive: Long?
     ): Flow<List<CheckinEntity>>
 }

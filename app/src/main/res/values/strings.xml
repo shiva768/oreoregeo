@@ -81,6 +81,8 @@
     <string name="search_filters">Search Filters</string>
     <string name="filter_place_name">Place Name</string>
     <string name="filter_location">City/Location</string>
+    <string name="filter_city_location">City/Location</string>
+    <string name="filter_city_location_hint">Tokyo, Tokyo-to, Adachi, Adachi-ku, Soka</string>
     <string name="filter_start_date">Start Date</string>
     <string name="filter_end_date">End Date</string>
     <string name="select_date">Select Date</string>

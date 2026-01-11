@@ -44,9 +44,11 @@ import java.util.Locale
 fun HistoryScreen(
     checkins: List<Checkin>,
     placeNameQuery: String,
+    areaQuery: String,
     startDate: Long?,
     endDate: Long?,
     onPlaceNameQueryChange: (String) -> Unit,
+    onAreaQueryChange: (String) -> Unit,
     onStartDateChange: (Long?) -> Unit,
     onEndDateChange: (Long?) -> Unit,
     onClearFilters: () -> Unit,
@@ -54,7 +56,7 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     var showFilters by remember { mutableStateOf(false) }
-    val hasActiveFilters = placeNameQuery.isNotEmpty() || 
+    val hasActiveFilters = placeNameQuery.isNotEmpty() || areaQuery.isNotEmpty() || 
         startDate != null || endDate != null
 
     Column(
@@ -108,9 +110,11 @@ fun HistoryScreen(
         if (showFilters) {
             SearchFilters(
                 placeNameQuery = placeNameQuery,
+                areaQuery = areaQuery,
                 startDate = startDate,
                 endDate = endDate,
                 onPlaceNameQueryChange = onPlaceNameQueryChange,
+                onAreaQueryChange = onAreaQueryChange,
                 onStartDateChange = onStartDateChange,
                 onEndDateChange = onEndDateChange,
                 onClearFilters = onClearFilters,
@@ -144,9 +148,11 @@ fun HistoryScreen(
 @Composable
 fun SearchFilters(
     placeNameQuery: String,
+    areaQuery: String,
     startDate: Long?,
     endDate: Long?,
     onPlaceNameQueryChange: (String) -> Unit,
+    onAreaQueryChange: (String) -> Unit,
     onStartDateChange: (Long?) -> Unit,
     onEndDateChange: (Long?) -> Unit,
     onClearFilters: () -> Unit,
@@ -193,6 +199,23 @@ fun SearchFilters(
                     }
                 }
             }
+        )
+
+        // City/Location filter
+        OutlinedTextField(
+            value = areaQuery,
+            onValueChange = onAreaQueryChange,
+            label = { Text(stringResource(R.string.filter_city_location)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            trailingIcon = {
+                if (areaQuery.isNotEmpty()) {
+                    IconButton(onClick = { onAreaQueryChange("") }) {
+                        Icon(Icons.Default.Clear, contentDescription = null)
+                    }
+                }
+            },
+            placeholder = { Text(stringResource(R.string.filter_city_location_hint)) }
         )
 
         // Date range filters in a compact row
@@ -259,7 +282,7 @@ fun SearchFilters(
         }
 
         // Clear filters button
-        val hasActiveFilters = placeNameQuery.isNotEmpty() || 
+        val hasActiveFilters = placeNameQuery.isNotEmpty() || areaQuery.isNotEmpty() || 
             startDate != null || endDate != null
         
         if (hasActiveFilters) {
@@ -351,6 +374,15 @@ fun MaterialDatePickerDialog(
 fun CheckinCard(checkin: Checkin, onDeleteClick: () -> Unit, modifier: Modifier = Modifier) {
     val dateFormat = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault())
     val dateText = dateFormat.format(Date(checkin.visitedAt))
+    
+    // Build location text from pref and city
+    val locationText = buildString {
+        if (checkin.prefName != null) append(checkin.prefName)
+        if (checkin.cityName != null) {
+            if (isNotEmpty()) append(" ")
+            append(checkin.cityName)
+        }
+    }
 
     Card(
         modifier = modifier.fillMaxWidth()
@@ -363,16 +395,35 @@ fun CheckinCard(checkin: Checkin, onDeleteClick: () -> Unit, modifier: Modifier 
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                // Title: place name from checkin or fallback to place entity
                 Text(
-                    text = checkin.place?.name ?: checkin.placeKey,
+                    text = checkin.placeName ?: checkin.place?.name ?: checkin.placeKey,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    text = dateText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Subtitle: location + date
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (locationText.isNotEmpty()) {
+                        Text(
+                            text = locationText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = dateText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 if (checkin.note.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
                     Text(

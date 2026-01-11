@@ -5,19 +5,22 @@ import com.zelretch.oreoregeo.data.local.CheckinDao
 import com.zelretch.oreoregeo.data.local.CheckinEntity
 import com.zelretch.oreoregeo.data.local.PlaceDao
 import com.zelretch.oreoregeo.data.local.PlaceEntity
+import com.zelretch.oreoregeo.data.remote.NominatimClient
 import com.zelretch.oreoregeo.data.remote.OsmApiClient
 import com.zelretch.oreoregeo.data.remote.OverpassClient
 import com.zelretch.oreoregeo.data.remote.OverpassElement
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
+import java.util.Calendar
 
 class Repository(
     private val placeDao: PlaceDao,
     private val checkinDao: CheckinDao,
     private val overpassClient: OverpassClient,
     private var osmApiClient: OsmApiClient,
-    private val driveBackupManager: com.zelretch.oreoregeo.data.DriveBackupManager
+    private val driveBackupManager: com.zelretch.oreoregeo.data.DriveBackupManager,
+    private val nominatimClient: NominatimClient = NominatimClient()
 ) {
     fun getAllCheckins(): Flow<List<Checkin>> = checkinDao.getAllCheckins().map { entities ->
         entities.map { entity ->
@@ -28,18 +31,30 @@ class Repository(
 
     fun searchCheckins(
         placeNameQuery: String?,
+        areaQuery: String?,
         startDate: Long?,
         endDate: Long?
-    ): Flow<List<Checkin>> = checkinDao.searchCheckins(startDate, endDate).map { entities ->
-        entities.mapNotNull { entity ->
-            val place = placeDao.getPlaceByKey(entity.place_key)?.toDomain()
-            val checkin = entity.toDomain(place)
-            
-            // Filter by place name if query is provided
-            val matchesPlaceName = placeNameQuery.isNullOrBlank() || 
-                place?.name?.contains(placeNameQuery, ignoreCase = true) == true
-            
-            if (matchesPlaceName) checkin else null
+    ): Flow<List<Checkin>> {
+        val placeQuery = placeNameQuery?.trim() ?: ""
+        val areaSearchQuery = areaQuery?.trim() ?: ""
+        
+        // Convert endDate to exclusive (next day at 00:00)
+        val endExclusive = endDate?.let { date ->
+            Calendar.getInstance().apply {
+                timeInMillis = date
+                add(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+        }
+        
+        return checkinDao.searchCheckins(placeQuery, areaSearchQuery, startDate, endExclusive).map { entities ->
+            entities.map { entity ->
+                val place = placeDao.getPlaceByKey(entity.place_key)?.toDomain()
+                entity.toDomain(place)
+            }
         }
     }
 
@@ -54,10 +69,45 @@ class Repository(
                 return Result.failure(Exception("duplicate_checkin"))
             }
 
+            // Get place information
+            val place = placeDao.getPlaceByKey(placeKey)
+            val placeName = place?.name
+            
+            // Perform reverse geocoding to get pref and city names
+            var prefName: String? = null
+            var cityName: String? = null
+            var areaSearch: String? = null
+            
+            if (place != null) {
+                val geocodeResult = nominatimClient.reverseGeocode(place.lat, place.lon)
+                if (geocodeResult.isSuccess) {
+                    val result = geocodeResult.getOrNull()
+                    prefName = result?.prefName
+                    cityName = result?.cityName
+                    
+                    // Build area_search string
+                    areaSearch = buildString {
+                        if (prefName != null) append(prefName)
+                        if (cityName != null) {
+                            if (isNotEmpty()) append(" ")
+                            append(cityName)
+                        }
+                    }.takeIf { it.isNotBlank() }
+                    
+                    Timber.d("Reverse geocode result: pref=$prefName, city=$cityName, areaSearch=$areaSearch")
+                } else {
+                    Timber.w("Reverse geocoding failed: ${geocodeResult.exceptionOrNull()}")
+                }
+            }
+
             val checkin = CheckinEntity(
                 place_key = placeKey,
                 visited_at = visitedAt,
-                note = note
+                note = note,
+                placeName = placeName,
+                prefName = prefName,
+                cityName = cityName,
+                areaSearch = areaSearch
             )
             val id = checkinDao.insert(checkin)
             Timber.i("Checkin successful for place $placeKey: id=$id")
@@ -255,6 +305,9 @@ class Repository(
         placeKey = place_key,
         visitedAt = visited_at,
         note = note,
-        place = place
+        place = place,
+        placeName = placeName,
+        prefName = prefName,
+        cityName = cityName
     )
 }

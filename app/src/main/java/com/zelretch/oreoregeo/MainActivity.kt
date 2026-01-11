@@ -318,15 +318,18 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
             composable("history") {
                 val checkins by historyViewModel.checkins.collectAsState()
                 val placeNameQuery by historyViewModel.placeNameQuery.collectAsState()
+                val areaQuery by historyViewModel.areaQuery.collectAsState()
                 val startDate by historyViewModel.startDate.collectAsState()
                 val endDate by historyViewModel.endDate.collectAsState()
 
                 HistoryScreen(
                     checkins = checkins,
                     placeNameQuery = placeNameQuery,
+                    areaQuery = areaQuery,
                     startDate = startDate,
                     endDate = endDate,
                     onPlaceNameQueryChange = { historyViewModel.setPlaceNameQuery(it) },
+                    onAreaQueryChange = { historyViewModel.setAreaQuery(it) },
                     onStartDateChange = { historyViewModel.setStartDate(it) },
                     onEndDateChange = { historyViewModel.setEndDate(it) },
                     onClearFilters = { historyViewModel.clearFilters() },
