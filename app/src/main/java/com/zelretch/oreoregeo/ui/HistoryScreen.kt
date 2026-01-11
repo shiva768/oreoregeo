@@ -1,6 +1,5 @@
 package com.zelretch.oreoregeo.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -109,129 +109,148 @@ fun SearchFilters(
     modifier: Modifier = Modifier
 ) {
     val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
 
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Place name filter - single field always visible
+        OutlinedTextField(
+            value = placeNameQuery,
+            onValueChange = onPlaceNameQueryChange,
+            label = { Text(stringResource(R.string.filter_place_name)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            trailingIcon = {
+                if (placeNameQuery.isNotEmpty()) {
+                    IconButton(onClick = { onPlaceNameQueryChange("") }) {
+                        Icon(Icons.Default.Clear, contentDescription = null)
+                    }
+                }
+            }
+        )
+
+        // Location/city filter
+        OutlinedTextField(
+            value = locationQuery,
+            onValueChange = onLocationQueryChange,
+            label = { Text(stringResource(R.string.filter_location)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            trailingIcon = {
+                if (locationQuery.isNotEmpty()) {
+                    IconButton(onClick = { onLocationQueryChange("") }) {
+                        Icon(Icons.Default.Clear, contentDescription = null)
+                    }
+                }
+            }
+        )
+
+        // Date range filters in a compact row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = stringResource(R.string.search_filters),
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            // Place name filter
-            OutlinedTextField(
-                value = placeNameQuery,
-                onValueChange = onPlaceNameQueryChange,
-                label = { Text(stringResource(R.string.filter_place_name)) },
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    if (placeNameQuery.isNotEmpty()) {
-                        IconButton(onClick = { onPlaceNameQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = null)
-                        }
-                    }
-                }
-            )
-
-            // Location/city filter
-            OutlinedTextField(
-                value = locationQuery,
-                onValueChange = onLocationQueryChange,
-                label = { Text(stringResource(R.string.filter_location)) },
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    if (locationQuery.isNotEmpty()) {
-                        IconButton(onClick = { onLocationQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = null)
-                        }
-                    }
-                }
-            )
-
-            // Date range filters
-            var showStartDatePicker by remember { mutableStateOf(false) }
-            var showEndDatePicker by remember { mutableStateOf(false) }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Start date
+            // Start date with calendar icon
+            Box(modifier = Modifier.weight(1f)) {
                 OutlinedTextField(
                     value = startDate?.let { dateFormat.format(Date(it)) } ?: "",
                     onValueChange = { },
                     label = { Text(stringResource(R.string.filter_start_date)) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { showStartDatePicker = true },
+                    modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
+                    singleLine = true,
                     trailingIcon = {
-                        if (startDate != null) {
-                            IconButton(onClick = { onStartDateChange(null) }) {
-                                Icon(Icons.Default.Clear, contentDescription = null)
+                        Row {
+                            if (startDate != null) {
+                                IconButton(onClick = { onStartDateChange(null) }) {
+                                    Icon(Icons.Default.Clear, contentDescription = null)
+                                }
+                            }
+                            IconButton(onClick = { showStartDatePicker = true }) {
+                                Icon(
+                                    imageVector = androidx.compose.material.icons.Icons.Default.DateRange,
+                                    contentDescription = stringResource(R.string.select_start_date)
+                                )
                             }
                         }
                     },
                     placeholder = { Text(stringResource(R.string.select_date)) }
                 )
+            }
 
-                // End date
+            // End date with calendar icon
+            Box(modifier = Modifier.weight(1f)) {
                 OutlinedTextField(
                     value = endDate?.let { dateFormat.format(Date(it)) } ?: "",
                     onValueChange = { },
                     label = { Text(stringResource(R.string.filter_end_date)) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { showEndDatePicker = true },
+                    modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
+                    singleLine = true,
                     trailingIcon = {
-                        if (endDate != null) {
-                            IconButton(onClick = { onEndDateChange(null) }) {
-                                Icon(Icons.Default.Clear, contentDescription = null)
+                        Row {
+                            if (endDate != null) {
+                                IconButton(onClick = { onEndDateChange(null) }) {
+                                    Icon(Icons.Default.Clear, contentDescription = null)
+                                }
+                            }
+                            IconButton(onClick = { showEndDatePicker = true }) {
+                                Icon(
+                                    imageVector = androidx.compose.material.icons.Icons.Default.DateRange,
+                                    contentDescription = stringResource(R.string.select_end_date)
+                                )
                             }
                         }
                     },
                     placeholder = { Text(stringResource(R.string.select_date)) }
                 )
             }
+        }
 
-            if (showStartDatePicker) {
-                MaterialDatePickerDialog(
-                    initialDate = startDate,
-                    onDateSelected = { date ->
-                        onStartDateChange(date)
-                        showStartDatePicker = false
-                    },
-                    onDismiss = { showStartDatePicker = false }
+        // Clear filters button - more compact
+        val hasActiveFilters = placeNameQuery.isNotEmpty() || locationQuery.isNotEmpty() || 
+            startDate != null || endDate != null
+        
+        if (hasActiveFilters) {
+            TextButton(
+                onClick = onClearFilters,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    Icons.Default.Clear,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 4.dp)
                 )
-            }
-
-            if (showEndDatePicker) {
-                MaterialDatePickerDialog(
-                    initialDate = endDate,
-                    onDateSelected = { date ->
-                        onEndDateChange(date)
-                        showEndDatePicker = false
-                    },
-                    onDismiss = { showEndDatePicker = false }
-                )
-            }
-
-            // Clear filters button
-            val hasActiveFilters = placeNameQuery.isNotEmpty() || locationQuery.isNotEmpty() || 
-                startDate != null || endDate != null
-            
-            if (hasActiveFilters) {
-                TextButton(
-                    onClick = onClearFilters,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.clear_filters))
-                }
+                Text(stringResource(R.string.clear_filters))
             }
         }
+    }
+
+    // Date picker dialogs
+    if (showStartDatePicker) {
+        MaterialDatePickerDialog(
+            initialDate = startDate,
+            onDateSelected = { date ->
+                onStartDateChange(date)
+                showStartDatePicker = false
+            },
+            onDismiss = { showStartDatePicker = false }
+        )
+    }
+
+    if (showEndDatePicker) {
+        MaterialDatePickerDialog(
+            initialDate = endDate,
+            onDateSelected = { date ->
+                onEndDateChange(date)
+                showEndDatePicker = false
+            },
+            onDismiss = { showEndDatePicker = false }
+        )
     }
 }
 
