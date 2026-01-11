@@ -28,6 +28,15 @@ class HistoryScreenTest {
             OreoregeoTheme {
                 HistoryScreen(
                     checkins = emptyList(),
+                    placeNameQuery = "",
+                    locationQuery = "",
+                    startDate = null,
+                    endDate = null,
+                    onPlaceNameQueryChange = {},
+                    onLocationQueryChange = {},
+                    onStartDateChange = {},
+                    onEndDateChange = {},
+                    onClearFilters = {},
                     onDeleteClick = {}
                 )
             }
@@ -62,6 +71,15 @@ class HistoryScreenTest {
             OreoregeoTheme {
                 HistoryScreen(
                     checkins = testCheckins,
+                    placeNameQuery = "",
+                    locationQuery = "",
+                    startDate = null,
+                    endDate = null,
+                    onPlaceNameQueryChange = {},
+                    onLocationQueryChange = {},
+                    onStartDateChange = {},
+                    onEndDateChange = {},
+                    onClearFilters = {},
                     onDeleteClick = {}
                 )
             }
@@ -71,5 +89,40 @@ class HistoryScreenTest {
         composeTestRule.onNodeWithText("node/123").assertIsDisplayed()
         composeTestRule.onNodeWithText("node/456").assertIsDisplayed()
         composeTestRule.onNodeWithText("テストノート1").assertIsDisplayed()
+    }
+
+    @Test
+    fun historyScreen_displaysSearchFilters() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                HistoryScreen(
+                    checkins = emptyList(),
+                    placeNameQuery = "",
+                    locationQuery = "",
+                    startDate = null,
+                    endDate = null,
+                    onPlaceNameQueryChange = {},
+                    onLocationQueryChange = {},
+                    onStartDateChange = {},
+                    onEndDateChange = {},
+                    onClearFilters = {},
+                    onDeleteClick = {}
+                )
+            }
+        }
+
+        // Search filter UI should be displayed
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.search_filters)
+        ).assertIsDisplayed()
+        
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.filter_place_name)
+        ).assertIsDisplayed()
+        
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.filter_location)
+        ).assertIsDisplayed()
     }
 }
