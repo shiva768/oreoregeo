@@ -24,7 +24,13 @@ class CheckinSearchTest {
         val endOfDay = calendar.timeInMillis
         
         assertTrue(endOfDay > startOfDay)
-        assertTrue(endOfDay - startOfDay < 24 * 60 * 60 * 1000) // Less than 24 hours
+        
+        // Verify both are on the same day
+        val startCalendar = Calendar.getInstance().apply { timeInMillis = startOfDay }
+        val endCalendar = Calendar.getInstance().apply { timeInMillis = endOfDay }
+        assertEquals(startCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.YEAR))
+        assertEquals(startCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.MONTH))
+        assertEquals(startCalendar.get(Calendar.DAY_OF_MONTH), endCalendar.get(Calendar.DAY_OF_MONTH))
     }
 
     @Test

@@ -233,6 +233,16 @@ fun SearchFilters(
     }
 }
 
+private fun normalizeToStartOfDay(millis: Long): Long {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = millis
+    calendar.set(Calendar.HOUR_OF_DAY, 0)
+    calendar.set(Calendar.MINUTE, 0)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+    return calendar.timeInMillis
+}
+
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialDatePickerDialog(
@@ -250,14 +260,7 @@ fun MaterialDatePickerDialog(
             TextButton(
                 onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        // Set to start of day in user's timezone
-                        val calendar = Calendar.getInstance()
-                        calendar.timeInMillis = millis
-                        calendar.set(Calendar.HOUR_OF_DAY, 0)
-                        calendar.set(Calendar.MINUTE, 0)
-                        calendar.set(Calendar.SECOND, 0)
-                        calendar.set(Calendar.MILLISECOND, 0)
-                        onDateSelected(calendar.timeInMillis)
+                        onDateSelected(normalizeToStartOfDay(millis))
                     }
                 }
             ) {
