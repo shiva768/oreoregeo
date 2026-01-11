@@ -15,7 +15,10 @@ data class Checkin(
     val placeKey: String,
     val visitedAt: Long,
     val note: String,
-    val place: Place? = null
+    val place: Place? = null,
+    val placeName: String? = null,
+    val prefName: String? = null,
+    val cityName: String? = null
 )
 
 data class PlaceWithDistance(

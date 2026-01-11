@@ -28,6 +28,15 @@ class HistoryScreenTest {
             OreoregeoTheme {
                 HistoryScreen(
                     checkins = emptyList(),
+                    placeNameQuery = "",
+                    areaQuery = "",
+                    startDate = null,
+                    endDate = null,
+                    onPlaceNameQueryChange = {},
+                    onAreaQueryChange = {},
+                    onStartDateChange = {},
+                    onEndDateChange = {},
+                    onClearFilters = {},
                     onDeleteClick = {}
                 )
             }
@@ -62,6 +71,15 @@ class HistoryScreenTest {
             OreoregeoTheme {
                 HistoryScreen(
                     checkins = testCheckins,
+                    placeNameQuery = "",
+                    areaQuery = "",
+                    startDate = null,
+                    endDate = null,
+                    onPlaceNameQueryChange = {},
+                    onAreaQueryChange = {},
+                    onStartDateChange = {},
+                    onEndDateChange = {},
+                    onClearFilters = {},
                     onDeleteClick = {}
                 )
             }
@@ -71,5 +89,32 @@ class HistoryScreenTest {
         composeTestRule.onNodeWithText("node/123").assertIsDisplayed()
         composeTestRule.onNodeWithText("node/456").assertIsDisplayed()
         composeTestRule.onNodeWithText("テストノート1").assertIsDisplayed()
+    }
+
+    @Test
+    fun historyScreen_displaysSearchButton() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                HistoryScreen(
+                    checkins = emptyList(),
+                    placeNameQuery = "",
+                    areaQuery = "",
+                    startDate = null,
+                    endDate = null,
+                    onPlaceNameQueryChange = {},
+                    onAreaQueryChange = {},
+                    onStartDateChange = {},
+                    onEndDateChange = {},
+                    onClearFilters = {},
+                    onDeleteClick = {}
+                )
+            }
+        }
+
+        // Search button should be displayed when no filters are active
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.search)
+        ).assertIsDisplayed()
     }
 }
