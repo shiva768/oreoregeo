@@ -166,6 +166,7 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Double, Double) -> Unit) -> Unit) {
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(0) }
+    var currentRoute by remember { mutableStateOf("search") }
 
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
     val repository = app.repository
@@ -191,7 +192,8 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
-                    if (repository.isOsmAuthenticated()) {
+                    // Only show Add Place button on the search screen
+                    if (repository.isOsmAuthenticated() && currentRoute == "search") {
                         IconButton(onClick = { navController.navigate("add_place") }) {
                             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_place))
                         }
@@ -207,6 +209,7 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     selected = selectedItem == 0,
                     onClick = {
                         selectedItem = 0
+                        currentRoute = "search"
                         navController.navigate("search") {
                             popUpTo("search") { inclusive = true }
                         }
@@ -220,6 +223,7 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     selected = selectedItem == 1,
                     onClick = {
                         selectedItem = 1
+                        currentRoute = "history"
                         navController.navigate("history") {
                             popUpTo("search")
                         }
@@ -233,6 +237,7 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     selected = selectedItem == 2,
                     onClick = {
                         selectedItem = 2
+                        currentRoute = "settings"
                         navController.navigate("settings") {
                             popUpTo("search")
                         }
