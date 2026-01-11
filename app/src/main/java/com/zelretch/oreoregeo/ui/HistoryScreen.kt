@@ -172,7 +172,7 @@ fun SearchFilters(
                             }
                             IconButton(onClick = { showStartDatePicker = true }) {
                                 Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.DateRange,
+                                    imageVector = Icons.Default.DateRange,
                                     contentDescription = stringResource(R.string.select_start_date)
                                 )
                             }
@@ -200,7 +200,7 @@ fun SearchFilters(
                             }
                             IconButton(onClick = { showEndDatePicker = true }) {
                                 Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.DateRange,
+                                    imageVector = Icons.Default.DateRange,
                                     contentDescription = stringResource(R.string.select_end_date)
                                 )
                             }
