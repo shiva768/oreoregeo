@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -166,6 +167,8 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Double, Double) -> Unit) -> Unit) {
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(0) }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
     val repository = app.repository
@@ -191,7 +194,8 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
-                    if (repository.isOsmAuthenticated()) {
+                    // Only show Add Place button on the search screen
+                    if (repository.isOsmAuthenticated() && currentRoute == "search") {
                         IconButton(onClick = { navController.navigate("add_place") }) {
                             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_place))
                         }
