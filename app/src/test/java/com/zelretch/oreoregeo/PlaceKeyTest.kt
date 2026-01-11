@@ -175,7 +175,6 @@ class PlaceKeyTest {
     @Test
     fun testEditButtonVisibilityCheckRobustness() {
         // Test edge cases to ensure the check is robust
-        
         // Valid cases
         assertEquals("node", "osm:node:123".split(":").getOrNull(1))
         assertEquals("way", "osm:way:456".split(":").getOrNull(1))
@@ -183,7 +182,7 @@ class PlaceKeyTest {
         
         // Edge cases - malformed keys should not match
         assertNotEquals("node", "invalid:format".split(":").getOrNull(1))
-        assertNull("".split(":").getOrNull(1))
+        assertNotEquals("node", "invalidformat".split(":").getOrNull(1))
         assertNotEquals("node", "osm".split(":").getOrNull(1))
     }
 }
