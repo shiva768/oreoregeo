@@ -1,6 +1,8 @@
 package com.zelretch.oreoregeo
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -122,5 +124,113 @@ class SearchScreenTest {
         composeTestRule.onNodeWithText(
             context.getString(R.string.no_places_found)
         ).assertIsDisplayed()
+    }
+
+    @Test
+    fun searchButton_isEnabledInIdleState() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                SearchScreen(
+                    searchState = SearchState.Idle,
+                    searchRadius = 100,
+                    onRadiusChange = {},
+                    excludeUnnamed = false,
+                    onExcludeUnnamedChange = {},
+                    canEdit = false,
+                    currentLocation = null,
+                    onSearchClick = {},
+                    onPlaceClick = {},
+                    onCheckinClick = {},
+                    onEditPlace = {}
+                )
+            }
+        }
+
+        // アイドル状態では検索ボタンが有効であることを確認
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.search_nearby_places)
+        ).assertIsEnabled()
+    }
+
+    @Test
+    fun searchButton_isDisabledInLoadingState() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                SearchScreen(
+                    searchState = SearchState.Loading,
+                    searchRadius = 100,
+                    onRadiusChange = {},
+                    excludeUnnamed = false,
+                    onExcludeUnnamedChange = {},
+                    canEdit = false,
+                    currentLocation = null,
+                    onSearchClick = {},
+                    onPlaceClick = {},
+                    onCheckinClick = {},
+                    onEditPlace = {}
+                )
+            }
+        }
+
+        // ローディング状態では検索ボタンが無効であることを確認
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.search_nearby_places)
+        ).assertIsNotEnabled()
+    }
+
+    @Test
+    fun searchButton_isEnabledInSuccessState() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                SearchScreen(
+                    searchState = SearchState.Success(emptyList()),
+                    searchRadius = 100,
+                    onRadiusChange = {},
+                    excludeUnnamed = false,
+                    onExcludeUnnamedChange = {},
+                    canEdit = false,
+                    currentLocation = null,
+                    onSearchClick = {},
+                    onPlaceClick = {},
+                    onCheckinClick = {},
+                    onEditPlace = {}
+                )
+            }
+        }
+
+        // 成功状態では検索ボタンが有効であることを確認
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.search_nearby_places)
+        ).assertIsEnabled()
+    }
+
+    @Test
+    fun searchButton_isEnabledInErrorState() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                SearchScreen(
+                    searchState = SearchState.Error("テストエラー"),
+                    searchRadius = 100,
+                    onRadiusChange = {},
+                    excludeUnnamed = false,
+                    onExcludeUnnamedChange = {},
+                    canEdit = false,
+                    currentLocation = null,
+                    onSearchClick = {},
+                    onPlaceClick = {},
+                    onCheckinClick = {},
+                    onEditPlace = {}
+                )
+            }
+        }
+
+        // エラー状態では検索ボタンが有効であることを確認
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.search_nearby_places)
+        ).assertIsEnabled()
     }
 }

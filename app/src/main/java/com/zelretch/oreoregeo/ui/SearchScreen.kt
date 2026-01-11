@@ -126,7 +126,8 @@ fun SearchScreen(
 
         Button(
             onClick = onSearchClick,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = searchState !is SearchState.Loading
         ) {
             Icon(Icons.Default.LocationOn, contentDescription = null)
             Spacer(Modifier.width(8.dp))
