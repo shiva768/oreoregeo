@@ -220,8 +220,10 @@ fun SearchFilters(
             }
 
             // Clear filters button
-            if (placeNameQuery.isNotEmpty() || locationQuery.isNotEmpty() || 
-                startDate != null || endDate != null) {
+            val hasActiveFilters = placeNameQuery.isNotEmpty() || locationQuery.isNotEmpty() || 
+                startDate != null || endDate != null
+            
+            if (hasActiveFilters) {
                 TextButton(
                     onClick = onClearFilters,
                     modifier = Modifier.fillMaxWidth()
