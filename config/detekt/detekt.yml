@@ -176,7 +176,7 @@ complexity:
     thresholdInObjects: 20
     thresholdInEnums: 20
     ignoreDeprecated: false
-    ignorePrivate: false
+    ignorePrivate: true
     ignoreOverridden: false
 
 coroutines:

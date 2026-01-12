@@ -56,8 +56,10 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     var showFilters by remember { mutableStateOf(false) }
-    val hasActiveFilters = placeNameQuery.isNotEmpty() || areaQuery.isNotEmpty() || 
-        startDate != null || endDate != null
+    val hasActiveFilters = placeNameQuery.isNotEmpty() ||
+        areaQuery.isNotEmpty() ||
+        startDate != null ||
+        endDate != null
 
     Column(
         modifier = modifier
@@ -282,9 +284,11 @@ fun SearchFilters(
         }
 
         // Clear filters button
-        val hasActiveFilters = placeNameQuery.isNotEmpty() || areaQuery.isNotEmpty() || 
-            startDate != null || endDate != null
-        
+        val hasActiveFilters = placeNameQuery.isNotEmpty() ||
+            areaQuery.isNotEmpty() ||
+            startDate != null ||
+            endDate != null
+
         if (hasActiveFilters) {
             TextButton(
                 onClick = onClearFilters,
@@ -374,7 +378,7 @@ fun MaterialDatePickerDialog(
 fun CheckinCard(checkin: Checkin, onDeleteClick: () -> Unit, modifier: Modifier = Modifier) {
     val dateFormat = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault())
     val dateText = dateFormat.format(Date(checkin.visitedAt))
-    
+
     // Build location text from pref and city
     val locationText = buildString {
         if (checkin.prefName != null) append(checkin.prefName)

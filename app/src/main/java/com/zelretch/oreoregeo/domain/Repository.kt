@@ -22,6 +22,10 @@ class Repository(
     private val driveBackupManager: com.zelretch.oreoregeo.data.DriveBackupManager,
     private val nominatimClient: NominatimClient = NominatimClient()
 ) {
+    companion object {
+        private const val DUPLICATE_CHECKIN_THRESHOLD_MS = 30 * 60 * 1000L // 30 minutes
+        private const val DEFAULT_SEARCH_RADIUS_METERS = 80
+    }
     fun getAllCheckins(): Flow<List<Checkin>> = checkinDao.getAllCheckins().map { entities ->
         entities.map { entity ->
             val place = placeDao.getPlaceByKey(entity.place_key)?.toDomain()
@@ -37,7 +41,7 @@ class Repository(
     ): Flow<List<Checkin>> {
         val placeQuery = placeNameQuery?.trim() ?: ""
         val areaSearchQuery = areaQuery?.trim() ?: ""
-        
+
         // Convert endDate to exclusive (next day at 00:00)
         val endExclusive = endDate?.let { date ->
             Calendar.getInstance().apply {
@@ -49,7 +53,7 @@ class Repository(
                 set(Calendar.MILLISECOND, 0)
             }.timeInMillis
         }
-        
+
         return checkinDao.searchCheckins(placeQuery, areaSearchQuery, startDate, endExclusive).map { entities ->
             entities.map { entity ->
                 val place = placeDao.getPlaceByKey(entity.place_key)?.toDomain()
@@ -61,71 +65,14 @@ class Repository(
     suspend fun performCheckin(placeKey: String, note: String): Result<Long> {
         return try {
             Timber.d("Performing checkin for place: $placeKey")
-            val lastCheckin = checkinDao.getLastCheckinByPlace(placeKey)
             val visitedAt = System.currentTimeMillis()
 
-            if (lastCheckin != null && (visitedAt - lastCheckin.visited_at) < 30 * 60 * 1000) {
-                Timber.w("Duplicate checkin prevented for place: $placeKey")
-                return Result.failure(Exception("duplicate_checkin"))
-            }
+            checkForDuplicateCheckin(placeKey, visitedAt)?.let { return it }
 
-            // Get place information
             val place = placeDao.getPlaceByKey(placeKey)
-            val placeName = place?.name
-            
-            // Perform reverse geocoding to get pref and city names (Japanese and English)
-            var prefName: String? = null
-            var cityName: String? = null
-            var prefNameEn: String? = null
-            var cityNameEn: String? = null
-            var areaSearch: String? = null
-            
-            if (place != null) {
-                val geocodeResult = nominatimClient.reverseGeocode(place.lat, place.lon)
-                if (geocodeResult.isSuccess) {
-                    val result = geocodeResult.getOrNull()
-                    prefName = result?.prefName
-                    cityName = result?.cityName
-                    prefNameEn = result?.prefNameEn
-                    cityNameEn = result?.cityNameEn
-                    
-                    // Build area_search string with both Japanese and English
-                    // Format: "Japanese Japanese English English"
-                    areaSearch = buildString {
-                        // Japanese versions
-                        if (prefName != null) append(prefName)
-                        if (cityName != null) {
-                            if (isNotEmpty()) append(" ")
-                            append(cityName)
-                        }
-                        // English versions (if different from Japanese)
-                        if (prefNameEn != null && prefNameEn != prefName) {
-                            if (isNotEmpty()) append(" ")
-                            append(prefNameEn)
-                        }
-                        if (cityNameEn != null && cityNameEn != cityName) {
-                            if (isNotEmpty()) append(" ")
-                            append(cityNameEn)
-                        }
-                    }.takeIf { it.isNotBlank() }
-                    
-                    Timber.d("Reverse geocode result: pref=$prefName, city=$cityName, prefEn=$prefNameEn, cityEn=$cityNameEn, areaSearch=$areaSearch")
-                } else {
-                    Timber.w("Reverse geocoding failed: ${geocodeResult.exceptionOrNull()}")
-                }
-            }
+            val geocodeData = fetchGeocodeData(place)
 
-            val checkin = CheckinEntity(
-                place_key = placeKey,
-                visited_at = visitedAt,
-                note = note,
-                placeName = placeName,
-                prefName = prefName,
-                cityName = cityName,
-                areaSearch = areaSearch,
-                prefNameEn = prefNameEn,
-                cityNameEn = cityNameEn
-            )
+            val checkin = createCheckinEntity(placeKey, visitedAt, note, place, geocodeData)
             val id = checkinDao.insert(checkin)
             Timber.i("Checkin successful for place $placeKey: id=$id")
             Result.success(id)
@@ -135,10 +82,93 @@ class Repository(
         }
     }
 
+    private suspend fun checkForDuplicateCheckin(placeKey: String, visitedAt: Long): Result<Long>? {
+        val lastCheckin = checkinDao.getLastCheckinByPlace(placeKey)
+        if (lastCheckin != null && (visitedAt - lastCheckin.visited_at) < DUPLICATE_CHECKIN_THRESHOLD_MS) {
+            Timber.w("Duplicate checkin prevented for place: $placeKey")
+            return Result.failure(Exception("duplicate_checkin"))
+        }
+        return null
+    }
+
+    private suspend fun fetchGeocodeData(place: PlaceEntity?): GeocodeData {
+        if (place == null) return GeocodeData()
+
+        val geocodeResult = nominatimClient.reverseGeocode(place.lat, place.lon)
+        if (geocodeResult.isFailure) {
+            Timber.w("Reverse geocoding failed: ${geocodeResult.exceptionOrNull()}")
+            return GeocodeData()
+        }
+
+        val result = geocodeResult.getOrNull() ?: return GeocodeData()
+        val areaSearch = buildAreaSearchString(result)
+
+        Timber.d(
+            "Reverse geocode result: pref=${result.prefName}, city=${result.cityName}, " +
+                "prefEn=${result.prefNameEn}, cityEn=${result.cityNameEn}, areaSearch=$areaSearch"
+        )
+
+        return GeocodeData(
+            prefName = result.prefName,
+            cityName = result.cityName,
+            prefNameEn = result.prefNameEn,
+            cityNameEn = result.cityNameEn,
+            areaSearch = areaSearch
+        )
+    }
+
+    private fun buildAreaSearchString(result: com.zelretch.oreoregeo.data.remote.ReverseGeocodeResult): String? = buildString {
+        // Japanese versions
+        result.prefName?.let { append(it) }
+        result.cityName?.let {
+            if (isNotEmpty()) append(" ")
+            append(it)
+        }
+        // English versions (if different from Japanese)
+        result.prefNameEn?.let { en ->
+            if (en != result.prefName) {
+                if (isNotEmpty()) append(" ")
+                append(en)
+            }
+        }
+        result.cityNameEn?.let { en ->
+            if (en != result.cityName) {
+                if (isNotEmpty()) append(" ")
+                append(en)
+            }
+        }
+    }.takeIf { it.isNotBlank() }
+
+    private fun createCheckinEntity(
+        placeKey: String,
+        visitedAt: Long,
+        note: String,
+        place: PlaceEntity?,
+        geocodeData: GeocodeData
+    ): CheckinEntity = CheckinEntity(
+        place_key = placeKey,
+        visited_at = visitedAt,
+        note = note,
+        placeName = place?.name,
+        prefName = geocodeData.prefName,
+        cityName = geocodeData.cityName,
+        areaSearch = geocodeData.areaSearch,
+        prefNameEn = geocodeData.prefNameEn,
+        cityNameEn = geocodeData.cityNameEn
+    )
+
+    private data class GeocodeData(
+        val prefName: String? = null,
+        val cityName: String? = null,
+        val prefNameEn: String? = null,
+        val cityNameEn: String? = null,
+        val areaSearch: String? = null
+    )
+
     suspend fun searchNearbyPlaces(
         currentLat: Double,
         currentLon: Double,
-        radiusMeters: Int = 80,
+        radiusMeters: Int = DEFAULT_SEARCH_RADIUS_METERS,
         excludeUnnamed: Boolean = true,
         language: String? = null
     ): Result<List<PlaceWithDistance>> {
