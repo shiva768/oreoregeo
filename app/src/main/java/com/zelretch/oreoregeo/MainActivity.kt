@@ -166,9 +166,16 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 @Composable
 fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Double, Double) -> Unit) -> Unit) {
     val navController = rememberNavController()
-    var selectedItem by remember { mutableStateOf(0) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Derive selectedItem from currentRoute to keep tab indicator synchronized with displayed screen
+    val selectedItem = when {
+        currentRoute == "search" -> 0
+        currentRoute == "history" -> 1
+        currentRoute == "settings" -> 2
+        else -> 0
+    }
 
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as OreoregeoApplication
     val repository = app.repository
@@ -210,7 +217,6 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     label = { Text(stringResource(R.string.search)) },
                     selected = selectedItem == 0,
                     onClick = {
-                        selectedItem = 0
                         navController.navigate("search") {
                             popUpTo("search") { inclusive = true }
                         }
@@ -223,7 +229,6 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     label = { Text(stringResource(R.string.checkin_history)) },
                     selected = selectedItem == 1,
                     onClick = {
-                        selectedItem = 1
                         navController.navigate("history") {
                             popUpTo("search")
                         }
@@ -236,7 +241,6 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     label = { Text(stringResource(R.string.settings_title)) },
                     selected = selectedItem == 2,
                     onClick = {
-                        selectedItem = 2
                         navController.navigate("settings") {
                             popUpTo("search")
                         }
