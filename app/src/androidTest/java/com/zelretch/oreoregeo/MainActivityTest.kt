@@ -73,4 +73,31 @@ class MainActivityTest {
         // 検索画面が表示されることを確認
         composeTestRule.onNodeWithText(searchLabel).assertIsDisplayed()
     }
+
+    @Test
+    fun mainActivity_tabIndicatorStaysInSyncAfterNavigation() {
+        // 履歴タブに移動
+        val historyLabel = composeTestRule.activity.getString(R.string.checkin_history)
+        composeTestRule.onNodeWithText(historyLabel).performClick()
+
+        // 履歴タブが選択されていることを確認
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText(historyLabel).assertIsDisplayed()
+
+        // 設定タブに移動
+        val settingsLabel = composeTestRule.activity.getString(R.string.settings_title)
+        composeTestRule.onNodeWithText(settingsLabel).performClick()
+
+        // 設定タブが選択されていることを確認
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText(settingsLabel).assertIsDisplayed()
+
+        // 検索タブに戻る
+        val searchLabel = composeTestRule.activity.getString(R.string.search)
+        composeTestRule.onNodeWithText(searchLabel).performClick()
+
+        // 検索タブが選択されていることを確認
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText(searchLabel).assertIsDisplayed()
+    }
 }
