@@ -102,8 +102,10 @@ class CheckinDialogTest {
         }
 
         // Checkin button should be enabled in idle state
+        // Use useUnmergedTree to find the button specifically, not the title
         composeTestRule.onNodeWithText(
-            context.getString(R.string.checkin)
+            context.getString(R.string.checkin),
+            useUnmergedTree = true
         ).assertIsEnabled()
     }
 
@@ -123,8 +125,10 @@ class CheckinDialogTest {
         }
 
         // Checkin button should be disabled in loading state
+        // Use useUnmergedTree to find the button specifically, not the title
         composeTestRule.onNodeWithText(
-            context.getString(R.string.checkin)
+            context.getString(R.string.checkin),
+            useUnmergedTree = true
         ).assertIsNotEnabled()
     }
 
@@ -244,8 +248,10 @@ class CheckinDialogTest {
         }
 
         // Checkin button should be re-enabled after error
+        // Use useUnmergedTree to find the button specifically, not the title
         composeTestRule.onNodeWithText(
-            context.getString(R.string.checkin)
+            context.getString(R.string.checkin),
+            useUnmergedTree = true
         ).assertIsEnabled()
     }
 }

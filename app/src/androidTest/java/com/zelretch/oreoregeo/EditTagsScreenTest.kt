@@ -152,9 +152,9 @@ class EditTagsScreenTest {
             }
         }
 
-        // Save button should be displayed
+        // Save button should be displayed (uses "Save to OSM" text)
         composeTestRule.onNodeWithText(
-            context.getString(R.string.save)
+            context.getString(R.string.save_to_osm)
         ).assertIsDisplayed()
     }
 

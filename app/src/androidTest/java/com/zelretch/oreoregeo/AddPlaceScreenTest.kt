@@ -142,9 +142,9 @@ class AddPlaceScreenTest {
             }
         }
 
-        // Save button should be displayed
+        // Save button should be displayed (uses "Save to OSM" text)
         composeTestRule.onNodeWithText(
-            context.getString(R.string.save)
+            context.getString(R.string.save_to_osm)
         ).assertIsDisplayed()
     }
 
@@ -170,6 +170,7 @@ class AddPlaceScreenTest {
 
     @Test
     fun addPlaceScreen_displaysCategoryChips() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
         composeTestRule.setContent {
             OreoregeoTheme {
                 AddPlaceScreen(
@@ -181,10 +182,10 @@ class AddPlaceScreenTest {
             }
         }
 
-        // Category chips should be displayed
-        composeTestRule.onNodeWithText("amenity").assertIsDisplayed()
-        composeTestRule.onNodeWithText("shop").assertIsDisplayed()
-        composeTestRule.onNodeWithText("tourism").assertIsDisplayed()
+        // Category chips should be displayed (capitalized)
+        composeTestRule.onNodeWithText(context.getString(R.string.amenity)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.shop)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.tourism)).assertIsDisplayed()
     }
 
     @Test
