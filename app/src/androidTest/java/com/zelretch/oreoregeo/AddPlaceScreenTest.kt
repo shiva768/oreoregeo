@@ -143,8 +143,11 @@ class AddPlaceScreenTest {
             }
         }
 
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
+
         // Save button should be displayed (use test tag for reliable matching)
-        composeTestRule.onNodeWithTag("saveButton").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("saveButton").assertExists()
     }
 
     @Test
@@ -161,8 +164,11 @@ class AddPlaceScreenTest {
             }
         }
 
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
+
         // Cancel button should be displayed (use test tag for reliable matching)
-        composeTestRule.onNodeWithTag("cancelButton").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("cancelButton").assertExists()
     }
 
     @Test

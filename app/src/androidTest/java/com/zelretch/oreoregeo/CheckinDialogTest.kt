@@ -102,6 +102,9 @@ class CheckinDialogTest {
             }
         }
 
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
+
         // Checkin button should be enabled in idle state
         // Use test tag to specifically target the button
         composeTestRule.onNodeWithTag("checkinButton").assertIsEnabled()
@@ -121,6 +124,9 @@ class CheckinDialogTest {
                 )
             }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Checkin button should be disabled in loading state
         // Use test tag to specifically target the button
@@ -241,6 +247,9 @@ class CheckinDialogTest {
                 )
             }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Checkin button should be re-enabled after error
         // Use test tag to specifically target the button
