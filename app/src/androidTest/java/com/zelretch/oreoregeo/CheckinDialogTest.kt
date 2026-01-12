@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.zelretch.oreoregeo.OreoregeoTheme
 import com.zelretch.oreoregeo.ui.CheckinDialog
 import com.zelretch.oreoregeo.ui.CheckinState
 import org.junit.Rule
