@@ -2,6 +2,7 @@ package com.zelretch.oreoregeo
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -142,10 +143,8 @@ class AddPlaceScreenTest {
             }
         }
 
-        // Save button should be displayed (uses "Save to OSM" text)
-        composeTestRule.onNodeWithText(
-            context.getString(R.string.save_to_osm)
-        ).assertIsDisplayed()
+        // Save button should be displayed (use test tag for reliable matching)
+        composeTestRule.onNodeWithTag("saveButton").assertIsDisplayed()
     }
 
     @Test
@@ -162,10 +161,8 @@ class AddPlaceScreenTest {
             }
         }
 
-        // Cancel button should be displayed
-        composeTestRule.onNodeWithText(
-            context.getString(R.string.cancel)
-        ).assertIsDisplayed()
+        // Cancel button should be displayed (use test tag for reliable matching)
+        composeTestRule.onNodeWithTag("cancelButton").assertIsDisplayed()
     }
 
     @Test

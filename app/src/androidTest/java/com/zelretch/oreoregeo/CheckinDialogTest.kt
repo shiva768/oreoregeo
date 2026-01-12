@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -102,11 +103,8 @@ class CheckinDialogTest {
         }
 
         // Checkin button should be enabled in idle state
-        // Use useUnmergedTree to find the button specifically, not the title
-        composeTestRule.onNodeWithText(
-            context.getString(R.string.checkin),
-            useUnmergedTree = true
-        ).assertIsEnabled()
+        // Use test tag to specifically target the button
+        composeTestRule.onNodeWithTag("checkinButton").assertIsEnabled()
     }
 
     @Test
@@ -125,11 +123,8 @@ class CheckinDialogTest {
         }
 
         // Checkin button should be disabled in loading state
-        // Use useUnmergedTree to find the button specifically, not the title
-        composeTestRule.onNodeWithText(
-            context.getString(R.string.checkin),
-            useUnmergedTree = true
-        ).assertIsNotEnabled()
+        // Use test tag to specifically target the button
+        composeTestRule.onNodeWithTag("checkinButton").assertIsNotEnabled()
     }
 
     @Test
@@ -248,10 +243,7 @@ class CheckinDialogTest {
         }
 
         // Checkin button should be re-enabled after error
-        // Use useUnmergedTree to find the button specifically, not the title
-        composeTestRule.onNodeWithText(
-            context.getString(R.string.checkin),
-            useUnmergedTree = true
-        ).assertIsEnabled()
+        // Use test tag to specifically target the button
+        composeTestRule.onNodeWithTag("checkinButton").assertIsEnabled()
     }
 }
