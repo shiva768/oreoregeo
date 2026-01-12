@@ -55,8 +55,11 @@ class HistoryViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val checkins: StateFlow<List<Checkin>> = searchFilters.flatMapLatest { filters ->
-        if (filters.placeName.isBlank() && filters.area.isBlank() && 
-            filters.startDate == null && filters.endDate == null) {
+        if (filters.placeName.isBlank() &&
+            filters.area.isBlank() &&
+            filters.startDate == null &&
+            filters.endDate == null
+        ) {
             repository.getAllCheckins()
         } else {
             repository.searchCheckins(

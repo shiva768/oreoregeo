@@ -25,24 +25,24 @@ data class CheckinEntity(
     val visited_at: Long, // epoch ms, UTC
     val note: String,
     val visited_at_bucket: Long = visited_at / THIRTY_MINUTES_MS, // 30 minutes bucket
-    
+
     // Added in version 2 for search functionality
     @ColumnInfo(name = "place_name")
     val placeName: String? = null,
-    
+
     @ColumnInfo(name = "pref_name")
     val prefName: String? = null,
-    
+
     @ColumnInfo(name = "city_name")
     val cityName: String? = null,
-    
+
     @ColumnInfo(name = "area_search")
     val areaSearch: String? = null,
-    
+
     // Added in version 3 for bilingual search support
     @ColumnInfo(name = "pref_name_en")
     val prefNameEn: String? = null,
-    
+
     @ColumnInfo(name = "city_name_en")
     val cityNameEn: String? = null
 )

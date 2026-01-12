@@ -6,7 +6,6 @@ import org.json.JSONObject
 import timber.log.Timber
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLEncoder
 
 /**
  * Data class for reverse geocoding results
@@ -35,17 +34,17 @@ class NominatimClient {
             // Make two calls - one for Japanese and one for English
             val jaResult = fetchGeocode(lat, lon, "ja")
             val enResult = fetchGeocode(lat, lon, "en")
-            
+
             val (prefName, cityName) = jaResult
             val (prefNameEn, cityNameEn) = enResult
-            
+
             val result = ReverseGeocodeResult(
                 prefName = prefName,
                 cityName = cityName,
                 prefNameEn = prefNameEn,
                 cityNameEn = cityNameEn
             )
-            
+
             Timber.d("Reverse geocode success: $result")
             Result.success(result)
         } catch (e: Exception) {
@@ -53,49 +52,50 @@ class NominatimClient {
             Result.failure(e)
         }
     }
-    
-    private suspend fun fetchGeocode(lat: Double, lon: Double, language: String): Pair<String?, String?> {
-        try {
-            val params = "format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=${language}"
-            val urlString = "$baseUrl?$params"
-            
-            val url = URL(urlString)
-            val connection = url.openConnection() as HttpURLConnection
-            
-            try {
-                connection.requestMethod = "GET"
-                connection.setRequestProperty("User-Agent", userAgent)
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
-                
-                val responseCode = connection.responseCode
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    return parseLocationNames(response)
-                } else {
-                    Timber.w("Geocode for $language failed with code: $responseCode")
-                    return Pair(null, null)
-                }
-            } finally {
-                connection.disconnect()
+
+    private suspend fun fetchGeocode(lat: Double, lon: Double, language: String): Pair<String?, String?> = try {
+        val response = performHttpRequest(lat, lon, language)
+        response?.let { parseLocationNames(it) } ?: Pair(null, null)
+    } catch (e: Exception) {
+        Timber.w(e, "Geocode fetch for $language failed")
+        Pair(null, null)
+    }
+
+    private fun performHttpRequest(lat: Double, lon: Double, language: String): String? {
+        val params = "format=json&lat=$lat&lon=$lon&zoom=18&addressdetails=1&accept-language=$language"
+        val urlString = "$baseUrl?$params"
+        val url = URL(urlString)
+        val connection = url.openConnection() as HttpURLConnection
+
+        return try {
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("User-Agent", userAgent)
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+
+            val responseCode = connection.responseCode
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                Timber.w("Geocode for $language failed with code: $responseCode")
+                return null
             }
-        } catch (e: Exception) {
-            Timber.w(e, "Geocode fetch for $language failed")
-            return Pair(null, null)
+
+            connection.inputStream.bufferedReader().use { it.readText() }
+        } finally {
+            connection.disconnect()
         }
     }
-    
+
     private fun parseLocationNames(response: String): Pair<String?, String?> {
         val json = JSONObject(response)
         val address = json.optJSONObject("address")
-        
+
         if (address == null) {
             return Pair(null, null)
         }
-        
+
         // Extract prefecture name (state in Nominatim)
         val prefName = address.optString("state").takeIf { it.isNotBlank() }
-        
+
         // Extract city name with priority: city > ward > town > village > municipality
         val cityName = when {
             address.has("city") && address.getString("city").isNotBlank() -> address.getString("city")
@@ -105,7 +105,7 @@ class NominatimClient {
             address.has("municipality") && address.getString("municipality").isNotBlank() -> address.getString("municipality")
             else -> null
         }
-        
+
         return Pair(prefName, cityName)
     }
 }

@@ -1,6 +1,5 @@
 package com.zelretch.oreoregeo
 
-import com.zelretch.oreoregeo.data.remote.NominatimClient
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -18,7 +17,7 @@ class NominatimClientTest {
             prefNameEn = "Tokyo",
             cityNameEn = "Adachi"
         )
-        
+
         assertEquals("東京都", result.prefName)
         assertEquals("足立区", result.cityName)
         assertEquals("Tokyo", result.prefNameEn)
@@ -34,7 +33,7 @@ class NominatimClientTest {
             prefNameEn = null,
             cityNameEn = null
         )
-        
+
         assertNull(result.prefName)
         assertNull(result.cityName)
         assertNull(result.prefNameEn)
@@ -50,7 +49,7 @@ class NominatimClientTest {
             prefNameEn = null,
             cityNameEn = null
         )
-        
+
         assertEquals("東京都", result.prefName)
         assertEquals("足立区", result.cityName)
         assertNull(result.prefNameEn)
@@ -64,20 +63,20 @@ class NominatimClientTest {
         val cityName = "足立区"
         val prefNameEn = "Tokyo"
         val cityNameEn = "Adachi"
-        
+
         val areaSearch = buildString {
             prefName?.let { append(it).append(" ") }
             cityName?.let { append(it).append(" ") }
             prefNameEn?.let { append(it).append(" ") }
             cityNameEn?.let { append(it) }
         }.trim()
-        
+
         // Should contain both Japanese and English
         assertTrue(areaSearch.contains("東京都"))
         assertTrue(areaSearch.contains("足立区"))
         assertTrue(areaSearch.contains("Tokyo"))
         assertTrue(areaSearch.contains("Adachi"))
-        
+
         // Verify format
         assertEquals("東京都 足立区 Tokyo Adachi", areaSearch)
     }
@@ -89,14 +88,14 @@ class NominatimClientTest {
         val cityName: String? = null
         val prefNameEn = "Tokyo"
         val cityNameEn: String? = null
-        
+
         val areaSearch = buildString {
             prefName?.let { append(it).append(" ") }
             cityName?.let { append(it).append(" ") }
             prefNameEn?.let { append(it).append(" ") }
             cityNameEn?.let { append(it) }
         }.trim()
-        
+
         assertEquals("東京都 Tokyo", areaSearch)
     }
 
@@ -104,7 +103,7 @@ class NominatimClientTest {
     fun testAreaSearchMatchingJapanese() {
         // Test that Japanese search queries match
         val areaSearch = "東京都 足立区 Tokyo Adachi"
-        
+
         assertTrue(areaSearch.contains("東京", ignoreCase = true))
         assertTrue(areaSearch.contains("足立", ignoreCase = true))
         assertTrue(areaSearch.contains("東京都", ignoreCase = true))
@@ -115,7 +114,7 @@ class NominatimClientTest {
     fun testAreaSearchMatchingEnglish() {
         // Test that English search queries match
         val areaSearch = "東京都 足立区 Tokyo Adachi"
-        
+
         assertTrue(areaSearch.contains("tokyo", ignoreCase = true))
         assertTrue(areaSearch.contains("TOKYO", ignoreCase = true))
         assertTrue(areaSearch.contains("Tokyo", ignoreCase = true))
@@ -128,11 +127,11 @@ class NominatimClientTest {
     fun testAreaSearchMatchingPartial() {
         // Test that partial queries match
         val areaSearch = "東京都 足立区 Tokyo Adachi"
-        
+
         // Partial Japanese
         assertTrue(areaSearch.contains("東京", ignoreCase = true))
         assertTrue(areaSearch.contains("足立", ignoreCase = true))
-        
+
         // Partial English
         assertTrue(areaSearch.contains("tok", ignoreCase = true))
         assertTrue(areaSearch.contains("ada", ignoreCase = true))
@@ -142,7 +141,7 @@ class NominatimClientTest {
     fun testAreaSearchNonMatching() {
         // Test that unrelated queries don't match
         val areaSearch = "東京都 足立区 Tokyo Adachi"
-        
+
         assertFalse(areaSearch.contains("大阪", ignoreCase = true))
         assertFalse(areaSearch.contains("Osaka", ignoreCase = true))
         assertFalse(areaSearch.contains("横浜", ignoreCase = true))
@@ -152,7 +151,7 @@ class NominatimClientTest {
     @Test
     fun testCityNameNormalizationPriority() {
         // Test the normalization priority: city > ward > town > village > municipality
-        
+
         // When multiple options exist, city should be preferred
         val cityOptions = mapOf(
             "city" to "Soka",
@@ -161,7 +160,7 @@ class NominatimClientTest {
             "village" to "Someville",
             "municipality" to "Somemunicipality"
         )
-        
+
         // Simulate priority selection
         val cityName = when {
             cityOptions["city"]?.isNotBlank() == true -> cityOptions["city"]
@@ -171,7 +170,7 @@ class NominatimClientTest {
             cityOptions["municipality"]?.isNotBlank() == true -> cityOptions["municipality"]
             else -> null
         }
-        
+
         assertEquals("Soka", cityName)
     }
 
@@ -183,7 +182,7 @@ class NominatimClientTest {
             "ward" to null,
             "town" to "Someplace"
         )
-        
+
         val cityName = when {
             cityOptions["city"]?.isNotBlank() == true -> cityOptions["city"]
             cityOptions["ward"]?.isNotBlank() == true -> cityOptions["ward"]
@@ -192,7 +191,7 @@ class NominatimClientTest {
             cityOptions["municipality"]?.isNotBlank() == true -> cityOptions["municipality"]
             else -> null
         }
-        
+
         assertEquals("Someplace", cityName)
     }
 
@@ -201,7 +200,7 @@ class NominatimClientTest {
         // Scenario: User checks in at Adachi-ku and searches in Japanese
         val areaSearch = "東京都 足立区 Tokyo Adachi"
         val searchQuery = "足立"
-        
+
         assertTrue(areaSearch.contains(searchQuery, ignoreCase = true))
     }
 
@@ -210,7 +209,7 @@ class NominatimClientTest {
         // Scenario: User checks in at Adachi-ku and searches in English
         val areaSearch = "東京都 足立区 Tokyo Adachi"
         val searchQuery = "adachi"
-        
+
         assertTrue(areaSearch.contains(searchQuery, ignoreCase = true))
     }
 
@@ -219,7 +218,7 @@ class NominatimClientTest {
         // Scenario: User searches for prefecture in Japanese
         val areaSearch = "東京都 足立区 Tokyo Adachi"
         val searchQuery = "東京"
-        
+
         assertTrue(areaSearch.contains(searchQuery, ignoreCase = true))
     }
 
@@ -228,7 +227,7 @@ class NominatimClientTest {
         // Scenario: User searches for prefecture in English
         val areaSearch = "東京都 足立区 Tokyo Adachi"
         val searchQuery = "tokyo"
-        
+
         assertTrue(areaSearch.contains(searchQuery, ignoreCase = true))
     }
 
@@ -239,14 +238,14 @@ class NominatimClientTest {
         val cityName: String? = null
         val prefNameEn: String? = null
         val cityNameEn: String? = null
-        
+
         val areaSearch = buildString {
             prefName?.let { append(it).append(" ") }
             cityName?.let { append(it).append(" ") }
             prefNameEn?.let { append(it).append(" ") }
             cityNameEn?.let { append(it) }
         }.trim()
-        
+
         assertTrue(areaSearch.isEmpty())
     }
 
@@ -257,20 +256,20 @@ class NominatimClientTest {
         val cityName = "足立区"
         val prefNameEn: String? = null
         val cityNameEn: String? = null
-        
+
         val areaSearch = buildString {
             prefName?.let { append(it).append(" ") }
             cityName?.let { append(it).append(" ") }
             prefNameEn?.let { append(it).append(" ") }
             cityNameEn?.let { append(it) }
         }.trim()
-        
+
         assertEquals("東京都 足立区", areaSearch)
-        
+
         // Japanese search should still work
         assertTrue(areaSearch.contains("東京", ignoreCase = true))
         assertTrue(areaSearch.contains("足立", ignoreCase = true))
-        
+
         // English search won't work (as expected when English data is missing)
         assertFalse(areaSearch.contains("Tokyo", ignoreCase = true))
         assertFalse(areaSearch.contains("Adachi", ignoreCase = true))
@@ -283,16 +282,16 @@ class NominatimClientTest {
         val cityName: String? = null
         val prefNameEn = "Tokyo"
         val cityNameEn = "Adachi"
-        
+
         val areaSearch = buildString {
             prefName?.let { append(it).append(" ") }
             cityName?.let { append(it).append(" ") }
             prefNameEn?.let { append(it).append(" ") }
             cityNameEn?.let { append(it) }
         }.trim()
-        
+
         assertEquals("Tokyo Adachi", areaSearch)
-        
+
         // English search should work
         assertTrue(areaSearch.contains("Tokyo", ignoreCase = true))
         assertTrue(areaSearch.contains("Adachi", ignoreCase = true))
