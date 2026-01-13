@@ -85,6 +85,47 @@ kotlin {
     }
 }
 
+// detekt / ktlint を「いい塩梅」に動かすための設定
+detekt {
+    // 公式デフォルト設定の上に、プロジェクトの設定を重ねる
+    buildUponDefaultConfig = true
+    parallel = true
+    config = files("$rootDir/config/detekt/detekt.yml")
+    autoCorrect = false
+
+    // レポート設定（CI 向けに SARIF も出力）
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        sarif.required.set(System.getenv("CI") != null)
+    }
+}
+
+// detekt タスクの JVM 設定（Kotlin 17 に合わせる）
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+    // 生成物やリソースを除外
+    setSource(files("src"))
+    include("**/*.kt", "**/*.kts")
+    exclude(
+        "**/build/**",
+        "**/generated/**",
+        "**/resources/**"
+    )
+}
+
+// ktlint の除外設定（生成コードやビルド出力を無視）
+ktlint {
+    debug.set(false)
+    ignoreFailures.set(false)
+    verbose.set(true)
+
+    filter {
+        exclude("**/build/**")
+        exclude("**/generated/**")
+    }
+}
+
 dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)

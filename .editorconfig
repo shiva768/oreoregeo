@@ -1,4 +1,7 @@
 [*.{kt,kts}]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
 ktlint_standard_class-signature = disabled
 ktlint_standard_no-wildcard-imports = disabled
 ktlint_standard_property-naming = disabled
