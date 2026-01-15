@@ -1,6 +1,8 @@
 [*.{kt,kts}]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
 ktlint_standard_class-signature = disabled
-ktlint_standard_no-wildcard-imports = disabled
 ktlint_standard_property-naming = disabled
 ktlint_standard_value-parameter-comment = disabled
 ktlint_standard_max-line-length = disabled
@@ -19,3 +21,4 @@ ij_xml_new_line_after_last_attribute = false
 
 [*Test.kt]
 ktlint_standard_function-naming = disabled
+ktlint_standard_no-wildcard-imports = disabled

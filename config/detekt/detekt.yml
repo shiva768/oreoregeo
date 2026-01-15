@@ -94,8 +94,9 @@ comments:
 complexity:
   active: true
   CognitiveComplexMethod:
-    active: false
-    threshold: 15
+    active: true
+    threshold: 25
+    excludes: ['**/ui/**', '**/MainActivity.kt']
   ComplexCondition:
     active: true
     threshold: 5
@@ -126,7 +127,7 @@ complexity:
     ignoredLabels: []
   LargeClass:
     active: true
-    threshold: 600
+    threshold: 400
   LongMethod:
     active: true
     threshold: 60
