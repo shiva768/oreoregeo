@@ -1,6 +1,7 @@
 package com.zelretch.oreoregeo.ui
 
 import android.graphics.Color
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -236,6 +237,14 @@ fun MapViewContainer(
             MapView(ctx).apply {
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
+                if (isRunningOnEmulator()) {
+                    this.setUseDataConnection(false)
+                    try {
+                        this.onPause()
+                    } catch (_: Exception) {
+                        // no-op
+                    }
+                }
                 controller.setZoom(targetZoom)
                 controller.setCenter(GeoPoint(location.first, location.second))
 
@@ -302,6 +311,24 @@ fun MapViewContainer(
         },
         modifier = Modifier.fillMaxSize()
     )
+}
+
+private fun isRunningOnEmulator(): Boolean {
+    val fingerprint = Build.FINGERPRINT
+    val model = Build.MODEL
+    val manufacturer = Build.MANUFACTURER
+    val brand = Build.BRAND
+    val device = Build.DEVICE
+    val product = Build.PRODUCT
+
+    return fingerprint.startsWith("generic") ||
+        fingerprint.startsWith("unknown") ||
+        model.contains("google_sdk", ignoreCase = true) ||
+        model.contains("Emulator", ignoreCase = true) ||
+        model.contains("Android SDK built for x86", ignoreCase = true) ||
+        manufacturer.contains("Genymotion", ignoreCase = true) ||
+        (brand.startsWith("generic") && device.startsWith("generic")) ||
+        product == "google_sdk"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

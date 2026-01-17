@@ -92,4 +92,5 @@
     <string name="date_picker_placeholder">Use the buttons below to set dates</string>
     <string name="filter_active">Filters Active</string>
     <string name="close">Close</string>
+    <string name="select_location_on_map_hint">Tip: Tap on the map to set the location</string>
 </resources>

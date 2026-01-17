@@ -193,6 +193,29 @@ class AddPlaceScreenTest {
     }
 
     @Test
+    fun addPlaceScreen_displaysMapPickerWhenCoordinatesAvailable() {
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                AddPlaceScreen(
+                    currentLat = 35.6812,
+                    currentLon = 139.7671,
+                    onSave = { _, _, _ -> },
+                    onCancel = {}
+                )
+            }
+        }
+
+        // Map picker container should exist
+        composeTestRule.onNodeWithTag("mapPicker").assertExists()
+
+        // Hint text should be visible
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.select_location_on_map_hint)
+        ).assertIsDisplayed()
+    }
+
+    @Test
     fun addPlaceScreen_handlesNullCoordinates() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         composeTestRule.setContent {
