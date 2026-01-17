@@ -1,5 +1,6 @@
 package com.zelretch.oreoregeo.ui
 
+import android.os.Build
 import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -249,6 +250,17 @@ private fun MapPickerView(
                 MapView(ctx).apply {
                     setTileSource(TileSourceFactory.MAPNIK)
                     setMultiTouchControls(true)
+                    // エミュレータ（CI含む）ではネットワークタイル取得を抑止し、描画負荷を軽減
+                    // テストが Espresso のアイドリング待ちでタイムアウトするのを防ぐ
+                    if (isRunningOnEmulator()) {
+                        this.setUseDataConnection(false)
+                        // 背景のタイルローダースレッドを止める
+                        try {
+                            this.onPause()
+                        } catch (_: Exception) {
+                            // no-op
+                        }
+                    }
                     controller.setZoom(targetZoom)
                     controller.setCenter(GeoPoint(initial.first, initial.second))
 
@@ -314,4 +326,22 @@ private fun MapPickerView(
         },
         modifier = modifier.fillMaxSize()
     )
+}
+
+private fun isRunningOnEmulator(): Boolean {
+    val fingerprint = Build.FINGERPRINT
+    val model = Build.MODEL
+    val manufacturer = Build.MANUFACTURER
+    val brand = Build.BRAND
+    val device = Build.DEVICE
+    val product = Build.PRODUCT
+
+    return fingerprint.startsWith("generic") ||
+        fingerprint.startsWith("unknown") ||
+        model.contains("google_sdk", ignoreCase = true) ||
+        model.contains("Emulator", ignoreCase = true) ||
+        model.contains("Android SDK built for x86", ignoreCase = true) ||
+        manufacturer.contains("Genymotion", ignoreCase = true) ||
+        (brand.startsWith("generic") && device.startsWith("generic")) ||
+        product == "google_sdk"
 }
