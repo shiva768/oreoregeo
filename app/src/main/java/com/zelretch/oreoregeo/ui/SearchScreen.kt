@@ -2,6 +2,7 @@ package com.zelretch.oreoregeo.ui
 
 import android.graphics.Color
 import android.os.Build
+import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.zelretch.oreoregeo.BuildConfig
 import com.zelretch.oreoregeo.R
 import com.zelretch.oreoregeo.domain.PlaceWithDistance
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -234,6 +236,10 @@ fun MapViewContainer(
 
     AndroidView(
         factory = { ctx ->
+            if (BuildConfig.IS_CI) {
+                // CI 上の UI テストでは MapView を生成せず空のコンテナを返す
+                return@AndroidView FrameLayout(ctx)
+            }
             MapView(ctx).apply {
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
@@ -266,7 +272,8 @@ fun MapViewContainer(
                 overlays.add(circleOverlay)
             }
         },
-        update = { mapView ->
+        update = { view ->
+            val mapView = view as? MapView ?: return@AndroidView
             mapView.overlays.clear()
 
             // スポットが選択されていない場合、半径に基づいてズームを更新

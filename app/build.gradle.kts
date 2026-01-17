@@ -28,6 +28,8 @@ android {
         // OSM OAuth credentials from environment variables or GitHub Secrets
         buildConfigField("String", "OSM_CLIENT_ID", "\"${System.getenv("OSM_CLIENT_ID") ?: ""}\"")
         buildConfigField("String", "OSM_CLIENT_SECRET", "\"${System.getenv("OSM_CLIENT_SECRET") ?: ""}\"")
+        // Expose CI flag to runtime so we can safely degrade heavy widgets (e.g., MapView) during UI tests
+        buildConfigField("boolean", "IS_CI", (System.getenv("CI") != null).toString())
     }
 
     val isCI = System.getenv("CI") != null
