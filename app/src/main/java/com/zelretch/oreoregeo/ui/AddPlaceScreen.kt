@@ -1,5 +1,6 @@
 package com.zelretch.oreoregeo.ui
 
+import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,17 +36,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.zelretch.oreoregeo.R
 import androidx.compose.ui.viewinterop.AndroidView
-import android.widget.FrameLayout
+import com.zelretch.oreoregeo.R
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.MapEventsOverlay
-import org.osmdroid.events.MapEventsReceiver
+import org.osmdroid.views.overlay.Marker
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("CyclomaticComplexMethod")
 @Composable
 fun AddPlaceScreen(
     currentLat: Double?,
@@ -231,6 +233,7 @@ fun AddPlaceScreen(
 }
 
 @Composable
+@Suppress("TooGenericExceptionCaught")
 private fun MapPickerView(
     initial: Pair<Double, Double>,
     selected: Pair<Double, Double>?,
@@ -276,14 +279,13 @@ private fun MapPickerView(
                             return true
                         }
 
-                        override fun longPressHelper(p: GeoPoint?): Boolean {
-                            return false
-                        }
+                        override fun longPressHelper(p: GeoPoint?) = false
                     })
                     overlays.add(eventsOverlay)
                 }
-            } catch (t: Throwable) {
+            } catch (e: Exception) {
                 // MapView 初期化に失敗した場合は空のコンテナを返す（UIテストを落とさない）
+                Timber.w(e, "MapView initialization failed; falling back to empty container")
                 FrameLayout(ctx)
             }
         },
@@ -305,8 +307,9 @@ private fun MapPickerView(
                     mapView.overlays.add(marker)
                 }
                 mapView.invalidate()
-            } catch (_: Throwable) {
-                // no-op
+            } catch (e: Exception) {
+                // 例外はログに記録して無視（テスト／特殊環境での描画失敗を許容）
+                Timber.d(e, "MapView update skipped due to exception")
             }
         },
         modifier = modifier.fillMaxSize()
