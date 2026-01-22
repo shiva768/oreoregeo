@@ -5,7 +5,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.zelretch.oreoregeo.OreoregeoTheme
@@ -184,6 +186,12 @@ class AddPlaceScreenTest {
                     onCancel = {}
                 )
             }
+        }
+
+        // Wait and scroll a bit because the map and text fields can push chips below the fold on small screens
+        composeTestRule.waitForIdle()
+        repeat(3) {
+            composeTestRule.onRoot().performTouchInput { swipeUp() }
         }
 
         // Category chips should be displayed (capitalized)
