@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 
 /**
  * AddPlaceScreenのUIテスト
- * 新規スポット追加画面の表示と操作をテストします
+ * 新規プレイス追加画面の表示と操作をテストします
  */
 @RunWith(AndroidJUnit4::class)
 class AddPlaceScreenTest {

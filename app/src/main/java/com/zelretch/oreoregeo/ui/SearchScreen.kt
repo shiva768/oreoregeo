@@ -276,7 +276,7 @@ fun MapViewContainer(
         update = { mapView ->
             mapView.overlays.clear()
 
-            // スポットが選択されていない場合、半径に基づいてズームを更新
+            // プレイスが選択されていない場合、半径に基づいてズームを更新
             if (selectedPlaceLocation == null) {
                 mapView.controller.setZoom(targetZoom)
             }
