@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -25,9 +27,25 @@ android {
             useSupportLibrary = true
         }
 
-        // OSM OAuth credentials from environment variables or GitHub Secrets
-        buildConfigField("String", "OSM_CLIENT_ID", "\"${System.getenv("OSM_CLIENT_ID") ?: ""}\"")
-        buildConfigField("String", "OSM_CLIENT_SECRET", "\"${System.getenv("OSM_CLIENT_SECRET") ?: ""}\"")
+        // Load properties from local.properties if available
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { stream ->
+                localProperties.load(stream)
+            }
+        }
+
+        val osmClientId = localProperties.getProperty("OSM_CLIENT_ID")
+            ?: System.getenv("OSM_CLIENT_ID")
+            ?: ""
+        val osmClientSecret = localProperties.getProperty("OSM_CLIENT_SECRET")
+            ?: System.getenv("OSM_CLIENT_SECRET")
+            ?: ""
+
+        // OSM OAuth credentials from local.properties, environment variables or GitHub Secrets
+        buildConfigField("String", "OSM_CLIENT_ID", "\"$osmClientId\"")
+        buildConfigField("String", "OSM_CLIENT_SECRET", "\"$osmClientSecret\"")
     }
 
     val isCI = System.getenv("CI") != null

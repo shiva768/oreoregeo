@@ -452,11 +452,15 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     currentLat = currentLat,
                     currentLon = currentLon,
                     onSave = { lat, lon, tags ->
-                        osmEditViewModel.createPlace(lat, lon, tags)
+                        osmEditViewModel.requestCreatePlace(lat, lon, tags)
                     },
                     onCancel = {
                         navController.popBackStack()
-                    }
+                    },
+                    onResetEditState = {
+                        osmEditViewModel.reset()
+                    },
+                    editState = editState
                 )
             }
 

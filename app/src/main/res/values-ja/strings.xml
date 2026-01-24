@@ -45,6 +45,36 @@
     <string name="amenity">アメニティ (施設)</string>
     <string name="shop">ショップ</string>
     <string name="tourism">観光</string>
+
+    <!-- Common OSM values for autocomplete -->
+    <!-- Amenities -->
+    <string name="amenity_restaurant">restaurant</string>
+    <string name="amenity_cafe">cafe</string>
+    <string name="amenity_fast_food">fast_food</string>
+    <string name="amenity_bar">bar</string>
+    <string name="amenity_pub">pub</string>
+    <string name="amenity_convenience">convenience</string>
+    <string name="amenity_vending_machine">vending_machine</string>
+    <string name="amenity_parking">parking</string>
+    <string name="amenity_bench">bench</string>
+    <string name="amenity_toilets">toilets</string>
+    <string name="amenity_post_box">post_box</string>
+
+    <!-- Shops -->
+    <string name="shop_convenience">convenience</string>
+    <string name="shop_supermarket">supermarket</string>
+    <string name="shop_clothes">clothes</string>
+    <string name="shop_hairdresser">hairdresser</string>
+    <string name="shop_bakery">bakery</string>
+    <string name="shop_drugstore">drugstore</string>
+
+    <!-- Tourism -->
+    <string name="tourism_information">information</string>
+    <string name="tourism_attraction">attraction</string>
+    <string name="tourism_viewpoint">viewpoint</string>
+    <string name="tourism_hotel">hotel</string>
+    <string name="tourism_museum">museum</string>
+    <string name="tourism_artwork">artwork</string>
     <string name="no_checkins_yet">チェックイン履歴がありません</string>
     <string name="edit_tags_title">タグ編集</string>
     <string name="place_label">スポット: %1$s</string>
@@ -92,4 +122,11 @@
     <string name="date_picker_placeholder">下のボタンで日付を設定してください</string>
     <string name="filter_active">フィルター有効</string>
     <string name="close">閉じる</string>
+    <string name="select_location_on_map_hint">ヒント：地図をタップして位置を設定できます</string>
+    <string name="confirm_duplicate_title">重複の確認</string>
+    <string name="confirm_duplicate_message">近くに既存のスポットが見つかりました。重複登録ではないことを確認してください。</string>
+    <string name="confirm_save_message">このスポットをOpenStreetMapに保存してもよろしいですか？</string>
+    <string name="confirm_save">確認して保存</string>
+    <string name="confirm_save_title">保存の確認</string>
+    <string name="nearby_places_list">付近のスポット:</string>
 </resources>

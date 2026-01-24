@@ -1,7 +1,10 @@
 package com.zelretch.oreoregeo
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -82,8 +85,8 @@ class EditTagsScreenTest {
         // Existing tags should be displayed
         composeTestRule.onNodeWithText("name", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("テストカフェ", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("amenity", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("cafe", substring = true).assertIsDisplayed()
+        composeTestRule.onNode(hasText("amenity", substring = true) and !hasTestTag("categoryValueField")).assertIsDisplayed()
+        composeTestRule.onNode(hasText("cafe", substring = true) and hasTestTag("categoryValueField")).assertIsDisplayed()
         composeTestRule.onNodeWithText("cuisine", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("coffee", substring = true).assertIsDisplayed()
     }
@@ -228,9 +231,36 @@ class EditTagsScreenTest {
         // All tags should be displayed
         composeTestRule.onNodeWithText("name", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("テストレストラン", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("amenity", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("restaurant", substring = true).assertIsDisplayed()
+        composeTestRule.onNode(hasText("amenity", substring = true) and !hasTestTag("categoryValueField")).assertIsDisplayed()
+        composeTestRule.onNode(hasText("restaurant", substring = true) and hasTestTag("categoryValueField")).assertIsDisplayed()
         composeTestRule.onNodeWithText("cuisine", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("japanese", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun editTagsScreen_categoryValueFieldAcceptsInput() {
+        val existingTags = mapOf(
+            "amenity" to "cafe"
+        )
+
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                EditTagsScreen(
+                    placeKey = "osm:node:123",
+                    existingTags = existingTags,
+                    onSave = { _, _ -> },
+                    onCancel = {}
+                )
+            }
+        }
+
+        // Input text into category value field
+        val categoryValueField = composeTestRule.onNodeWithTag("categoryValueField")
+        categoryValueField.performClick()
+        categoryValueField.performTextInput("restaurant")
+        composeTestRule.waitForIdle()
+
+        // Verify text was input
+        composeTestRule.onNodeWithText("restaurant", substring = true).assertExists()
     }
 }

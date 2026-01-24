@@ -1,6 +1,7 @@
 package com.zelretch.oreoregeo.ui
 
 import android.graphics.Color
+import android.view.MotionEvent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -81,6 +83,7 @@ fun SearchScreen(
                     .fillMaxWidth()
                     .height(200.dp)
                     .clip(RoundedCornerShape(8.dp))
+                    .clipToBounds()
             ) {
                 MapViewContainer(
                     location = currentLocation,
@@ -238,6 +241,19 @@ fun MapViewContainer(
                 setMultiTouchControls(true)
                 controller.setZoom(targetZoom)
                 controller.setCenter(GeoPoint(location.first, location.second))
+
+                // 親のスクロールを抑制するための設定
+                setOnTouchListener { v, event ->
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            v.parent.requestDisallowInterceptTouchEvent(true)
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            v.parent.requestDisallowInterceptTouchEvent(false)
+                        }
+                    }
+                    false
+                }
 
                 // 現在地のマーカーを追加
                 val marker = Marker(this)
