@@ -344,4 +344,74 @@ class AddPlaceScreenTest {
             context.getString(R.string.confirm_save)
         ).assertIsDisplayed()
     }
+
+    @Test
+    fun addPlaceScreen_parsesAdditionalTagsCorrectly() {
+        var capturedTags: Map<String, String> = emptyMap()
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                AddPlaceScreen(
+                    currentLat = 35.6812,
+                    currentLon = 139.7671,
+                    onSave = { _, _, tags -> capturedTags = tags },
+                    onCancel = {},
+                    editState = OsmEditState.ConfirmDuplicate(emptyList()) // Show dialog to click confirm
+                )
+            }
+        }
+
+        // Fill required fields
+        composeTestRule.onNodeWithTag("categoryValueField").performTextInput("cafe")
+        val nameLabel = InstrumentationRegistry.getInstrumentation().targetContext
+            .getString(R.string.name_required)
+        composeTestRule.onNodeWithText(nameLabel).performTextInput("Test Cafe")
+
+        // Fill additional tags
+        val additionalTagsLabel = InstrumentationRegistry.getInstrumentation().targetContext
+            .getString(R.string.additional_tags_label)
+        composeTestRule.onNodeWithText(additionalTagsLabel).performTextInput(
+            "cuisine=coffee, website=https://example.com"
+        )
+
+        // Click save to show dialog
+        composeTestRule.onNodeWithTag("saveButton").performClick()
+
+        // Confirm in dialog
+        val confirmText = InstrumentationRegistry.getInstrumentation().targetContext
+            .getString(R.string.confirm_save)
+        composeTestRule.onNodeWithText(confirmText).performClick()
+
+        // Verify captured tags
+        assert(capturedTags["cuisine"] == "coffee")
+        assert(capturedTags["website"] == "https://example.com")
+        assert(capturedTags["name"] == "Test Cafe")
+        assert(capturedTags["amenity"] == "cafe")
+    }
+
+    @Test
+    fun addPlaceScreen_resetCategoryValueWhenCategoryChanged() {
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                AddPlaceScreen(
+                    currentLat = 35.6812,
+                    currentLon = 139.7671,
+                    onSave = { _, _, _ -> },
+                    onCancel = {}
+                )
+            }
+        }
+
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+        // Input into amenity
+        composeTestRule.onNodeWithTag("categoryValueField").performTextInput("cafe")
+
+        // Change category to shop
+        composeTestRule.onNodeWithText(context.getString(R.string.shop)).performClick()
+
+        // Verify category value is reset
+        composeTestRule.onNode(
+            hasTestTag("categoryValueField") and hasText("")
+        ).assertExists()
+    }
 }

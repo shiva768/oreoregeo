@@ -1,6 +1,8 @@
 package com.zelretch.oreoregeo
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -10,7 +12,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.zelretch.oreoregeo.OreoregeoTheme
 import com.zelretch.oreoregeo.ui.EditTagsScreen
 import org.junit.Rule
 import org.junit.Test
@@ -85,8 +86,12 @@ class EditTagsScreenTest {
         // Existing tags should be displayed
         composeTestRule.onNodeWithText("name", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("テストカフェ", substring = true).assertIsDisplayed()
-        composeTestRule.onNode(hasText("amenity", substring = true) and !hasTestTag("categoryValueField")).assertIsDisplayed()
-        composeTestRule.onNode(hasText("cafe", substring = true) and hasTestTag("categoryValueField")).assertIsDisplayed()
+        composeTestRule.onNode(
+            hasText("amenity", substring = true) and !hasTestTag("categoryValueField")
+        ).assertIsDisplayed()
+        composeTestRule.onNode(
+            hasText("cafe", substring = true) and hasTestTag("categoryValueField")
+        ).assertIsDisplayed()
         composeTestRule.onNodeWithText("cuisine", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("coffee", substring = true).assertIsDisplayed()
     }
@@ -231,8 +236,12 @@ class EditTagsScreenTest {
         // All tags should be displayed
         composeTestRule.onNodeWithText("name", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("テストレストラン", substring = true).assertIsDisplayed()
-        composeTestRule.onNode(hasText("amenity", substring = true) and !hasTestTag("categoryValueField")).assertIsDisplayed()
-        composeTestRule.onNode(hasText("restaurant", substring = true) and hasTestTag("categoryValueField")).assertIsDisplayed()
+        composeTestRule.onNode(
+            hasText("amenity", substring = true) and !hasTestTag("categoryValueField")
+        ).assertIsDisplayed()
+        composeTestRule.onNode(
+            hasText("restaurant", substring = true) and hasTestTag("categoryValueField")
+        ).assertIsDisplayed()
         composeTestRule.onNodeWithText("cuisine", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("japanese", substring = true).assertIsDisplayed()
     }
@@ -262,5 +271,50 @@ class EditTagsScreenTest {
 
         // Verify text was input
         composeTestRule.onNodeWithText("restaurant", substring = true).assertExists()
+    }
+
+    @Test
+    fun editTagsScreen_deletesTagCorrectly() {
+        var capturedTags: Map<String, String>? = null
+        val existingTags = mapOf(
+            "name" to "Test Place",
+            "amenity" to "cafe"
+        )
+
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                EditTagsScreen(
+                    placeKey = "osm:node:123",
+                    existingTags = existingTags,
+                    onSave = { _, tags -> capturedTags = tags },
+                    onCancel = {}
+                )
+            }
+        }
+
+        // Delete "amenity" tag
+        // Find the card containing "amenity" and click delete button inside it
+        val deleteContentDesc = InstrumentationRegistry.getInstrumentation()
+            .targetContext.getString(R.string.delete_tag)
+
+        // We look for a delete icon button where the key "amenity" is present in the same Card
+        // Since our UI structure has the key text and delete button in the same Row
+        composeTestRule.onAllNodes(
+            hasText("amenity", substring = true)
+        ).assertCountEquals(2) // Key label and the editable value field (or dropdown)
+
+        // Click delete for amenity
+        // In this case, we have two tags. Let's just click the one next to amenity.
+        composeTestRule.onAllNodes(hasContentDescription(deleteContentDesc))[1].performClick()
+
+        // Click save
+        val saveText = InstrumentationRegistry.getInstrumentation().targetContext
+            .getString(R.string.save_to_osm)
+        composeTestRule.onNodeWithText(saveText).performClick()
+
+        // Verify captured tags doesn't have amenity
+        assert(capturedTags != null)
+        assert(capturedTags?.containsKey("amenity") == false)
+        assert(capturedTags?.containsKey("name") == true)
     }
 }
