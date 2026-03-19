@@ -14,12 +14,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -55,6 +58,7 @@ fun SearchScreen(
     modifier: Modifier = Modifier,
     currentLocation: Pair<Double, Double>? = null,
     onSearchClick: () -> Unit,
+    onCancelClick: () -> Unit = {},
     onPlaceClick: (String) -> Unit,
     onCheckinClick: (String) -> Unit,
     onEditPlace: ((String) -> Unit)? = null
@@ -78,7 +82,7 @@ fun SearchScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        SearchButton(searchState, onSearchClick)
+        SearchButton(searchState, onSearchClick, onCancelClick)
 
         Spacer(Modifier.height(16.dp))
 
@@ -92,7 +96,8 @@ fun SearchScreen(
                 onPlaceClick(place.placeKey)
             },
             onCheckinClick = onCheckinClick,
-            onEditPlace = onEditPlace
+            onEditPlace = onEditPlace,
+            onRetryClick = onSearchClick
         )
     }
 }
@@ -164,15 +169,25 @@ private fun SearchFiltersSection(
 
 @Composable
 @Suppress("FunctionNaming")
-private fun SearchButton(searchState: SearchState, onSearchClick: () -> Unit) {
-    Button(
-        onClick = onSearchClick,
-        modifier = Modifier.fillMaxWidth(),
-        enabled = searchState !is SearchState.Loading
-    ) {
-        Icon(Icons.Default.LocationOn, contentDescription = null)
-        Spacer(Modifier.width(8.dp))
-        Text(stringResource(R.string.search_nearby_places))
+private fun SearchButton(searchState: SearchState, onSearchClick: () -> Unit, onCancelClick: () -> Unit) {
+    if (searchState is SearchState.Loading) {
+        OutlinedButton(
+            onClick = onCancelClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Close, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.cancel))
+        }
+    } else {
+        Button(
+            onClick = onSearchClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.LocationOn, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.search_nearby_places))
+        }
     }
 }
 
@@ -185,7 +200,8 @@ private fun SearchResultsSection(
     selectedPlaceKey: String?,
     onPlaceSelect: (com.zelretch.oreoregeo.domain.Place) -> Unit,
     onCheckinClick: (String) -> Unit,
-    onEditPlace: ((String) -> Unit)? = null
+    onEditPlace: ((String) -> Unit)? = null,
+    onRetryClick: () -> Unit = {}
 ) {
     when (searchState) {
         is SearchState.Idle -> CenteredText(stringResource(R.string.tap_to_search))
@@ -204,7 +220,7 @@ private fun SearchResultsSection(
                 )
             }
         }
-        is SearchState.Error -> SearchErrorView(searchState.message)
+        is SearchState.Error -> SearchErrorView(searchState.message, onRetryClick)
     }
 }
 
@@ -257,13 +273,16 @@ private fun PlacesList(
 
 @Composable
 @Suppress("FunctionNaming")
-private fun SearchErrorView(message: String) {
+private fun SearchErrorView(message: String, onRetryClick: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(message, color = MaterialTheme.colorScheme.error)
             Spacer(Modifier.height(8.dp))
-            // Retry logic is usually handled by search click in this app's current architecture
-            Text(stringResource(R.string.retry), style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = onRetryClick) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.retry))
+            }
         }
     }
 }
