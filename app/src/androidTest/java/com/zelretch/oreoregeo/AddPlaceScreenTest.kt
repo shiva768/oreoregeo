@@ -221,8 +221,15 @@ class AddPlaceScreenTest {
             }
         }
 
-        // Wait for composition to complete
-        composeTestRule.waitForIdle()
+        // Wait for map to initialize (LaunchedEffect delay is clock-controlled in Compose tests)
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            try {
+                composeTestRule.onNodeWithText(context.getString(R.string.amenity)).assertIsDisplayed()
+                true
+            } catch (e: AssertionError) {
+                false
+            }
+        }
 
         // Category chips should be displayed (capitalized)
         composeTestRule.onNodeWithText(context.getString(R.string.amenity)).assertIsDisplayed()

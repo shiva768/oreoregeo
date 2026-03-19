@@ -4,9 +4,11 @@ import android.view.MotionEvent
 import android.widget.FrameLayout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.zelretch.oreoregeo.R
+import kotlinx.coroutines.delay
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -30,6 +32,11 @@ fun MapPickerView(
 ) {
     val targetZoom = TARGET_ZOOM
 
+    LaunchedEffect(Unit) {
+        delay(MAP_READY_DELAY_MS)
+        onReady()
+    }
+
     AndroidView(
         factory = { ctx ->
             try {
@@ -42,15 +49,10 @@ fun MapPickerView(
                     setupDisallowInterceptTouchEvent()
                     addLocationMarkers(currentLocation, selected)
                     addTapEventsOverlay(onPicked, currentLocation)
-
-                    addOnFirstLayoutListener { _, _, _, _, _ ->
-                        postDelayed({ onReady() }, MAP_READY_DELAY_MS)
-                    }
                     setHasTransientState(true)
                 }
             } catch (e: Exception) {
                 Timber.w(e, "MapView initialization failed")
-                onReady()
                 FrameLayout(ctx)
             }
         },
