@@ -5,6 +5,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -219,6 +220,12 @@ class AddPlaceScreenTest {
                     onCancel = {}
                 )
             }
+        }
+
+        // Wait for map to initialize (content is hidden with alpha=0 until map is ready)
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithText(context.getString(R.string.amenity))
+                .fetchSemanticsNodes().isNotEmpty()
         }
 
         // Category chips should be displayed (capitalized)
