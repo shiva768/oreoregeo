@@ -280,6 +280,7 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                             searchViewModel.searchNearby(lat, lon)
                         }
                     },
+                    onCancelClick = { searchViewModel.cancelSearch() },
                     onPlaceClick = { placeKey ->
                         selectedPlaceKey = placeKey
                         selectedPlaceName = if (searchState is SearchState.Success) {

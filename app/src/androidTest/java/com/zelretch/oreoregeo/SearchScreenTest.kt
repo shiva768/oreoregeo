@@ -77,6 +77,7 @@ class SearchScreenTest {
 
     @Test
     fun searchScreen_displaysErrorState() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
         composeTestRule.setContent {
             OreoregeoTheme {
                 SearchScreen(
@@ -97,6 +98,11 @@ class SearchScreenTest {
 
         // エラーメッセージが表示されることを確認
         composeTestRule.onNodeWithText("テストエラー").assertIsDisplayed()
+
+        // 再試行ボタンが表示されることを確認
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.retry)
+        ).assertIsDisplayed()
     }
 
     @Test
@@ -154,7 +160,7 @@ class SearchScreenTest {
     }
 
     @Test
-    fun searchButton_isDisabledInLoadingState() {
+    fun searchButton_isReplacedByCancelInLoadingState() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         composeTestRule.setContent {
             OreoregeoTheme {
@@ -167,6 +173,7 @@ class SearchScreenTest {
                     canEdit = false,
                     currentLocation = null,
                     onSearchClick = {},
+                    onCancelClick = {},
                     onPlaceClick = {},
                     onCheckinClick = {},
                     onEditPlace = {}
@@ -174,10 +181,10 @@ class SearchScreenTest {
             }
         }
 
-        // ローディング状態では検索ボタンが無効であることを確認
+        // ローディング状態ではキャンセルボタンが表示されることを確認
         composeTestRule.onNodeWithText(
-            context.getString(R.string.search_nearby_places)
-        ).assertIsNotEnabled()
+            context.getString(R.string.cancel)
+        ).assertIsDisplayed()
     }
 
     @Test

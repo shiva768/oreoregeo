@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.zelretch.oreoregeo.domain.PlaceWithDistance
 import com.zelretch.oreoregeo.domain.Repository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +26,8 @@ class SearchViewModel(
     private val _searchState = MutableStateFlow<SearchState>(SearchState.Idle)
     val searchState: StateFlow<SearchState> = _searchState.asStateFlow()
 
+    private var searchJob: Job? = null
+
     private val _searchRadius = MutableStateFlow(80)
     val searchRadius: StateFlow<Int> = _searchRadius.asStateFlow()
 
@@ -40,7 +43,8 @@ class SearchViewModel(
     }
 
     fun searchNearby(lat: Double, lon: Double) {
-        viewModelScope.launch {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             _searchState.value = SearchState.Loading
             val language = Locale.getDefault().language
             val result = repository.searchNearbyPlaces(
@@ -55,6 +59,12 @@ class SearchViewModel(
                 onFailure = { SearchState.Error(it.message ?: "Unknown error") }
             )
         }
+    }
+
+    fun cancelSearch() {
+        searchJob?.cancel()
+        searchJob = null
+        _searchState.value = SearchState.Idle
     }
 
     @Suppress("unused")
