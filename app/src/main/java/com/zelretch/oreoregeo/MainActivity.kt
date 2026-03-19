@@ -155,6 +155,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+@Suppress("FunctionNaming")
 fun OreoregeoTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = lightColorScheme(),
@@ -164,6 +165,7 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod")
 fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Double, Double) -> Unit) -> Unit) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -353,7 +355,9 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                                 // Google ログインリクエスト
                                 val googleIdOption = GetGoogleIdOption.Builder()
                                     .setFilterByAuthorizedAccounts(false)
-                                    .setServerClientId(context.getString(R.string.default_web_client_id)) // TODO: ID の設定
+                                    .setServerClientId(
+                                        context.getString(R.string.default_web_client_id)
+                                    )
                                     .build()
 
                                 val request = GetCredentialRequest.Builder()
@@ -361,7 +365,9 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                                     .build()
 
                                 val result = credentialManager.getCredential(context, request)
-                                val googleIdCredential = com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(result.credential.data)
+                                val credential = result.credential
+                                val googleIdCredential = com.google.android.libraries.identity.googleid
+                                    .GoogleIdTokenCredential.createFrom(credential.data)
 
                                 val accountManager = AccountManager.get(context)
                                 val accounts = accountManager.getAccountsByType("com.google")
@@ -370,7 +376,11 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
 
                                 if (account != null) {
                                     val backupResult = repository.backupToGoogleDrive(account)
-                                    val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
+                                    val messageId = if (backupResult.isSuccess) {
+                                        R.string.backup_success
+                                    } else {
+                                        R.string.backup_failed
+                                    }
                                     android.widget.Toast.makeText(
                                         context,
                                         context.getString(messageId),
@@ -383,8 +393,8 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                                         android.widget.Toast.LENGTH_LONG
                                     ).show()
                                 }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
+                            } catch (e: androidx.credentials.exceptions.GetCredentialException) {
+                                Timber.e(e, "Google login failed")
                                 android.widget.Toast.makeText(
                                     context,
                                     context.getString(R.string.backup_failed),
@@ -395,19 +405,13 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     },
                     onOsmLoginClick = {
                         scope.launch {
-                            try {
-                                val osmOAuthManager = com.zelretch.oreoregeo.auth.OsmOAuthManager(context)
-                                val authUrl = osmOAuthManager.getAuthorizationUrl()
-                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(authUrl))
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Timber.e(e, "Failed to start OAuth flow")
-                                android.widget.Toast.makeText(
-                                    context,
-                                    context.getString(R.string.osm_oauth_start_failed),
-                                    android.widget.Toast.LENGTH_LONG
-                                ).show()
-                            }
+                            val osmOAuthManager = com.zelretch.oreoregeo.auth.OsmOAuthManager(context)
+                            val authUrl = osmOAuthManager.getAuthorizationUrl()
+                            val intent = android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(authUrl)
+                            )
+                            context.startActivity(intent)
                         }
                     },
                     onOsmDisconnectClick = suspend {
@@ -452,11 +456,15 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     currentLat = currentLat,
                     currentLon = currentLon,
                     onSave = { lat, lon, tags ->
-                        osmEditViewModel.createPlace(lat, lon, tags)
+                        osmEditViewModel.requestCreatePlace(lat, lon, tags)
                     },
                     onCancel = {
                         navController.popBackStack()
-                    }
+                    },
+                    onResetEditState = {
+                        osmEditViewModel.reset()
+                    },
+                    editState = editState
                 )
             }
 

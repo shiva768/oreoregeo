@@ -28,6 +28,36 @@
     <string name="amenity">Amenity</string>
     <string name="shop">Shop</string>
     <string name="tourism">Tourism</string>
+
+    <!-- Common OSM values for autocomplete -->
+    <!-- Amenities -->
+    <string name="amenity_restaurant">restaurant</string>
+    <string name="amenity_cafe">cafe</string>
+    <string name="amenity_fast_food">fast_food</string>
+    <string name="amenity_bar">bar</string>
+    <string name="amenity_pub">pub</string>
+    <string name="amenity_convenience">convenience</string> <!-- Note: convenience is usually a shop, but some use it as amenity -->
+    <string name="amenity_vending_machine">vending_machine</string>
+    <string name="amenity_parking">parking</string>
+    <string name="amenity_bench">bench</string>
+    <string name="amenity_toilets">toilets</string>
+    <string name="amenity_post_box">post_box</string>
+
+    <!-- Shops -->
+    <string name="shop_convenience">convenience</string>
+    <string name="shop_supermarket">supermarket</string>
+    <string name="shop_clothes">clothes</string>
+    <string name="shop_hairdresser">hairdresser</string>
+    <string name="shop_bakery">bakery</string>
+    <string name="shop_drugstore">drugstore</string>
+
+    <!-- Tourism -->
+    <string name="tourism_information">information</string>
+    <string name="tourism_attraction">attraction</string>
+    <string name="tourism_viewpoint">viewpoint</string>
+    <string name="tourism_hotel">hotel</string>
+    <string name="tourism_museum">museum</string>
+    <string name="tourism_artwork">artwork</string>
     <string name="edit_tags_title">Edit Tags</string>
     <string name="place_label">Place: %1$s</string>
     <string name="existing_tags">Existing Tags</string>
@@ -92,4 +122,11 @@
     <string name="date_picker_placeholder">Use the buttons below to set dates</string>
     <string name="filter_active">Filters Active</string>
     <string name="close">Close</string>
+    <string name="select_location_on_map_hint">Tip: Tap on the map to set the location</string>
+    <string name="confirm_duplicate_title">Confirm Duplicate</string>
+    <string name="confirm_duplicate_message">Nearby places found. Please ensure this is not a duplicate.</string>
+    <string name="confirm_save_message">Are you sure you want to save this place to OpenStreetMap?</string>
+    <string name="confirm_save">Confirm and Save</string>
+    <string name="confirm_save_title">Confirm Save</string>
+    <string name="nearby_places_list">Nearby Places:</string>
 </resources>

@@ -5,13 +5,13 @@
     <string name="checkin_history">チェックイン履歴</string>
     <string name="search">検索</string>
     <string name="checkin">チェックイン</string>
-    <string name="add_place">スポット追加</string>
+    <string name="add_place">プレイス追加</string>
     <string name="edit_tags">タグ編集</string>
     <string name="backup">バックアップ</string>
-    <string name="searching">周辺のスポットを検索中...</string>
-    <string name="search_nearby_places">周辺のスポットを検索</string>
-    <string name="tap_to_search">ボタンをタップして周辺のスポットを検索してください</string>
-    <string name="no_places_found">周辺にスポットが見つかりませんでした</string>
+    <string name="searching">周辺のプレイスを検索中...</string>
+    <string name="search_nearby_places">周辺のプレイスを検索</string>
+    <string name="tap_to_search">ボタンをタップして周辺のプレイスを検索してください</string>
+    <string name="no_places_found">周辺にプレイスが見つかりませんでした</string>
     <string name="retry">再試行</string>
     <string name="edit_tags_desc">タグを編集</string>
     <string name="error_msg">エラー: %1$s</string>
@@ -20,7 +20,7 @@
     <string name="osm_sync_delay">OSMの変更が反映されるまで時間がかかる場合があります</string>
     <string name="duplicate_checkin">前回のチェックインから30分以内はチェックインできません</string>
     <string name="checkin_success">チェックインしました</string>
-    <string name="place_name">スポット名</string>
+    <string name="place_name">プレイス名</string>
     <string name="category">カテゴリ</string>
     <string name="note">メモ</string>
     <string name="distance">距離</string>
@@ -33,7 +33,7 @@
     <string name="backup_to_drive">Google ドライブにバックアップ</string>
     <string name="backup_success">バックアップに成功しました</string>
     <string name="backup_failed">バックアップに失敗しました</string>
-    <string name="add_new_place">新規スポット追加</string>
+    <string name="add_new_place">新規プレイス追加</string>
     <string name="name_required">名称 *</string>
     <string name="latitude_required">緯度 *</string>
     <string name="longitude_required">経度 *</string>
@@ -45,9 +45,39 @@
     <string name="amenity">アメニティ (施設)</string>
     <string name="shop">ショップ</string>
     <string name="tourism">観光</string>
+
+    <!-- Common OSM values for autocomplete -->
+    <!-- Amenities -->
+    <string name="amenity_restaurant">restaurant</string>
+    <string name="amenity_cafe">cafe</string>
+    <string name="amenity_fast_food">fast_food</string>
+    <string name="amenity_bar">bar</string>
+    <string name="amenity_pub">pub</string>
+    <string name="amenity_convenience">convenience</string>
+    <string name="amenity_vending_machine">vending_machine</string>
+    <string name="amenity_parking">parking</string>
+    <string name="amenity_bench">bench</string>
+    <string name="amenity_toilets">toilets</string>
+    <string name="amenity_post_box">post_box</string>
+
+    <!-- Shops -->
+    <string name="shop_convenience">convenience</string>
+    <string name="shop_supermarket">supermarket</string>
+    <string name="shop_clothes">clothes</string>
+    <string name="shop_hairdresser">hairdresser</string>
+    <string name="shop_bakery">bakery</string>
+    <string name="shop_drugstore">drugstore</string>
+
+    <!-- Tourism -->
+    <string name="tourism_information">information</string>
+    <string name="tourism_attraction">attraction</string>
+    <string name="tourism_viewpoint">viewpoint</string>
+    <string name="tourism_hotel">hotel</string>
+    <string name="tourism_museum">museum</string>
+    <string name="tourism_artwork">artwork</string>
     <string name="no_checkins_yet">チェックイン履歴がありません</string>
     <string name="edit_tags_title">タグ編集</string>
-    <string name="place_label">スポット: %1$s</string>
+    <string name="place_label">プレイス: %1$s</string>
     <string name="existing_tags">既存のタグ</string>
     <string name="add_new_tag">新規タグ追加</string>
     <string name="key_label">キー (Key)</string>
@@ -56,7 +86,7 @@
     <string name="delete_tag">タグを削除</string>
     <string name="settings_title">設定</string>
     <string name="osm_section_title">OpenStreetMap</string>
-    <string name="osm_section_desc">OSMアカウントを接続して、スポットの追加や編集を可能にします</string>
+    <string name="osm_section_desc">OSMアカウントを接続して、プレイスの追加や編集を可能にします</string>
     <string name="connect_osm_account">OSMアカウントを接続</string>
     <string name="osm_connected">OSMに接続済み</string>
     <string name="osm_disconnect">接続を解除</string>
@@ -71,13 +101,13 @@
     <string name="backup_drive_desc">チェックインデータをGoogle ドライブにバックアップします</string>
     <string name="about_title">このアプリについて</string>
     <string name="app_version_label">%1$s v%2$s</string>
-    <string name="app_desc">OpenStreetMapのスポットに手動でチェックインするためのアプリです</string>
+    <string name="app_desc">OpenStreetMapのプレイスに手動でチェックインするためのアプリです</string>
     <string name="checkin_at">%1$sにチェックイン</string>
     <string name="note_optional">メモ (任意)</string>
     <string name="search_radius_label">検索半径: %1$dm</string>
-    <string name="exclude_unnamed_label">名前のないスポットを除外</string>
+    <string name="exclude_unnamed_label">名前のないプレイスを除外</string>
     <string name="current_location">現在地</string>
-    <string name="selected_place">選択したスポット</string>
+    <string name="selected_place">選択したプレイス</string>
     <string name="search_filters">検索フィルター</string>
     <string name="filter_place_name">場所名</string>
     <string name="filter_location">市区町村</string>
@@ -92,4 +122,11 @@
     <string name="date_picker_placeholder">下のボタンで日付を設定してください</string>
     <string name="filter_active">フィルター有効</string>
     <string name="close">閉じる</string>
+    <string name="select_location_on_map_hint">ヒント：地図をタップして位置を設定できます</string>
+    <string name="confirm_duplicate_title">重複の確認</string>
+    <string name="confirm_duplicate_message">近くに既存のプレイスが見つかりました。重複登録ではないことを確認してください。</string>
+    <string name="confirm_save_message">このプレイスをOpenStreetMapに保存してもよろしいですか？</string>
+    <string name="confirm_save">確認して保存</string>
+    <string name="confirm_save_title">保存の確認</string>
+    <string name="nearby_places_list">付近のプレイス:</string>
 </resources>

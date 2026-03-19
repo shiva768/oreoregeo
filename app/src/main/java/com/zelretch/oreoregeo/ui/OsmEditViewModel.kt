@@ -3,17 +3,23 @@ package com.zelretch.oreoregeo.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.zelretch.oreoregeo.domain.PlaceWithDistance
 import com.zelretch.oreoregeo.domain.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
+
+private const val DUPLICATE_CHECK_RADIUS_METERS = 30
+private const val MAX_DUPLICATES_DISPLAY = 5
 
 sealed class OsmEditState {
     object Idle : OsmEditState()
     object Loading : OsmEditState()
     data class Success(val placeKey: String) : OsmEditState()
     data class Error(val message: String) : OsmEditState()
+    data class ConfirmDuplicate(val nearbyPlaces: List<PlaceWithDistance>) : OsmEditState()
 }
 
 class OsmEditViewModel(
@@ -47,6 +53,24 @@ class OsmEditViewModel(
                     "amenity" to place.category // Simplification
                 )
             }
+        }
+    }
+
+    fun requestCreatePlace(lat: Double, lon: Double, tags: Map<String, String>) {
+        viewModelScope.launch {
+            _editState.value = OsmEditState.Loading
+            Timber.d("Checking duplicates for lat=$lat, lon=$lon, tags=$tags")
+            // 30m以内の重複チェック
+            val nearbyResult = repository.searchNearbyPlaces(
+                lat,
+                lon,
+                radiusMeters = DUPLICATE_CHECK_RADIUS_METERS,
+                excludeUnnamed = false
+            )
+            val nearbyPlaces = nearbyResult.getOrDefault(emptyList()).take(MAX_DUPLICATES_DISPLAY)
+
+            // 常に確認状態へ遷移する（重複があるかどうかに関わらず）
+            _editState.value = OsmEditState.ConfirmDuplicate(nearbyPlaces)
         }
     }
 
