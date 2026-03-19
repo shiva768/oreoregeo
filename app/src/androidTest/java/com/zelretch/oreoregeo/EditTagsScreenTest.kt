@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -271,6 +272,32 @@ class EditTagsScreenTest {
 
         // Verify text was input
         composeTestRule.onNodeWithText("restaurant", substring = true).assertExists()
+    }
+
+    @Test
+    fun editTagsScreen_showsCategoryValueFieldWhenKeyIsAmenity() {
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                EditTagsScreen(
+                    placeKey = "osm:node:123",
+                    existingTags = emptyMap(),
+                    onSave = { _, _ -> },
+                    onCancel = {}
+                )
+            }
+        }
+
+        // Input "amenity" into key field
+        val keyLabel = InstrumentationRegistry.getInstrumentation().targetContext
+            .getString(R.string.key_label)
+        composeTestRule.onNodeWithText(keyLabel).performClick()
+        composeTestRule.onNodeWithText(keyLabel).performTextInput("amenity")
+
+        // CategoryValueField should appear for value input
+        composeTestRule.waitUntil(3000) {
+            composeTestRule.onAllNodesWithTag("categoryValueField").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithTag("categoryValueField").assertIsDisplayed()
     }
 
     @Test
