@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -221,9 +222,8 @@ class AddPlaceScreenTest {
             }
         }
 
-        // Wait real 700ms for LaunchedEffect delay(500ms) to fire and recompose
-        Thread.sleep(700)
-        composeTestRule.waitForIdle()
+        // Scroll to chips (they may be below the fold on smaller screens)
+        composeTestRule.onNodeWithText(context.getString(R.string.amenity)).performScrollTo()
 
         // Category chips should be displayed (capitalized)
         composeTestRule.onNodeWithText(context.getString(R.string.amenity)).assertIsDisplayed()
