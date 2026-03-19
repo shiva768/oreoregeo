@@ -1,6 +1,5 @@
 package com.zelretch.oreoregeo
 
-import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -222,9 +221,8 @@ class AddPlaceScreenTest {
             }
         }
 
-        // Advance the Compose virtual clock past MAP_READY_DELAY_MS (500ms) to trigger LaunchedEffect
-        @OptIn(ExperimentalTestApi::class)
-        composeTestRule.mainClock.advanceTimeBy(600)
+        // Wait real 700ms for LaunchedEffect delay(500ms) to fire and recompose
+        Thread.sleep(700)
         composeTestRule.waitForIdle()
 
         // Category chips should be displayed (capitalized)
