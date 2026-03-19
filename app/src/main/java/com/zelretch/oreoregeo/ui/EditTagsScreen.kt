@@ -207,12 +207,20 @@ private fun AddNewTagSection(
         modifier = Modifier.fillMaxWidth()
     )
 
-    OutlinedTextField(
-        value = newValue,
-        onValueChange = onValueChange,
-        label = { Text(stringResource(R.string.value_label)) },
-        modifier = Modifier.fillMaxWidth()
-    )
+    if (newKey == "amenity" || newKey == "shop" || newKey == "tourism") {
+        CategoryValueField(
+            category = newKey,
+            value = newValue,
+            onValueChange = onValueChange
+        )
+    } else {
+        OutlinedTextField(
+            value = newValue,
+            onValueChange = onValueChange,
+            label = { Text(stringResource(R.string.value_label)) },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 
     OutlinedButton(
         onClick = onAddClick,
