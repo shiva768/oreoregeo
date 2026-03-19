@@ -119,10 +119,11 @@ private fun MapView.addTapEventsOverlay(
             p ?: return false
             onPicked(p.latitude, p.longitude)
             overlays.removeAll {
-                it is Marker && (
-                    it.title == context.getString(R.string.selected_place) ||
-                        it.title == context.getString(R.string.current_location)
-                    )
+                it is Marker &&
+                    (
+                        it.title == context.getString(R.string.selected_place) ||
+                            it.title == context.getString(R.string.current_location)
+                        )
             }
 
             addLocationMarkers(currentLocation, p.latitude to p.longitude)

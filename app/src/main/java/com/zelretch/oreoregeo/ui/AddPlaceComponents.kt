@@ -28,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -48,7 +47,6 @@ fun AddPlaceContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .alpha(if (state.isMapReady) 1f else 0f)
             .padding(horizontal = 16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -172,6 +170,9 @@ private fun MapSection(state: AddPlaceState, currentLat: Double?, currentLon: Do
                 .clipToBounds(),
             contentAlignment = Alignment.Center
         ) {
+            if (!state.isMapReady) {
+                CircularProgressIndicator()
+            }
             MapPickerView(
                 initial = Pair(initialLat, initialLon),
                 currentLocation = if (currentLat != null && currentLon != null) {

@@ -221,15 +221,8 @@ class AddPlaceScreenTest {
             }
         }
 
-        // Wait for map to initialize (content is hidden with alpha=0 until map is ready)
-        composeTestRule.waitUntil(timeoutMillis = 10000) {
-            try {
-                composeTestRule.onNodeWithText(context.getString(R.string.amenity)).assertIsDisplayed()
-                true
-            } catch (e: AssertionError) {
-                false
-            }
-        }
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Category chips should be displayed (capitalized)
         composeTestRule.onNodeWithText(context.getString(R.string.amenity)).assertIsDisplayed()

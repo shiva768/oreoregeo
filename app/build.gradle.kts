@@ -119,7 +119,7 @@ detekt {
     }
 }
 
-    // detekt タスクの JVM 設定（Kotlin 17 に合わせる）
+// detekt タスクの JVM 設定（Kotlin 17 に合わせる）
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     jvmTarget = "17"
     // 生成物やリソースを除外

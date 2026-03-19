@@ -28,11 +28,10 @@ class AddPlaceState(
         }
     }
 
-    fun isInputValid(): Boolean =
-        lat.toDoubleOrNull() != null &&
-            lon.toDoubleOrNull() != null &&
-            name.isNotBlank() &&
-            categoryValue.isNotBlank()
+    fun isInputValid(): Boolean = lat.toDoubleOrNull() != null &&
+        lon.toDoubleOrNull() != null &&
+        name.isNotBlank() &&
+        categoryValue.isNotBlank()
 
     fun createTagsMap(): Map<String, String> {
         val tags = mutableMapOf("name" to name, category to categoryValue)
