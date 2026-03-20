@@ -178,7 +178,10 @@ class Repository(
         return result.map { elements ->
             val places = elements.mapNotNull { element ->
                 element.toPlace(language)?.let { place ->
-                    if (excludeUnnamed && place.name == "Unnamed") {
+                    val isDisused = element.tags?.keys?.any { it.startsWith("disused:") } == true
+                    if (isDisused) {
+                        null
+                    } else if (excludeUnnamed && place.name == "Unnamed") {
                         null
                     } else {
                         val distance = calculateDistance(

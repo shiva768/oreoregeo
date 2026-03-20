@@ -105,7 +105,7 @@
     <string name="checkin_at">%1$sにチェックイン</string>
     <string name="note_optional">メモ (任意)</string>
     <string name="search_radius_label">検索半径: %1$dm</string>
-    <string name="exclude_unnamed_label">名前のないプレイスを除外</string>
+    <string name="exclude_unnamed_label">閉店または名前のないプレイスを除外</string>
     <string name="current_location">現在地</string>
     <string name="selected_place">選択したプレイス</string>
     <string name="search_filters">検索フィルター</string>
