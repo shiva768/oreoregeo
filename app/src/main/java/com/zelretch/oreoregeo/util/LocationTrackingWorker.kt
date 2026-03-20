@@ -53,6 +53,9 @@ class LocationTrackingWorker(
     }
 
     override suspend fun doWork(): Result {
+        val repository = (applicationContext as OreoregeoApplication).repository
+        repository.cleanupProvisionalCheckins()
+
         if (!hasLocationPermission()) {
             Timber.d("Location permission not granted, skipping")
             return Result.success()
@@ -119,7 +122,7 @@ class LocationTrackingWorker(
     }
 
     private suspend fun createProvisionalCheckin(lat: Double, lon: Double) {
-        val repository = (context.applicationContext as OreoregeoApplication).repository
+        val repository = (applicationContext as OreoregeoApplication).repository
         val nearbyResult = repository.searchNearbyPlaces(lat, lon, SEARCH_RADIUS_METERS)
         if (nearbyResult.isFailure) {
             Timber.w("Failed to search nearby places for provisional check-in")

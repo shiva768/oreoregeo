@@ -24,9 +24,12 @@ interface ProvisionalCheckinDao {
     @Query("SELECT COUNT(*) FROM provisional_checkins WHERE status = 'PENDING'")
     fun getPendingCount(): Flow<Int>
 
-    @Query(
-        "SELECT COUNT(*) FROM provisional_checkins WHERE place_key = :placeKey " +
-            "AND detected_at > :sinceMs AND status = 'PENDING'"
-    )
-    suspend fun countRecentPending(placeKey: String, sinceMs: Long): Int
+    @Query("SELECT COUNT(*) FROM provisional_checkins WHERE place_key = :placeKey AND status = 'PENDING'")
+    suspend fun countPendingForPlace(placeKey: String): Int
+
+    @Query("UPDATE provisional_checkins SET status = 'DISMISSED' WHERE status = 'PENDING' AND detected_at < :beforeMs")
+    suspend fun dismissExpired(beforeMs: Long)
+
+    @Query("DELETE FROM provisional_checkins WHERE status = 'DISMISSED' AND detected_at < :beforeMs")
+    suspend fun deleteOldDismissed(beforeMs: Long)
 }

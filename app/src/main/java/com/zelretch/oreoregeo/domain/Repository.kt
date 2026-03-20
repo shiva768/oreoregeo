@@ -326,11 +326,7 @@ class Repository(
         lon: Double
     ): Result<Long> {
         return try {
-            val deduplicationWindowMs = 2 * 60 * 60 * 1000L // 2時間
-            val recent = provisionalCheckinDao.countRecentPending(
-                placeKey,
-                System.currentTimeMillis() - deduplicationWindowMs
-            )
+            val recent = provisionalCheckinDao.countPendingForPlace(placeKey)
             if (recent > 0) {
                 Timber.d("Skipping duplicate provisional check-in for place: $placeKey")
                 return Result.failure(Exception("duplicate_provisional"))
@@ -366,6 +362,16 @@ class Repository(
     suspend fun dismissProvisionalCheckin(id: Long) {
         provisionalCheckinDao.updateStatus(id, ProvisionalCheckinStatus.DISMISSED.name)
         Timber.d("Dismissed provisional check-in: $id")
+    }
+
+    suspend fun cleanupProvisionalCheckins() {
+        val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
+        provisionalCheckinDao.dismissExpired(oneWeekAgo)
+        Timber.d("Dismissed provisional check-ins older than 1 week")
+
+        val oneMonthAgo = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L
+        provisionalCheckinDao.deleteOldDismissed(oneMonthAgo)
+        Timber.d("Deleted dismissed provisional check-ins older than 1 month")
     }
 
     private fun ProvisionalCheckinEntity.toDomain() = ProvisionalCheckin(
