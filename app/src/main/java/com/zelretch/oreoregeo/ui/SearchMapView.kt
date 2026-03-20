@@ -114,6 +114,7 @@ private fun MapView.addSearchRadiusCircle(location: Pair<Double, Double>, radius
     )
     circleOverlay.outlinePaint.color = Color.BLUE
     circleOverlay.outlinePaint.strokeWidth = 2f
+    circleOverlay.infoWindow = null
     overlays.add(circleOverlay)
 }
 
