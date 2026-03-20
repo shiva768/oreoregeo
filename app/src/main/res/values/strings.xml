@@ -129,4 +129,12 @@
     <string name="confirm_save">Confirm and Save</string>
     <string name="confirm_save_title">Confirm Save</string>
     <string name="nearby_places_list">Nearby Places:</string>
+    <string name="provisional_checkins">Provisional Check-ins</string>
+    <string name="no_provisional_checkins">No provisional check-ins</string>
+    <string name="provisional_detected_at">Detected at: %1$s</string>
+    <string name="provisional_confirm">Check-in</string>
+    <string name="provisional_dismiss">Dismiss</string>
+    <string name="provisional_confirm_title">Confirm Check-in</string>
+    <string name="provisional_confirm_message">Check in to %1$s?</string>
+    <string name="unknown_place">Unknown place</string>
 </resources>

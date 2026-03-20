@@ -25,3 +25,12 @@ data class PlaceWithDistance(
     val place: Place,
     val distanceMeters: Float
 )
+
+data class ProvisionalCheckin(
+    val id: Long,
+    val placeKey: String,
+    val placeName: String?,
+    val detectedAt: Long,
+    val lat: Double,
+    val lon: Double
+)

@@ -42,6 +42,7 @@ play-services-auth-blockstore = "16.4.0"
 
 # Coroutines
 coroutines = "1.10.2"
+workmanager = "2.9.1"
 
 # Map
 osmdroid = "6.1.18"
@@ -102,6 +103,9 @@ authBlockstore = { group = "com.google.android.gms", name = "play-services-auth-
 # Coroutines
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
+
+# WorkManager
+workmanager = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workmanager" }
 
 # Map
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }

@@ -7,6 +7,7 @@ import com.zelretch.oreoregeo.data.local.AppDatabase
 import com.zelretch.oreoregeo.data.remote.OsmApiClient
 import com.zelretch.oreoregeo.data.remote.OverpassClient
 import com.zelretch.oreoregeo.domain.Repository
+import com.zelretch.oreoregeo.util.LocationTrackingWorker
 import org.osmdroid.config.Configuration
 import timber.log.Timber
 
@@ -22,6 +23,9 @@ class OreoregeoApplication : Application() {
         // osmdroidの設定を初期化
         Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
         Configuration.getInstance().userAgentValue = packageName
+
+        // 仮チェックイン用の位置追跡ワーカーをスケジュール
+        LocationTrackingWorker.schedule(this)
     }
 
     private val database by lazy { AppDatabase.getDatabase(this) }
@@ -43,7 +47,8 @@ class OreoregeoApplication : Application() {
             checkinDao = database.checkinDao(),
             overpassClient = OverpassClient(),
             osmApiClient = osmApiClient,
-            driveBackupManager = DriveBackupManager(this)
+            driveBackupManager = DriveBackupManager(this),
+            provisionalCheckinDao = database.provisionalCheckinDao()
         )
     }
 }
