@@ -77,6 +77,47 @@ class MainActivity : ComponentActivity() {
     private var currentLocation: Location? = null
     private var pendingBackupAccount: android.accounts.Account? = null
 
+    private val accountPickerForRestoreLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val accountName = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME) ?: return@registerForActivityResult
+            val account = android.accounts.Account(accountName, "com.google")
+            val repository = (applicationContext as OreoregeoApplication).repository
+            kotlinx.coroutines.MainScope().launch {
+                val restoreResult = repository.restoreDatabaseFromGoogleDrive(account)
+                val messageId = if (restoreResult.isSuccess) R.string.restore_success else R.string.restore_failed
+                android.widget.Toast.makeText(this@MainActivity, getString(messageId), android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private val accountPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val accountName = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME) ?: return@registerForActivityResult
+            val account = android.accounts.Account(accountName, "com.google")
+            val repository = (applicationContext as OreoregeoApplication).repository
+            kotlinx.coroutines.MainScope().launch {
+                val backupResult = repository.backupToGoogleDrive(account)
+                when {
+                    backupResult.isSuccess -> {
+                        android.widget.Toast.makeText(this@MainActivity, getString(R.string.backup_success), android.widget.Toast.LENGTH_LONG).show()
+                    }
+                    backupResult.exceptionOrNull() is UserRecoverableAuthIOException -> {
+                        val authEx = backupResult.exceptionOrNull() as UserRecoverableAuthIOException
+                        pendingBackupAccount = account
+                        driveAuthLauncher.launch(authEx.intent)
+                    }
+                    else -> {
+                        android.widget.Toast.makeText(this@MainActivity, getString(R.string.backup_failed), android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+    }
+
     private val driveAuthLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -129,6 +170,30 @@ class MainActivity : ComponentActivity() {
                     onDriveAuthRequired = { intent, account ->
                         pendingBackupAccount = account
                         driveAuthLauncher.launch(intent)
+                    },
+                    onAccountPickerRequested = {
+                        val intent = AccountManager.newChooseAccountIntent(
+                            null,
+                            null,
+                            arrayOf("com.google"),
+                            null,
+                            null,
+                            null,
+                            null
+                        )
+                        accountPickerLauncher.launch(intent)
+                    },
+                    onRestoreRequested = {
+                        val intent = AccountManager.newChooseAccountIntent(
+                            null,
+                            null,
+                            arrayOf("com.google"),
+                            null,
+                            null,
+                            null,
+                            null
+                        )
+                        accountPickerForRestoreLauncher.launch(intent)
                     }
                 )
             }
@@ -193,7 +258,9 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 fun MainScreen(
     currentLocation: Pair<Double, Double>?,
     onRequestLocation: ((Double, Double) -> Unit) -> Unit,
-    onDriveAuthRequired: (android.content.Intent, android.accounts.Account) -> Unit = { _, _ -> }
+    onDriveAuthRequired: (android.content.Intent, android.accounts.Account) -> Unit = { _, _ -> },
+    onAccountPickerRequested: () -> Unit = {},
+    onRestoreRequested: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -417,39 +484,10 @@ fun MainScreen(
                 val context = androidx.compose.ui.platform.LocalContext.current
                 SettingsScreen(
                     onBackupClick = {
-                        scope.launch {
-                            val accountManager = AccountManager.get(context)
-                            val account = accountManager.getAccountsByType("com.google").firstOrNull()
-                            if (account != null) {
-                                val backupResult = repository.backupToGoogleDrive(account)
-                                when {
-                                    backupResult.isSuccess -> {
-                                        android.widget.Toast.makeText(
-                                            context,
-                                            context.getString(R.string.backup_success),
-                                            android.widget.Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                    backupResult.exceptionOrNull() is UserRecoverableAuthIOException -> {
-                                        val authEx = backupResult.exceptionOrNull() as UserRecoverableAuthIOException
-                                        onDriveAuthRequired(authEx.intent, account)
-                                    }
-                                    else -> {
-                                        android.widget.Toast.makeText(
-                                            context,
-                                            context.getString(R.string.backup_failed),
-                                            android.widget.Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                }
-                            } else {
-                                android.widget.Toast.makeText(
-                                    context,
-                                    context.getString(R.string.backup_failed),
-                                    android.widget.Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
+                        onAccountPickerRequested()
+                    },
+                    onRestoreClick = {
+                        onRestoreRequested()
                     },
                     onOsmLoginClick = {
                         scope.launch {

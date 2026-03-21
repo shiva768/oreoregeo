@@ -106,6 +106,9 @@
     <string name="login_osm">Login to OSM</string>
     <string name="backup_success">Backup successful</string>
     <string name="backup_failed">Backup failed</string>
+    <string name="restore_from_drive">Restore from Google Drive</string>
+    <string name="restore_success">Restore successful. Please restart the app.</string>
+    <string name="restore_failed">Restore failed</string>
     <string name="no_checkins_yet">No check-ins yet</string>
     <string name="checkin_at">Check-in at %1$s</string>
     <string name="search_filters">Search Filters</string>

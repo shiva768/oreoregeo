@@ -27,6 +27,7 @@ class SettingsScreenTest {
             OreoregeoTheme {
                 SettingsScreen(
                     onBackupClick = {},
+                    onRestoreClick = {},
                     onOsmLoginClick = {},
                     onOsmDisconnectClick = suspend {}
                 )
@@ -46,6 +47,7 @@ class SettingsScreenTest {
             OreoregeoTheme {
                 SettingsScreen(
                     onBackupClick = {},
+                    onRestoreClick = {},
                     onOsmLoginClick = {},
                     onOsmDisconnectClick = suspend {}
                 )
