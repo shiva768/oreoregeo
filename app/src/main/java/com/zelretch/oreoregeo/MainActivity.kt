@@ -53,6 +53,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.zelretch.oreoregeo.ui.AddPlaceScreen
 import com.zelretch.oreoregeo.ui.CheckinDialog
 import com.zelretch.oreoregeo.ui.CheckinViewModel
@@ -78,6 +79,23 @@ import timber.log.Timber
 class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: Location? = null
+    private var pendingBackupAccount: android.accounts.Account? = null
+
+    private val driveAuthLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            pendingBackupAccount?.let { account ->
+                val repository = (applicationContext as OreoregeoApplication).repository
+                kotlinx.coroutines.MainScope().launch {
+                    val backupResult = repository.backupToGoogleDrive(account)
+                    val messageId = if (backupResult.isSuccess) R.string.backup_success else R.string.backup_failed
+                    android.widget.Toast.makeText(this@MainActivity, getString(messageId), android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        pendingBackupAccount = null
+    }
 
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -111,6 +129,10 @@ class MainActivity : ComponentActivity() {
                             currentLocationPair = lat to lon
                             callback(lat, lon)
                         }
+                    },
+                    onDriveAuthRequired = { intent, account ->
+                        pendingBackupAccount = account
+                        driveAuthLauncher.launch(intent)
                     }
                 )
             }
@@ -172,7 +194,11 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod")
-fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Double, Double) -> Unit) -> Unit) {
+fun MainScreen(
+    currentLocation: Pair<Double, Double>?,
+    onRequestLocation: ((Double, Double) -> Unit) -> Unit,
+    onDriveAuthRequired: (android.content.Intent, android.accounts.Account) -> Unit = { _, _ -> }
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -423,20 +449,31 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
 
                                 if (account != null) {
                                     val backupResult = repository.backupToGoogleDrive(account)
-                                    val messageId = if (backupResult.isSuccess) {
-                                        R.string.backup_success
-                                    } else {
-                                        R.string.backup_failed
+                                    when {
+                                        backupResult.isSuccess -> {
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                context.getString(R.string.backup_success),
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                        backupResult.exceptionOrNull() is UserRecoverableAuthIOException -> {
+                                            // Drive アクセス権限をユーザーに要求してリトライ
+                                            val authEx = backupResult.exceptionOrNull() as UserRecoverableAuthIOException
+                                            onDriveAuthRequired(authEx.intent, account)
+                                        }
+                                        else -> {
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                context.getString(R.string.backup_failed),
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        }
                                     }
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        context.getString(messageId),
-                                        android.widget.Toast.LENGTH_LONG
-                                    ).show()
                                 } else {
                                     android.widget.Toast.makeText(
                                         context,
-                                        "Google Account not found on device",
+                                        context.getString(R.string.backup_failed),
                                         android.widget.Toast.LENGTH_LONG
                                     ).show()
                                 }

@@ -3,6 +3,7 @@ package com.zelretch.oreoregeo.data
 import android.accounts.Account
 import android.content.Context
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
@@ -49,6 +50,9 @@ class DriveBackupManager(private val context: Context) {
 
             Timber.i("Database backup completed successfully")
             Result.success(Unit)
+        } catch (e: UserRecoverableAuthIOException) {
+            Timber.w(e, "Drive authorization required")
+            Result.failure(e)
         } catch (e: Exception) {
             Timber.e(e, "Error during database backup")
             Result.failure(e)
