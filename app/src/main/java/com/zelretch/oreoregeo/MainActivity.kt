@@ -39,8 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -52,7 +50,6 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.zelretch.oreoregeo.ui.AddPlaceScreen
 import com.zelretch.oreoregeo.ui.CheckinDialog
@@ -419,66 +416,34 @@ fun MainScreen(
             composable("settings") {
                 val scope = rememberCoroutineScope()
                 val context = androidx.compose.ui.platform.LocalContext.current
-                val credentialManager = CredentialManager.create(context)
-
                 SettingsScreen(
                     onBackupClick = {
                         scope.launch {
-                            try {
-                                // Google ログインリクエスト
-                                val googleIdOption = GetGoogleIdOption.Builder()
-                                    .setFilterByAuthorizedAccounts(false)
-                                    .setServerClientId(
-                                        context.getString(R.string.default_web_client_id)
-                                    )
-                                    .build()
-
-                                val request = GetCredentialRequest.Builder()
-                                    .addCredentialOption(googleIdOption)
-                                    .build()
-
-                                val result = credentialManager.getCredential(context, request)
-                                val credential = result.credential
-                                val googleIdCredential = com.google.android.libraries.identity.googleid
-                                    .GoogleIdTokenCredential.createFrom(credential.data)
-
-                                val accountManager = AccountManager.get(context)
-                                val accounts = accountManager.getAccountsByType("com.google")
-                                val account = accounts.find { it.name == googleIdCredential.id }
-                                    ?: accounts.firstOrNull() // 簡易的な選択
-
-                                if (account != null) {
-                                    val backupResult = repository.backupToGoogleDrive(account)
-                                    when {
-                                        backupResult.isSuccess -> {
-                                            android.widget.Toast.makeText(
-                                                context,
-                                                context.getString(R.string.backup_success),
-                                                android.widget.Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                        backupResult.exceptionOrNull() is UserRecoverableAuthIOException -> {
-                                            // Drive アクセス権限をユーザーに要求してリトライ
-                                            val authEx = backupResult.exceptionOrNull() as UserRecoverableAuthIOException
-                                            onDriveAuthRequired(authEx.intent, account)
-                                        }
-                                        else -> {
-                                            android.widget.Toast.makeText(
-                                                context,
-                                                context.getString(R.string.backup_failed),
-                                                android.widget.Toast.LENGTH_LONG
-                                            ).show()
-                                        }
+                            val accountManager = AccountManager.get(context)
+                            val account = accountManager.getAccountsByType("com.google").firstOrNull()
+                            if (account != null) {
+                                val backupResult = repository.backupToGoogleDrive(account)
+                                when {
+                                    backupResult.isSuccess -> {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            context.getString(R.string.backup_success),
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
                                     }
-                                } else {
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        context.getString(R.string.backup_failed),
-                                        android.widget.Toast.LENGTH_LONG
-                                    ).show()
+                                    backupResult.exceptionOrNull() is UserRecoverableAuthIOException -> {
+                                        val authEx = backupResult.exceptionOrNull() as UserRecoverableAuthIOException
+                                        onDriveAuthRequired(authEx.intent, account)
+                                    }
+                                    else -> {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            context.getString(R.string.backup_failed),
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    }
                                 }
-                            } catch (e: androidx.credentials.exceptions.GetCredentialException) {
-                                Timber.e(e, "Google login failed")
+                            } else {
                                 android.widget.Toast.makeText(
                                     context,
                                     context.getString(R.string.backup_failed),

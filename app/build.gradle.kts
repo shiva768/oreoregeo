@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.plugin.compose)
-    alias(libs.plugins.google.services)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
 }
@@ -178,10 +177,6 @@ dependencies {
 
     // Google Play Services (for location and Drive)
     implementation(libs.bundles.google.play)
-    implementation(libs.identityCredentials)
-    implementation(libs.identityCredentialsPlayAuth)
-    implementation(libs.googleId)
-    implementation(libs.authBlockstore)
 
     // Coroutines
     implementation(libs.bundles.coroutines)
@@ -191,10 +186,6 @@ dependencies {
 
     // Logging
     implementation(libs.timber)
-
-    // Firebase
-    implementation(platform(libs.googleFirebaseBom))
-    implementation(libs.googleFirebaseAnalytics)
 
     // Testing
     testImplementation(libs.bundles.testing)
