@@ -167,10 +167,6 @@ class MainActivity : ComponentActivity() {
                             callback(lat, lon)
                         }
                     },
-                    onDriveAuthRequired = { intent, account ->
-                        pendingBackupAccount = account
-                        driveAuthLauncher.launch(intent)
-                    },
                     onAccountPickerRequested = {
                         val intent = AccountManager.newChooseAccountIntent(
                             null,
@@ -258,7 +254,6 @@ fun OreoregeoTheme(content: @Composable () -> Unit) {
 fun MainScreen(
     currentLocation: Pair<Double, Double>?,
     onRequestLocation: ((Double, Double) -> Unit) -> Unit,
-    onDriveAuthRequired: (android.content.Intent, android.accounts.Account) -> Unit = { _, _ -> },
     onAccountPickerRequested: () -> Unit = {},
     onRestoreRequested: () -> Unit = {}
 ) {
