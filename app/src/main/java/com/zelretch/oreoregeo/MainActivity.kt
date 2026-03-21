@@ -71,7 +71,6 @@ import com.zelretch.oreoregeo.ui.SearchViewModel
 import com.zelretch.oreoregeo.ui.SearchViewModelFactory
 import com.zelretch.oreoregeo.ui.SettingsScreen
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
