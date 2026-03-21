@@ -186,6 +186,9 @@ dependencies {
     // Coroutines
     implementation(libs.bundles.coroutines)
 
+    // WorkManager
+    implementation(libs.workmanager)
+
     // Logging
     implementation(libs.timber)
 

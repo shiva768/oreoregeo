@@ -129,4 +129,12 @@
     <string name="confirm_save">確認して保存</string>
     <string name="confirm_save_title">保存の確認</string>
     <string name="nearby_places_list">付近のプレイス:</string>
+    <string name="provisional_checkins">仮チェックイン</string>
+    <string name="no_provisional_checkins">仮チェックインはありません</string>
+    <string name="provisional_detected_at">検出日時: %1$s</string>
+    <string name="provisional_confirm">チェックイン</string>
+    <string name="provisional_dismiss">無視</string>
+    <string name="provisional_confirm_title">チェックインの確認</string>
+    <string name="provisional_confirm_message">%1$sにチェックインしますか？</string>
+    <string name="unknown_place">不明なプレイス</string>
 </resources>

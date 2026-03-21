@@ -5,6 +5,9 @@ import com.zelretch.oreoregeo.data.local.CheckinDao
 import com.zelretch.oreoregeo.data.local.CheckinEntity
 import com.zelretch.oreoregeo.data.local.PlaceDao
 import com.zelretch.oreoregeo.data.local.PlaceEntity
+import com.zelretch.oreoregeo.data.local.ProvisionalCheckinDao
+import com.zelretch.oreoregeo.data.local.ProvisionalCheckinEntity
+import com.zelretch.oreoregeo.data.local.ProvisionalCheckinStatus
 import com.zelretch.oreoregeo.data.remote.NominatimClient
 import com.zelretch.oreoregeo.data.remote.OsmApiClient
 import com.zelretch.oreoregeo.data.remote.OverpassClient
@@ -20,7 +23,8 @@ class Repository(
     private val overpassClient: OverpassClient,
     private var osmApiClient: OsmApiClient,
     private val driveBackupManager: com.zelretch.oreoregeo.data.DriveBackupManager,
-    private val nominatimClient: NominatimClient = NominatimClient()
+    private val nominatimClient: NominatimClient = NominatimClient(),
+    private val provisionalCheckinDao: ProvisionalCheckinDao
 ) {
     companion object {
         private const val DUPLICATE_CHECKIN_THRESHOLD_MS = 30 * 60 * 1000L // 30 minutes
@@ -308,6 +312,76 @@ class Repository(
     suspend fun backupToGoogleDrive(account: android.accounts.Account): Result<Unit> = driveBackupManager.backupDatabase(account)
 
     fun isOsmAuthenticated(): Boolean = osmApiClient.isLoggedIn()
+
+    fun getPendingProvisionalCheckins(): Flow<List<ProvisionalCheckin>> = provisionalCheckinDao.getPending().map { entities ->
+        entities.map { it.toDomain() }
+    }
+
+    fun getPendingProvisionalCheckinCount(): Flow<Int> = provisionalCheckinDao.getPendingCount()
+
+    suspend fun createProvisionalCheckin(
+        placeKey: String,
+        placeName: String?,
+        lat: Double,
+        lon: Double
+    ): Result<Long> {
+        return try {
+            val recent = provisionalCheckinDao.countPendingForPlace(placeKey)
+            if (recent > 0) {
+                Timber.d("Skipping duplicate provisional check-in for place: $placeKey")
+                return Result.failure(Exception("duplicate_provisional"))
+            }
+            val entity = ProvisionalCheckinEntity(
+                place_key = placeKey,
+                place_name = placeName,
+                detected_at = System.currentTimeMillis(),
+                lat = lat,
+                lon = lon
+            )
+            val id = provisionalCheckinDao.insert(entity)
+            Timber.i("Created provisional check-in for place $placeKey: id=$id")
+            Result.success(id)
+        } catch (e: Exception) {
+            Timber.e(e, "Error creating provisional check-in for place: $placeKey")
+            Result.failure(e)
+        }
+    }
+
+    suspend fun confirmProvisionalCheckin(
+        provisionalId: Long,
+        placeKey: String,
+        note: String
+    ): Result<Long> {
+        val checkinResult = performCheckin(placeKey, note)
+        if (checkinResult.isSuccess) {
+            provisionalCheckinDao.updateStatus(provisionalId, ProvisionalCheckinStatus.CONFIRMED.name)
+        }
+        return checkinResult
+    }
+
+    suspend fun dismissProvisionalCheckin(id: Long) {
+        provisionalCheckinDao.updateStatus(id, ProvisionalCheckinStatus.DISMISSED.name)
+        Timber.d("Dismissed provisional check-in: $id")
+    }
+
+    suspend fun cleanupProvisionalCheckins() {
+        val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
+        provisionalCheckinDao.dismissExpired(oneWeekAgo)
+        Timber.d("Dismissed provisional check-ins older than 1 week")
+
+        val oneMonthAgo = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L
+        provisionalCheckinDao.deleteOldDismissed(oneMonthAgo)
+        Timber.d("Deleted dismissed provisional check-ins older than 1 month")
+    }
+
+    private fun ProvisionalCheckinEntity.toDomain() = ProvisionalCheckin(
+        id = id,
+        placeKey = place_key,
+        placeName = place_name,
+        detectedAt = detected_at,
+        lat = lat,
+        lon = lon
+    )
 
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
         val results = FloatArray(1)

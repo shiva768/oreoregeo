@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +64,9 @@ import com.zelretch.oreoregeo.ui.HistoryViewModelFactory
 import com.zelretch.oreoregeo.ui.OsmEditState
 import com.zelretch.oreoregeo.ui.OsmEditViewModel
 import com.zelretch.oreoregeo.ui.OsmEditViewModelFactory
+import com.zelretch.oreoregeo.ui.ProvisionalCheckinScreen
+import com.zelretch.oreoregeo.ui.ProvisionalCheckinViewModel
+import com.zelretch.oreoregeo.ui.ProvisionalCheckinViewModelFactory
 import com.zelretch.oreoregeo.ui.SearchScreen
 import com.zelretch.oreoregeo.ui.SearchState
 import com.zelretch.oreoregeo.ui.SearchViewModel
@@ -175,7 +181,8 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
     val selectedItem = when {
         currentRoute == "search" -> 0
         currentRoute == "history" -> 1
-        currentRoute == "settings" -> 2
+        currentRoute == "provisional" -> 2
+        currentRoute == "settings" -> 3
         else -> 0
     }
 
@@ -193,6 +200,11 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
     val checkinViewModel: CheckinViewModel = viewModel(
         factory = CheckinViewModelFactory(repository)
     )
+
+    val provisionalCheckinViewModel: ProvisionalCheckinViewModel = viewModel(
+        factory = ProvisionalCheckinViewModelFactory(repository)
+    )
+    val provisionalCount by provisionalCheckinViewModel.pendingCount.collectAsState()
 
     Scaffold(
         topBar = {
@@ -238,10 +250,29 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                 )
                 NavigationBarItem(
                     icon = {
+                        BadgedBox(badge = {
+                            if (provisionalCount > 0) Badge { Text(provisionalCount.toString()) }
+                        }) {
+                            Icon(
+                                Icons.Default.Notifications,
+                                contentDescription = stringResource(R.string.provisional_checkins)
+                            )
+                        }
+                    },
+                    label = { Text(stringResource(R.string.provisional_checkins)) },
+                    selected = selectedItem == 2,
+                    onClick = {
+                        navController.navigate("provisional") {
+                            popUpTo("search")
+                        }
+                    }
+                )
+                NavigationBarItem(
+                    icon = {
                         Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_title))
                     },
                     label = { Text(stringResource(R.string.settings_title)) },
-                    selected = selectedItem == 2,
+                    selected = selectedItem == 3,
                     onClick = {
                         navController.navigate("settings") {
                             popUpTo("search")
@@ -341,6 +372,21 @@ fun MainScreen(currentLocation: Pair<Double, Double>?, onRequestLocation: ((Doub
                     onEndDateChange = { historyViewModel.setEndDate(it) },
                     onClearFilters = { historyViewModel.clearFilters() },
                     onDeleteClick = { historyViewModel.deleteCheckin(it) }
+                )
+            }
+
+            composable("provisional") {
+                val pendingCheckins by provisionalCheckinViewModel.pendingCheckins.collectAsState()
+                val confirmState by provisionalCheckinViewModel.confirmState.collectAsState()
+
+                ProvisionalCheckinScreen(
+                    pendingCheckins = pendingCheckins,
+                    confirmState = confirmState,
+                    onConfirm = { provisionalId, placeKey, note ->
+                        provisionalCheckinViewModel.confirm(provisionalId, placeKey, note)
+                    },
+                    onDismiss = { provisionalCheckinViewModel.dismiss(it) },
+                    onConfirmStateReset = { provisionalCheckinViewModel.resetConfirmState() }
                 )
             }
 
