@@ -30,7 +30,7 @@ class LocationTrackingWorker(
         private const val KEY_LAST_LON = "last_lon"
         private const val KEY_LAST_TIMESTAMP = "last_timestamp"
         private const val STAY_RADIUS_METERS = 50f
-        private const val STAY_DURATION_MS = 30 * 60 * 1000L // 30分
+        private const val STAY_DURATION_MS = 15 * 60 * 1000L // 15分
         private const val SEARCH_RADIUS_METERS = 80
         private const val INTERVAL_MINUTES = 15L
 
