@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onBackupClick: () -> Unit,
+    onRestoreClick: () -> Unit,
     onOsmLoginClick: () -> Unit,
     onOsmDisconnectClick: suspend () -> Unit,
     modifier: Modifier = Modifier
@@ -135,6 +137,15 @@ fun SettingsScreen(
                     Icon(Icons.Default.Backup, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.backup_to_drive))
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = onRestoreClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Restore, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.restore_from_drive))
                 }
             }
         }

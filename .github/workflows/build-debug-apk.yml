@@ -36,15 +36,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Overwrite google-services.json if secret is available
-        run: |
-          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
-            echo "Overwriting dummy google-services.json with real one from secrets."
-            echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
-          else
-            echo "GOOGLE_SERVICES_JSON secret is not set. Using the committed dummy file."
-          fi
-
       - name: Decode debug keystore
         run: |
           if [ -n "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" ]; then

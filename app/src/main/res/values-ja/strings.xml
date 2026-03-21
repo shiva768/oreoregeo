@@ -33,6 +33,9 @@
     <string name="backup_to_drive">Google ドライブにバックアップ</string>
     <string name="backup_success">バックアップに成功しました</string>
     <string name="backup_failed">バックアップに失敗しました</string>
+    <string name="restore_from_drive">Google ドライブから復元</string>
+    <string name="restore_success">復元に成功しました。アプリを再起動してください。</string>
+    <string name="restore_failed">復元に失敗しました</string>
     <string name="add_new_place">新規プレイス追加</string>
     <string name="name_required">名称 *</string>
     <string name="latitude_required">緯度 *</string>
