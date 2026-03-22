@@ -130,8 +130,11 @@ class HistoryScreenTest {
         }
 
         // カードをタップしてマップダイアログが表示されることを確認
-        composeTestRule.onNodeWithText(placeName).performClick()
-        composeTestRule.onNodeWithText(placeName).assertIsDisplayed()
+        composeTestRule.onAllNodes(androidx.compose.ui.test.hasText(placeName))[0].performClick()
+        // ダイアログ内にもプレイス名が表示されること（2件以上になる）
+        composeTestRule.onAllNodes(androidx.compose.ui.test.hasText(placeName)).fetchSemanticsNodes().let {
+            assert(it.size >= 2) { "ダイアログが表示されていない（ノード数: ${it.size}）" }
+        }
     }
 
     @Test
