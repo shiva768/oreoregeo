@@ -220,7 +220,7 @@ private fun SearchResultsSection(
                 )
             }
         }
-        is SearchState.Error -> SearchErrorView(searchState.message, onRetryClick)
+        is SearchState.Error -> SearchErrorView(searchState.errorType, onRetryClick)
     }
 }
 
@@ -273,7 +273,12 @@ private fun PlacesList(
 
 @Composable
 @Suppress("FunctionNaming")
-private fun SearchErrorView(message: String, onRetryClick: () -> Unit) {
+private fun SearchErrorView(errorType: SearchErrorType, onRetryClick: () -> Unit) {
+    val message = when (errorType) {
+        SearchErrorType.TIMEOUT -> stringResource(R.string.error_network_timeout)
+        SearchErrorType.OFFLINE -> stringResource(R.string.error_network_offline)
+        SearchErrorType.GENERIC -> stringResource(R.string.error_network_generic)
+    }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(message, color = MaterialTheme.colorScheme.error)

@@ -16,6 +16,10 @@
     <string name="edit_tags_desc">タグを編集</string>
     <string name="error_msg">エラー: %1$s</string>
     <string name="error_occurred">エラーが発生しました</string>
+    <string name="error_network_timeout">通信がタイムアウトしました。再度お試しください。</string>
+    <string name="error_network_offline">ネットワークに接続できません。接続を確認してください。</string>
+    <string name="error_network_generic">通信エラーが発生しました。再度お試しください。</string>
+    <string name="error_save_failed">保存に失敗しました。再度お試しください。</string>
     <string name="offline_mode">オフラインです。一部の機能が利用できません。</string>
     <string name="osm_sync_delay">OSMの変更が反映されるまで時間がかかる場合があります</string>
     <string name="duplicate_checkin">前回のチェックインから30分以内はチェックインできません</string>

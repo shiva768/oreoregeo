@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.zelretch.oreoregeo.R
+import com.zelretch.oreoregeo.ui.OsmEditState
 
 @Composable
 @Suppress("FunctionNaming")
@@ -43,7 +44,8 @@ fun EditTagsScreen(
     existingTags: Map<String, String>,
     onSave: (Long, Map<String, String>) -> Unit,
     onCancel: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    editState: OsmEditState = OsmEditState.Idle
 ) {
     // place_key (osm:node:12345) からノードIDを抽出
     val nodeId = placeKey.split(":").lastOrNull()?.toLongOrNull()
@@ -57,6 +59,12 @@ fun EditTagsScreen(
     LaunchedEffect(existingTags) {
         if (existingTags.isNotEmpty()) {
             tags = existingTags
+        }
+    }
+
+    LaunchedEffect(editState) {
+        if (editState is OsmEditState.Error) {
+            isSaving = false
         }
     }
 
@@ -98,6 +106,14 @@ fun EditTagsScreen(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        if (editState is OsmEditState.Error) {
+            Text(
+                text = stringResource(R.string.error_save_failed),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         EditTagsActions(
             isSaving = isSaving,

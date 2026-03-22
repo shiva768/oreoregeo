@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.zelretch.oreoregeo.ui.SearchErrorType
 import com.zelretch.oreoregeo.ui.SearchScreen
 import com.zelretch.oreoregeo.ui.SearchState
 import org.junit.Rule
@@ -80,7 +81,7 @@ class SearchScreenTest {
         composeTestRule.setContent {
             OreoregeoTheme {
                 SearchScreen(
-                    searchState = SearchState.Error("テストエラー"),
+                    searchState = SearchState.Error(SearchErrorType.GENERIC),
                     searchRadius = 100,
                     onRadiusChange = {},
                     excludeUnnamed = false,
@@ -96,7 +97,9 @@ class SearchScreenTest {
         }
 
         // エラーメッセージが表示されることを確認
-        composeTestRule.onNodeWithText("テストエラー").assertIsDisplayed()
+        composeTestRule.onNodeWithText(
+            context.getString(R.string.error_network_generic)
+        ).assertIsDisplayed()
 
         // 再試行ボタンが表示されることを確認
         composeTestRule.onNodeWithText(
@@ -219,7 +222,7 @@ class SearchScreenTest {
         composeTestRule.setContent {
             OreoregeoTheme {
                 SearchScreen(
-                    searchState = SearchState.Error("テストエラー"),
+                    searchState = SearchState.Error(SearchErrorType.GENERIC),
                     searchRadius = 100,
                     onRadiusChange = {},
                     excludeUnnamed = false,
