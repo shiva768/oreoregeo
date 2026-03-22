@@ -1,9 +1,13 @@
 package com.zelretch.oreoregeo.data.local
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "provisional_checkins")
+@Entity(
+    tableName = "provisional_checkins",
+    indices = [Index(value = ["place_key", "status"], unique = true)]
+)
 data class ProvisionalCheckinEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

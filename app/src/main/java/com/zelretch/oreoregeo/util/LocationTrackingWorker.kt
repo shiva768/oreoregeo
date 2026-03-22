@@ -8,6 +8,8 @@ import android.location.Location
 import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -25,6 +27,7 @@ class LocationTrackingWorker(
 
     companion object {
         private const val WORK_NAME = "location_tracking"
+        private const val ONE_TIME_WORK_NAME = "location_tracking_one_time"
         private const val PREFS_NAME = "location_tracking_prefs"
         private const val KEY_LAST_LAT = "last_lat"
         private const val KEY_LAST_LON = "last_lon"
@@ -35,15 +38,19 @@ class LocationTrackingWorker(
         private const val INTERVAL_MINUTES = 15L
 
         fun schedule(context: Context) {
+            val workManager = WorkManager.getInstance(context)
             val request = PeriodicWorkRequestBuilder<LocationTrackingWorker>(
                 INTERVAL_MINUTES,
                 TimeUnit.MINUTES
             ).build()
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            workManager.enqueueUniquePeriodicWork(
                 WORK_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,
                 request
             )
+            // 起動時に即時実行（同名のワークが既に実行中なら KEEP でスキップ）
+            val immediateRequest = OneTimeWorkRequestBuilder<LocationTrackingWorker>().build()
+            workManager.enqueueUniqueWork(ONE_TIME_WORK_NAME, ExistingWorkPolicy.KEEP, immediateRequest)
             Timber.d("LocationTrackingWorker scheduled")
         }
     }
