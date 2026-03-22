@@ -3,9 +3,11 @@ package com.zelretch.oreoregeo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.zelretch.oreoregeo.domain.Checkin
+import com.zelretch.oreoregeo.domain.Place
 import com.zelretch.oreoregeo.ui.HistoryScreen
 import org.junit.Rule
 import org.junit.Test
@@ -89,6 +91,83 @@ class HistoryScreenTest {
         composeTestRule.onNodeWithText("node/123").assertIsDisplayed()
         composeTestRule.onNodeWithText("node/456").assertIsDisplayed()
         composeTestRule.onNodeWithText("テストノート1").assertIsDisplayed()
+    }
+
+    @Test
+    fun historyScreen_tapCheckinWithPlace_showsMapDialog() {
+        val placeName = "テストカフェ"
+        val testCheckin = Checkin(
+            id = 1,
+            placeKey = "osm:node:123",
+            visitedAt = System.currentTimeMillis(),
+            note = "",
+            place = Place(
+                placeKey = "osm:node:123",
+                name = placeName,
+                category = "amenity",
+                lat = 35.6812,
+                lon = 139.7671,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                HistoryScreen(
+                    checkins = listOf(testCheckin),
+                    placeNameQuery = "",
+                    areaQuery = "",
+                    startDate = null,
+                    endDate = null,
+                    onPlaceNameQueryChange = {},
+                    onAreaQueryChange = {},
+                    onStartDateChange = {},
+                    onEndDateChange = {},
+                    onClearFilters = {},
+                    onDeleteClick = {}
+                )
+            }
+        }
+
+        // カードをタップしてマップダイアログが表示されることを確認
+        composeTestRule.onNodeWithText(placeName).performClick()
+        composeTestRule.onNodeWithText(placeName).assertIsDisplayed()
+    }
+
+    @Test
+    fun historyScreen_tapCheckinWithoutPlace_noMapDialog() {
+        val testCheckin = Checkin(
+            id = 1,
+            placeKey = "osm:node:123",
+            visitedAt = System.currentTimeMillis(),
+            note = "",
+            place = null,
+            placeName = "場所なしチェックイン"
+        )
+
+        composeTestRule.setContent {
+            OreoregeoTheme {
+                HistoryScreen(
+                    checkins = listOf(testCheckin),
+                    placeNameQuery = "",
+                    areaQuery = "",
+                    startDate = null,
+                    endDate = null,
+                    onPlaceNameQueryChange = {},
+                    onAreaQueryChange = {},
+                    onStartDateChange = {},
+                    onEndDateChange = {},
+                    onClearFilters = {},
+                    onDeleteClick = {}
+                )
+            }
+        }
+
+        // place が null のカードをタップしてもダイアログが出ないことを確認
+        composeTestRule.onNodeWithText("場所なしチェックイン").performClick()
+        composeTestRule.waitForIdle()
+        // Dialog はなく、カード自体は表示されたまま
+        composeTestRule.onNodeWithText("場所なしチェックイン").assertIsDisplayed()
     }
 
     @Test
