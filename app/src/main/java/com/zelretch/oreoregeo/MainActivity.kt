@@ -620,7 +620,8 @@ fun MainScreen(
                     },
                     onCancel = {
                         navController.popBackStack()
-                    }
+                    },
+                    editState = editState
                 )
             }
         }

@@ -10,13 +10,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.Locale
+
+enum class SearchErrorType { TIMEOUT, OFFLINE, GENERIC }
 
 sealed class SearchState {
     object Idle : SearchState()
     object Loading : SearchState()
     data class Success(val places: List<PlaceWithDistance>) : SearchState()
-    data class Error(val message: String) : SearchState()
+    data class Error(val errorType: SearchErrorType) : SearchState()
 }
 
 class SearchViewModel(
@@ -56,7 +60,14 @@ class SearchViewModel(
             )
             _searchState.value = result.fold(
                 onSuccess = { SearchState.Success(it) },
-                onFailure = { SearchState.Error(it.message ?: "Unknown error") }
+                onFailure = { e ->
+                    val errorType = when (e) {
+                        is SocketTimeoutException -> SearchErrorType.TIMEOUT
+                        is UnknownHostException -> SearchErrorType.OFFLINE
+                        else -> SearchErrorType.GENERIC
+                    }
+                    SearchState.Error(errorType)
+                }
             )
         }
     }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -74,6 +75,15 @@ fun AddPlaceScreen(
 
             if (!state.isMapReady) {
                 CircularProgressIndicator()
+            }
+
+            if (editState is OsmEditState.Error) {
+                Text(
+                    text = stringResource(R.string.error_save_failed),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
         }
     }

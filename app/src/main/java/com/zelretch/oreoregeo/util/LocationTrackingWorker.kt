@@ -64,12 +64,12 @@ class LocationTrackingWorker(
         repository.cleanupProvisionalCheckins()
 
         if (!hasLocationPermission()) {
-            Timber.d("Location permission not granted, skipping")
+            Timber.w("Location permission not granted, skipping")
             return Result.success()
         }
 
         val currentLocation = getCurrentLocation() ?: run {
-            Timber.d("Could not get current location")
+            Timber.w("Could not get current location")
             return Result.success()
         }
 
@@ -91,7 +91,7 @@ class LocationTrackingWorker(
             // 同じ場所にいる
             val elapsed = now - lastTimestamp
             if (elapsed >= STAY_DURATION_MS) {
-                Timber.d("User stayed at same location for ${elapsed / 60000} min, creating provisional check-in")
+                Timber.i("Stayed ${elapsed / 60000} min at same location, creating provisional check-in")
                 createProvisionalCheckin(currentLocation.latitude, currentLocation.longitude)
                 // 次の検出のためにタイムスタンプをリセット
                 saveLocation(currentLocation.latitude, currentLocation.longitude, now)
@@ -136,7 +136,7 @@ class LocationTrackingWorker(
             return
         }
         val nearest: PlaceWithDistance = nearbyResult.getOrNull()?.firstOrNull() ?: run {
-            Timber.d("No nearby places found for provisional check-in")
+            Timber.w("No nearby places found for provisional check-in")
             return
         }
         repository.createProvisionalCheckin(
@@ -145,5 +145,6 @@ class LocationTrackingWorker(
             lat = lat,
             lon = lon
         )
+        Timber.i("Provisional check-in created: ${nearest.place.name}")
     }
 }

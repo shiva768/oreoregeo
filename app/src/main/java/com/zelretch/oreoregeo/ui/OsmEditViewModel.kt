@@ -67,6 +67,12 @@ class OsmEditViewModel(
                 radiusMeters = DUPLICATE_CHECK_RADIUS_METERS,
                 excludeUnnamed = false
             )
+            if (nearbyResult.isFailure) {
+                _editState.value = OsmEditState.Error(
+                    nearbyResult.exceptionOrNull()?.message ?: "Failed to check duplicates"
+                )
+                return@launch
+            }
             val nearbyPlaces = nearbyResult.getOrDefault(emptyList()).take(MAX_DUPLICATES_DISPLAY)
 
             // 常に確認状態へ遷移する（重複があるかどうかに関わらず）
