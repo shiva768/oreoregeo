@@ -39,6 +39,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -289,6 +292,39 @@ fun MainScreen(
         factory = ProvisionalCheckinViewModelFactory(repository)
     )
     val provisionalCount by provisionalCheckinViewModel.pendingCount.collectAsState()
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    var showLocationPermissionDialog by remember { mutableStateOf(false) }
+
+    androidx.compose.runtime.LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+            val granted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            showLocationPermissionDialog = !granted
+        }
+    }
+
+    if (showLocationPermissionDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.location_permission_required_title)) },
+            text = { Text(stringResource(R.string.location_permission_required_message)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    val intent = android.content.Intent(
+                        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        android.net.Uri.fromParts("package", context.packageName, null)
+                    )
+                    context.startActivity(intent)
+                }) {
+                    Text(stringResource(R.string.open_settings))
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {

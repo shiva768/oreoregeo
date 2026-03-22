@@ -1,10 +1,12 @@
 package com.zelretch.oreoregeo
 
+import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -72,6 +74,34 @@ class MainActivityTest {
 
         // 検索画面が表示されることを確認
         composeTestRule.onNodeWithText(searchLabel).assertIsDisplayed()
+    }
+
+    @Test
+    fun locationPermissionDialog_showsWhenPermissionDenied() {
+        // パーミッションを剥奪してダイアログが表示されることを確認
+        InstrumentationRegistry.getInstrumentation().uiAutomation.revokeRuntimePermission(
+            composeTestRule.activity.packageName,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        composeTestRule.activityRule.scenario.recreate()
+        composeTestRule.waitForIdle()
+
+        val dialogTitle = composeTestRule.activity.getString(R.string.location_permission_required_title)
+        composeTestRule.onNodeWithText(dialogTitle).assertIsDisplayed()
+    }
+
+    @Test
+    fun locationPermissionDialog_notShownWhenPermissionGranted() {
+        // パーミッション許可済みの場合はダイアログが表示されないことを確認
+        InstrumentationRegistry.getInstrumentation().uiAutomation.grantRuntimePermission(
+            composeTestRule.activity.packageName,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        composeTestRule.activityRule.scenario.recreate()
+        composeTestRule.waitForIdle()
+
+        val dialogTitle = composeTestRule.activity.getString(R.string.location_permission_required_title)
+        composeTestRule.onNodeWithText(dialogTitle).assertDoesNotExist()
     }
 
     @Test

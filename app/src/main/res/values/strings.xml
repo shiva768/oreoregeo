@@ -140,4 +140,7 @@
     <string name="provisional_confirm_title">Confirm Check-in</string>
     <string name="provisional_confirm_message">Check in to %1$s?</string>
     <string name="unknown_place">Unknown place</string>
+    <string name="location_permission_required_title">Location Permission Required</string>
+    <string name="location_permission_required_message">Location permission is required for the provisional check-in feature. Please enable it in settings.</string>
+    <string name="open_settings">Open Settings</string>
 </resources>
