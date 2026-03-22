@@ -3,6 +3,7 @@ package com.zelretch.oreoregeo.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.zelretch.oreoregeo.data.remote.ReverseGeocodeResult
 import com.zelretch.oreoregeo.domain.ProvisionalCheckin
 import com.zelretch.oreoregeo.domain.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +36,20 @@ class ProvisionalCheckinViewModel(
         ProvisionalCheckinConfirmState.Idle
     )
     val confirmState: StateFlow<ProvisionalCheckinConfirmState> = _confirmState.asStateFlow()
+
+    private val _geocodeResult = MutableStateFlow<ReverseGeocodeResult?>(null)
+    val geocodeResult: StateFlow<ReverseGeocodeResult?> = _geocodeResult.asStateFlow()
+
+    fun loadGeocode(lat: Double, lon: Double) {
+        _geocodeResult.value = null
+        viewModelScope.launch {
+            repository.reverseGeocode(lat, lon).onSuccess { _geocodeResult.value = it }
+        }
+    }
+
+    fun clearGeocode() {
+        _geocodeResult.value = null
+    }
 
     fun confirm(provisionalId: Long, placeKey: String, note: String) {
         viewModelScope.launch {

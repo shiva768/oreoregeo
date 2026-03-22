@@ -12,11 +12,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -45,9 +49,14 @@ fun ProvisionalCheckinScreen(
     confirmState: ProvisionalCheckinConfirmState,
     onConfirm: (provisionalId: Long, placeKey: String, note: String) -> Unit,
     onDismiss: (id: Long) -> Unit,
-    onConfirmStateReset: () -> Unit
+    onConfirmStateReset: () -> Unit,
+    onLoadGeocode: (lat: Double, lon: Double) -> Unit = { _, _ -> },
+    onClearGeocode: () -> Unit = {},
+    geocodePrefName: String? = null,
+    geocodeCityName: String? = null
 ) {
     var selectedCheckin by remember { mutableStateOf<ProvisionalCheckin?>(null) }
+    var mapCheckin by remember { mutableStateOf<ProvisionalCheckin?>(null) }
 
     LaunchedEffect(confirmState) {
         if (confirmState is ProvisionalCheckinConfirmState.Success) {
@@ -77,9 +86,27 @@ fun ProvisionalCheckinScreen(
             ProvisionalCheckinCard(
                 checkin = checkin,
                 onConfirmClick = { selectedCheckin = checkin },
-                onDismissClick = { onDismiss(checkin.id) }
+                onDismissClick = { onDismiss(checkin.id) },
+                onMapClick = {
+                    mapCheckin = checkin
+                    onLoadGeocode(checkin.lat, checkin.lon)
+                }
             )
         }
+    }
+
+    mapCheckin?.let { checkin ->
+        LocationMapDialog(
+            lat = checkin.lat,
+            lon = checkin.lon,
+            name = checkin.placeName ?: stringResource(R.string.unknown_place),
+            prefName = geocodePrefName,
+            cityName = geocodeCityName,
+            onDismiss = {
+                mapCheckin = null
+                onClearGeocode()
+            }
+        )
     }
 
     selectedCheckin?.let { checkin ->
@@ -100,7 +127,8 @@ fun ProvisionalCheckinScreen(
 private fun ProvisionalCheckinCard(
     checkin: ProvisionalCheckin,
     onConfirmClick: () -> Unit,
-    onDismissClick: () -> Unit
+    onDismissClick: () -> Unit,
+    onMapClick: () -> Unit = {}
 ) {
     val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault()) }
     Card(
@@ -124,13 +152,26 @@ private fun ProvisionalCheckinCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = onDismissClick) {
-                    Text(stringResource(R.string.provisional_dismiss))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = onMapClick) {
+                    Icon(
+                        imageVector = Icons.Default.Place,
+                        contentDescription = stringResource(R.string.show_map),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = onConfirmClick) {
-                    Text(stringResource(R.string.provisional_confirm))
+                Row {
+                    TextButton(onClick = onDismissClick) {
+                        Text(stringResource(R.string.provisional_dismiss))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = onConfirmClick) {
+                        Text(stringResource(R.string.provisional_confirm))
+                    }
                 }
             }
         }

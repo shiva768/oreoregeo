@@ -498,6 +498,7 @@ fun MainScreen(
             composable("provisional") {
                 val pendingCheckins by provisionalCheckinViewModel.pendingCheckins.collectAsState()
                 val confirmState by provisionalCheckinViewModel.confirmState.collectAsState()
+                val geocodeResult by provisionalCheckinViewModel.geocodeResult.collectAsState()
 
                 ProvisionalCheckinScreen(
                     pendingCheckins = pendingCheckins,
@@ -506,7 +507,11 @@ fun MainScreen(
                         provisionalCheckinViewModel.confirm(provisionalId, placeKey, note)
                     },
                     onDismiss = { provisionalCheckinViewModel.dismiss(it) },
-                    onConfirmStateReset = { provisionalCheckinViewModel.resetConfirmState() }
+                    onConfirmStateReset = { provisionalCheckinViewModel.resetConfirmState() },
+                    onLoadGeocode = { lat, lon -> provisionalCheckinViewModel.loadGeocode(lat, lon) },
+                    onClearGeocode = { provisionalCheckinViewModel.clearGeocode() },
+                    geocodePrefName = geocodeResult?.prefName,
+                    geocodeCityName = geocodeResult?.cityName
                 )
             }
 

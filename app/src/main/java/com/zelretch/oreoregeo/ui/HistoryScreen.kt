@@ -470,6 +470,32 @@ fun CheckinLocationDialog(checkin: Checkin, onDismiss: () -> Unit) {
     val lat = checkin.place?.lat ?: return
     val lon = checkin.place?.lon ?: return
     val placeName = checkin.placeName ?: checkin.place?.name ?: checkin.placeKey
+    LocationMapDialog(
+        lat = lat,
+        lon = lon,
+        name = placeName,
+        prefName = checkin.prefName,
+        cityName = checkin.cityName,
+        onDismiss = onDismiss
+    )
+}
+
+@Composable
+fun LocationMapDialog(
+    lat: Double,
+    lon: Double,
+    name: String,
+    prefName: String? = null,
+    cityName: String? = null,
+    onDismiss: () -> Unit
+) {
+    val addressText = buildString {
+        if (prefName != null) append(prefName)
+        if (cityName != null) {
+            if (isNotEmpty()) append(" ")
+            append(cityName)
+        }
+    }.takeIf { it.isNotEmpty() }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.medium) {
@@ -477,15 +503,23 @@ fun CheckinLocationDialog(checkin: Checkin, onDismiss: () -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                        .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = placeName,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        if (addressText != null) {
+                            Text(
+                                text = addressText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -503,7 +537,7 @@ fun CheckinLocationDialog(checkin: Checkin, onDismiss: () -> Unit) {
                             val marker = Marker(this)
                             marker.position = GeoPoint(lat, lon)
                             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            marker.title = placeName
+                            marker.title = name
                             overlays.add(marker)
                         }
                     },
