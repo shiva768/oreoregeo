@@ -140,4 +140,7 @@
     <string name="provisional_confirm_title">チェックインの確認</string>
     <string name="provisional_confirm_message">%1$sにチェックインしますか？</string>
     <string name="unknown_place">不明なプレイス</string>
+    <string name="location_permission_required_title">位置情報の許可が必要です</string>
+    <string name="location_permission_required_message">仮チェックイン機能を使用するには位置情報の許可が必要です。設定から許可してください。</string>
+    <string name="open_settings">設定を開く</string>
 </resources>
