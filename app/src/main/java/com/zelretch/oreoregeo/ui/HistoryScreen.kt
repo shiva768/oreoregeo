@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -534,6 +535,7 @@ fun LocationMapDialog(
                             setMultiTouchControls(true)
                             controller.setZoom(17.0)
                             controller.setCenter(GeoPoint(lat, lon))
+                            clipToOutline = true
                             val marker = Marker(this)
                             marker.position = GeoPoint(lat, lon)
                             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
@@ -544,6 +546,7 @@ fun LocationMapDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(300.dp)
+                        .clip(MaterialTheme.shapes.medium)
                 )
             }
         }
