@@ -1,5 +1,6 @@
 package com.zelretch.oreoregeo.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,10 +33,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import com.zelretch.oreoregeo.R
 import com.zelretch.oreoregeo.domain.Checkin
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -56,6 +65,7 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     var showFilters by remember { mutableStateOf(false) }
+    var selectedCheckin by remember { mutableStateOf<Checkin?>(null) }
     val hasActiveFilters = placeNameQuery.isNotEmpty() ||
         areaQuery.isNotEmpty() ||
         startDate != null ||
@@ -139,11 +149,19 @@ fun HistoryScreen(
                 items(checkins) { checkin ->
                     CheckinCard(
                         checkin = checkin,
-                        onDeleteClick = { onDeleteClick(checkin.id) }
+                        onDeleteClick = { onDeleteClick(checkin.id) },
+                        onClick = { if (checkin.place?.lat != null) selectedCheckin = checkin }
                     )
                 }
             }
         }
+    }
+
+    selectedCheckin?.let { checkin ->
+        CheckinLocationDialog(
+            checkin = checkin,
+            onDismiss = { selectedCheckin = null }
+        )
     }
 }
 
@@ -375,7 +393,7 @@ fun MaterialDatePickerDialog(
 }
 
 @Composable
-fun CheckinCard(checkin: Checkin, onDeleteClick: () -> Unit, modifier: Modifier = Modifier) {
+fun CheckinCard(checkin: Checkin, onDeleteClick: () -> Unit, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     val dateFormat = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault())
     val dateText = dateFormat.format(Date(checkin.visitedAt))
 
@@ -389,7 +407,7 @@ fun CheckinCard(checkin: Checkin, onDeleteClick: () -> Unit, modifier: Modifier 
     }
 
     Card(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth().clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -442,6 +460,93 @@ fun CheckinCard(checkin: Checkin, onDeleteClick: () -> Unit, modifier: Modifier 
                     Icons.Default.Delete,
                     contentDescription = stringResource(R.string.delete_tag),
                     tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CheckinLocationDialog(checkin: Checkin, onDismiss: () -> Unit) {
+    val lat = checkin.place?.lat ?: return
+    val lon = checkin.place?.lon ?: return
+    val placeName = checkin.placeName ?: checkin.place?.name ?: checkin.placeKey
+    LocationMapDialog(
+        lat = lat,
+        lon = lon,
+        name = placeName,
+        prefName = checkin.prefName,
+        cityName = checkin.cityName,
+        onDismiss = onDismiss
+    )
+}
+
+@Composable
+fun LocationMapDialog(
+    lat: Double,
+    lon: Double,
+    name: String,
+    prefName: String? = null,
+    cityName: String? = null,
+    onDismiss: () -> Unit
+) {
+    val addressText = buildString {
+        if (prefName != null) append(prefName)
+        if (cityName != null) {
+            if (isNotEmpty()) append(" ")
+            append(cityName)
+        }
+    }.takeIf { it.isNotEmpty() }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = MaterialTheme.shapes.medium) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        if (addressText != null) {
+                            Text(
+                                text = addressText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
+                    }
+                }
+                AndroidView(
+                    factory = { ctx ->
+                        MapView(ctx).apply {
+                            setTileSource(TileSourceFactory.MAPNIK)
+                            setMultiTouchControls(true)
+                            controller.setZoom(17.0)
+                            controller.setCenter(GeoPoint(lat, lon))
+                            clipToOutline = true
+                            val marker = Marker(this)
+                            marker.position = GeoPoint(lat, lon)
+                            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            marker.title = name
+                            overlays.add(marker)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .clip(MaterialTheme.shapes.medium)
                 )
             }
         }

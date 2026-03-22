@@ -364,6 +364,8 @@ class Repository(
         Timber.d("Dismissed provisional check-in: $id")
     }
 
+    suspend fun reverseGeocode(lat: Double, lon: Double) = nominatimClient.reverseGeocode(lat, lon)
+
     suspend fun cleanupProvisionalCheckins() {
         val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
         provisionalCheckinDao.dismissExpired(oneWeekAgo)
